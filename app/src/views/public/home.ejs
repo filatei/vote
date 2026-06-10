@@ -13,9 +13,16 @@
   </div>
 
   <div class="landing-visual">
-    <% if (landingVideoUrl) { %>
+    <% if (video && video.type === 'youtube') { %>
+      <div class="video-wrap">
+        <iframe src="<%= video.src %>" title="Torama Vote — explainer"
+                loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+                allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen></iframe>
+      </div>
+    <% } else if (video && video.type === 'file') { %>
       <video class="landing-video" controls preload="metadata" playsinline>
-        <source src="<%= landingVideoUrl %>" />
+        <source src="<%= video.src %>" />
         Your browser can't play this video.
       </video>
     <% } else { %>

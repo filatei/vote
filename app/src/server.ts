@@ -9,6 +9,7 @@ import pinoHttp from 'pino-http';
 import { config } from './config';
 import { formatWat, toWatInput } from './util/datetime';
 import { avatarSvg } from './util/avatar';
+import { parseVideoUrl } from './util/video';
 
 // Changes each process start → used to cache-bust /static assets after a deploy.
 const ASSET_VER = String(Date.now());
@@ -46,6 +47,7 @@ app.use(
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", 'data:'],
         mediaSrc: ["'self'", 'https:'],
+        frameSrc: ["'self'", 'https://www.youtube.com', 'https://www.youtube-nocookie.com'],
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
         formAction: ["'self'"],
@@ -110,8 +112,9 @@ app.use((_req, res, next) => {
   res.locals.toWatInput = toWatInput;
   res.locals.priceLabel = priceLabel();
   res.locals.paymentsEnabled = paymentsEnabled();
-  // The bundled explainer video is served at /static/landing.mp4 by default.
-  res.locals.landingVideoUrl = config.LANDING_VIDEO_URL || '/static/landing.mp4';
+  // Landing explainer video (YouTube embed or direct file). Defaults to the
+  // configured Torama Vote YouTube clip.
+  res.locals.video = parseVideoUrl(config.LANDING_VIDEO_URL || 'https://youtu.be/Cafnwp8FElk');
   res.locals.assetVer = ASSET_VER;
   res.locals.avatarSvg = avatarSvg;
   next();
