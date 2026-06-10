@@ -1,34 +1,106 @@
 <%- include('../partials/head') %>
-<section class="hero">
-  <h1>Cast your vote</h1>
-  <p class="lead">Enter your election ID and the voting code you were given. Your code is anonymous and can be used once.</p>
+
+<section class="landing-hero">
+  <div class="landing-hero-text">
+    <p class="eyebrow">Free &amp; fair online elections</p>
+    <h1 class="landing-title">Run an election<br />anyone can trust</h1>
+    <p class="landing-sub">Torama Vote lets any group hold a secret-ballot election online in minutes — with verifiable receipts, so every voter can confirm their vote was counted.</p>
+    <div class="landing-cta">
+      <a class="button button-primary button-lg" href="/account/login">Create an election</a>
+      <a class="button button-ghost button-lg" href="#vote">I have a voting code</a>
+    </div>
+    <p class="landing-note">No account needed to vote — just your code or election link.</p>
+  </div>
+
+  <div class="landing-visual">
+    <% if (landingVideoUrl) { %>
+      <video class="landing-video" controls preload="metadata" playsinline>
+        <source src="<%= landingVideoUrl %>" />
+        Your browser can't play this video.
+      </video>
+    <% } else { %>
+      <div class="explainer" role="img" aria-label="Animated illustration of casting a secret ballot">
+        <svg viewBox="0 0 240 200" xmlns="http://www.w3.org/2000/svg">
+          <!-- ballot box -->
+          <rect x="40" y="96" width="160" height="84" rx="10" class="ex-box" />
+          <rect x="92" y="92" width="56" height="10" rx="5" class="ex-slot" />
+          <!-- ballot paper dropping in -->
+          <g class="ex-paper">
+            <rect x="96" y="20" width="48" height="60" rx="6" />
+            <line x1="104" y1="34" x2="136" y2="34" />
+            <line x1="104" y1="44" x2="136" y2="44" />
+            <path d="M106 56 l6 6 l12 -14" class="ex-check" />
+          </g>
+          <!-- sparkles -->
+          <circle cx="60" cy="60" r="3" class="ex-spark s1" />
+          <circle cx="186" cy="48" r="3" class="ex-spark s2" />
+          <circle cx="172" cy="150" r="3" class="ex-spark s3" />
+        </svg>
+        <p class="explainer-caption">A 60-second walkthrough video can go here.</p>
+      </div>
+    <% } %>
+  </div>
 </section>
 
-<section class="card narrow">
-  <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
-  <form method="post" action="/vote" class="stack" novalidate>
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-    <label for="election">Election ID or link</label>
-    <input id="election" name="election" type="text" inputmode="text" autocomplete="off"
-           value="<%= electionId || '' %>" placeholder="e.g. 3f1c… (from your invitation)" required />
-    <p class="help">This is the long ID in the election link, e.g. <code>vote.torama.money/e/<strong>THIS-PART</strong></code>.</p>
+<section class="options-grid">
+  <div class="card option-card" id="vote">
+    <div class="option-badge vote">Vote</div>
+    <h2 class="h3">Cast your vote</h2>
+    <p>Have a voting code or an election link? Enter your details below to cast a secret ballot. Your code is never linked to your choice.</p>
+    <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+    <form method="post" action="/vote" class="stack" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <label for="election">Election ID or link</label>
+      <input id="election" name="election" type="text" autocomplete="off" value="<%= electionId || '' %>"
+             placeholder="e.g. 3f1c… (from your invitation)" required />
+      <label for="code">Voting code</label>
+      <input id="code" name="code" type="text" autocomplete="off" spellcheck="false"
+             placeholder="XXXX-XXXX-XXXX-XXXX" class="code-input" required />
+      <button class="button button-primary" type="submit">Continue to ballot</button>
+    </form>
+  </div>
 
-    <label for="code">Voting code</label>
-    <input id="code" name="code" type="text" inputmode="text" autocomplete="off"
-           spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX" class="code-input" required />
-    <p class="help">Not case-sensitive. Spaces and dashes don't matter.</p>
-
-    <button class="button button-primary" type="submit">Continue to ballot</button>
-  </form>
+  <div class="card option-card create">
+    <div class="option-badge create">Organise</div>
+    <h2 class="h3">Run your own election</h2>
+    <p>Create an election, add candidates with photos and bios, then invite voters — either with pre-issued codes or a single open link limited to one vote per device. Watch results come in live.</p>
+    <ul class="tick-list">
+      <li>Single or multiple-choice ballots</li>
+      <li>Schedule open/close times</li>
+      <li>Verifiable public results board</li>
+    </ul>
+    <a class="button button-primary button-lg full" href="/account/login">Sign in to get started</a>
+    <p class="help">Passwordless — we email you a secure sign-in link.</p>
+  </div>
 </section>
 
-<section class="card narrow muted-card">
-  <h2 class="h3">How this stays fair</h2>
+<section class="how-it-works">
+  <h2 class="section-title">How it works</h2>
+  <ol class="steps">
+    <li class="step">
+      <span class="step-num">1</span>
+      <h3>Create &amp; set up</h3>
+      <p>Sign in, add your question and candidates, and choose how people vote — codes or an open link.</p>
+    </li>
+    <li class="step">
+      <span class="step-num">2</span>
+      <h3>Invite voters</h3>
+      <p>Share voting codes or the election link. Voters cast a secret ballot from any device or browser.</p>
+    </li>
+    <li class="step">
+      <span class="step-num">3</span>
+      <h3>Count &amp; verify</h3>
+      <p>Results tally automatically. Every voter gets a receipt to confirm their vote on the public board.</p>
+    </li>
+  </ol>
+</section>
+
+<section class="card muted-card fairness">
+  <h2 class="h3">Built to be fair</h2>
   <ul class="tick-list">
     <li>Your code is never linked to the choice you make — the ballot is secret.</li>
-    <li>Each code works only once, so no one can vote twice.</li>
-    <li>You'll get a receipt to confirm your vote was counted.</li>
+    <li>Each code (or device) votes only once, so no one can vote twice.</li>
+    <li>A public bulletin board lets anyone audit the count.</li>
   </ul>
-  <p class="links-row">Want to run your own election? <a href="/account/login">Sign in to get started</a>.</p>
 </section>
 <%- include('../partials/foot') %>

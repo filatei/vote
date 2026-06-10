@@ -54,6 +54,10 @@ const schema = z.object({
   PAYMENT_CURRENCY: z.string().default('NGN'),
   PAYMENT_AMOUNT: z.coerce.number().positive().default(100000),
 
+  // Optional landing-page explainer video (direct .mp4/.webm URL, ideally
+  // self-hosted at /static/...). Empty shows an animated illustration instead.
+  LANDING_VIDEO_URL: z.string().optional(),
+
   // ── Transactional email ──────────────────────────────────────────────
   // Defaults target Google Workspace SMTP relay (smtp-relay.gmail.com),
   // IP-authorised — same setup the other torama.money apps use. With no

@@ -39,8 +39,9 @@ app.use(
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'"],
-        styleSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", 'data:'],
+        mediaSrc: ["'self'", 'https:'],
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
         formAction: ["'self'"],
@@ -105,6 +106,7 @@ app.use((_req, res, next) => {
   res.locals.toWatInput = toWatInput;
   res.locals.priceLabel = priceLabel();
   res.locals.paymentsEnabled = paymentsEnabled();
+  res.locals.landingVideoUrl = config.LANDING_VIDEO_URL || null;
   next();
 });
 
