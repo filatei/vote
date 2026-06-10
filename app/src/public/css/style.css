@@ -187,3 +187,105 @@ textarea { resize: vertical; }
 .error-status { font-size: 3rem; margin: 0 0 6px; color: var(--brand); }
 
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
+
+/* ===========================================================================
+   Transitions, motion & mobile responsiveness
+   =========================================================================== */
+
+/* Smooth interactive feedback */
+a { transition: color .15s ease; }
+.button {
+  transition: background-color .15s ease, border-color .15s ease,
+              filter .15s ease, transform .06s ease, box-shadow .15s ease;
+}
+.button:active { transform: translateY(1px); }
+.button-primary:hover { box-shadow: 0 4px 14px rgba(47, 109, 244, .3); }
+input[type="text"], input[type="password"], input[type="number"], textarea, .option-input {
+  transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+.option {
+  transition: border-color .15s ease, background-color .15s ease,
+              box-shadow .15s ease, transform .06s ease;
+}
+.option:active { transform: scale(.995); }
+
+/* Highlight the chosen ballot option (modern browsers via :has) */
+.option:has(input:checked) {
+  border-color: var(--brand);
+  background: #f0f5ff;
+  box-shadow: 0 0 0 2px rgba(47, 109, 244, .25);
+}
+
+/* Entrance motion — subtle rise/fade */
+@keyframes riseIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes pop {
+  0%   { opacity: 0; transform: scale(.6); }
+  60%  { transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.card { animation: riseIn .32s ease both; }
+.hero { animation: riseIn .28s ease both; }
+.alert { animation: riseIn .22s ease both; }
+.success-badge { animation: pop .42s cubic-bezier(.2, .8, .3, 1.2) both; }
+.receipt-box { animation: riseIn .4s ease .1s both; }
+
+/* Respect users who prefer less motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- Phones (≤640px) ------------------------------------------------------ */
+@media (max-width: 640px) {
+  .container { padding: 0 16px; }
+  main { padding: 18px 0 4px; }
+
+  .header-row { height: 56px; }
+  .brand-name { font-size: 1rem; }
+  .header-nav { gap: 12px; }
+
+  .hero { padding: 8px 0 14px; }
+  .hero h1 { font-size: 1.5rem; line-height: 1.2; }
+  .lead { font-size: 1rem; }
+  .page-head h1 { font-size: 1.35rem; }
+  .h3 { font-size: 1.08rem; }
+
+  .card { padding: 18px; border-radius: 12px; }
+  .card.narrow { max-width: none; }
+
+  /* Comfortable tap targets + bigger ballot rows */
+  .option { padding: 16px; }
+  .option input { width: 22px; height: 22px; }
+  input[type="text"], input[type="password"], input[type="number"], textarea, .option-input {
+    font-size: 16px;            /* prevents iOS zoom-on-focus */
+    padding: 13px 12px;
+  }
+
+  /* Stack actions full-width so they're easy to tap */
+  .actions { flex-direction: column; align-items: stretch; }
+  .actions .button { width: 100%; }
+  .inline-form-wide { flex-direction: column; align-items: stretch; }
+  .inline-form-wide input[type="number"] { width: 100%; }
+  .inline-form-wide .button { width: 100%; }
+  .button-row { width: 100%; }
+  .button-row .inline-form, .button-row .button { flex: 1 1 auto; }
+  .button-row .button { width: 100%; }
+
+  .page-head { gap: 10px; }
+  .receipt-code { font-size: 1.3rem; letter-spacing: .08em; word-break: break-word; }
+  .stat-row { gap: 20px; }
+  .stat-num { font-size: 1.45rem; }
+  .data-table { font-size: .88rem; }
+  .data-table th, .data-table td { padding: 8px 8px; }
+  .share-url code { font-size: .85rem; }
+}
+
+/* --- Small phones (≤380px) ------------------------------------------------ */
+@media (max-width: 380px) {
+  .hero h1 { font-size: 1.32rem; }
+  .receipt-code { font-size: 1.12rem; }
+  .brand-name { font-size: .95rem; }
+}

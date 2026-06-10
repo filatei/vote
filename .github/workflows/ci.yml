@@ -32,3 +32,29 @@ jobs:
 
       - name: Unit tests
         run: node --test $(find dist -name '*.test.js')
+
+  deploy:
+    name: Deploy to server
+    needs: build-test
+    # Only deploy on a real push to main (never on PRs), and only if tests pass.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - name: Trigger deploy over SSH
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: vote.torama.money
+          DEPLOY_USER: user1
+        run: |
+          test -n "$DEPLOY_KEY" || { echo "DEPLOY_SSH_KEY secret is not set"; exit 1; }
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          # The key is locked to a forced command on the server, so the literal
+          # command sent here is ignored — deploy.sh runs regardless.
+          ssh -T -i ~/.ssh/deploy_key -o IdentitiesOnly=yes \
+            "$DEPLOY_USER@$DEPLOY_HOST" deploy
