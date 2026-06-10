@@ -7,7 +7,9 @@ import { toArray } from '../util/validate';
 import {
   getElectionWithOptionsByPublicId,
   resultsArePublic,
+  votingState,
 } from '../services/elections';
+import { formatWat } from '../util/datetime';
 import { castBallot } from '../services/ballots';
 import { bulletinBoard, findReceipt, tallyElection } from '../services/tally';
 
@@ -44,10 +46,17 @@ publicRouter.post('/vote', codeAttemptLimiter, csrfProtection, csrfToken, async 
       });
       return;
     }
-    if (election.status !== 'open') {
+    const state = votingState(election);
+    if (!state.open) {
+      const msg =
+        state.reason === 'before'
+          ? `Voting has not opened yet${election.opens_at ? ` — it opens ${formatWat(election.opens_at)}.` : '.'}`
+          : state.reason === 'after'
+            ? 'Voting has closed for that election.'
+            : 'That election is not open for voting right now.';
       res.status(409).render('public/home', {
         title: 'Torama Vote',
-        error: 'That election is not open for voting right now.',
+        error: msg,
         electionId: publicId,
       });
       return;
@@ -109,7 +118,14 @@ publicRouter.get('/e/:publicId', csrfToken, async (req, res, next) => {
   try {
     const election = await getElectionWithOptionsByPublicId(req.params.publicId);
     if (!election) throw new HttpError(404, 'Election not found.');
-    res.render('public/election', { title: election.title, election, error: null });
+    res.render('public/election', {
+      title: election.title,
+      election,
+      state: votingState(election),
+      opensWat: formatWat(election.opens_at),
+      closesWat: formatWat(election.closes_at),
+      error: null,
+    });
   } catch (err) {
     next(err);
   }

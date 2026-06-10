@@ -1,6 +1,7 @@
 import { withSerializableTx } from '../db';
 import { HttpError } from '../middleware/errors';
 import { generateReceiptCode, hashCode } from '../util/crypto';
+import { votingState } from './elections';
 import { Election, Option } from './types';
 
 export interface CastResult {
@@ -61,8 +62,15 @@ export async function castBallot(params: {
 }): Promise<CastResult> {
   const { election, options, rawCode, selectedOptionIds } = params;
 
-  if (election.status !== 'open') {
-    throw new HttpError(409, 'This election is not currently open for voting.');
+  const state = votingState(election);
+  if (!state.open) {
+    const msg =
+      state.reason === 'before'
+        ? 'Voting has not opened yet for this election.'
+        : state.reason === 'after'
+          ? 'Voting has closed for this election.'
+          : 'This election is not currently open for voting.';
+    throw new HttpError(409, msg);
   }
 
   const selected = validateSelection(election, options, selectedOptionIds);

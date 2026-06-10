@@ -6,7 +6,15 @@
 </section>
 
 <section class="card narrow">
-  <% if (election.status === 'open') { %>
+  <% if (opensWat || closesWat) { %>
+    <p class="window-note">
+      <% if (opensWat) { %>Opens <strong><%= opensWat %></strong><% } %>
+      <% if (opensWat && closesWat) { %> · <% } %>
+      <% if (closesWat) { %>Closes <strong><%= closesWat %></strong><% } %>
+    </p>
+  <% } %>
+
+  <% if (state.open) { %>
     <h2 class="h3">Ready to vote?</h2>
     <form method="post" action="/vote" class="stack" novalidate>
       <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
@@ -16,7 +24,9 @@
              placeholder="XXXX-XXXX-XXXX-XXXX" class="code-input" required />
       <button class="button button-primary" type="submit">Continue to ballot</button>
     </form>
-  <% } else if (election.status === 'closed') { %>
+  <% } else if (state.reason === 'before') { %>
+    <p class="lead">Voting hasn't opened yet<% if (opensWat) { %> — it opens <strong><%= opensWat %></strong><% } %>. Please check back then.</p>
+  <% } else if (state.reason === 'after' || state.reason === 'closed') { %>
     <p class="lead">This election is closed.</p>
   <% } else { %>
     <p class="lead">This election has not opened yet. Please check back later.</p>

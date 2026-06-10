@@ -6,14 +6,20 @@ import { config } from '../config';
 import {
   createElectionSchema,
   generateCodesSchema,
+  scheduleSchema,
   toArray,
 } from '../util/validate';
 import {
+  canDeleteElection,
   createElection,
+  deleteElection,
+  getElectionById,
   getElectionWithOptions,
   listElections,
   setStatus,
+  updateSchedule,
 } from '../services/elections';
+import { watInputToUtc } from '../util/datetime';
 import { generateCodes, getCodeStats } from '../services/codes';
 import { tallyElection } from '../services/tally';
 import { getAuditLog, logAction } from '../services/admins';
@@ -48,6 +54,8 @@ adminRouter.post('/elections', csrfProtection, async (req, res, next) => {
       maxSelections: req.body.maxSelections,
       resultsVisibility: req.body.resultsVisibility,
       options: toArray(req.body.option).map((s) => s.trim()).filter((s) => s.length > 0),
+      opensAt: req.body.opensAt,
+      closesAt: req.body.closesAt,
     };
     const parsed = createElectionSchema.safeParse(payload);
     if (!parsed.success) {
@@ -58,8 +66,20 @@ adminRouter.post('/elections', csrfProtection, async (req, res, next) => {
       });
       return;
     }
+    const opensAt = watInputToUtc(parsed.data.opensAt);
+    const closesAt = watInputToUtc(parsed.data.closesAt);
+    if (opensAt && closesAt && closesAt <= opensAt) {
+      res.status(400).render('admin/election_new', {
+        title: 'New election',
+        error: 'The closing time must be after the opening time.',
+        form: payload,
+      });
+      return;
+    }
     const id = await createElection({
       ...parsed.data,
+      opensAt,
+      closesAt,
       createdBy: req.session.adminId!,
     });
     await logAction({
@@ -92,7 +112,62 @@ adminRouter.get('/elections/:id', csrfToken, async (req, res, next) => {
       audit,
       baseUrl: config.PUBLIC_BASE_URL,
       generatedCodes: null,
+      canDelete: canDeleteElection(election, config.ALLOW_ELECTION_DELETE),
+      allowDeleteAny: config.ALLOW_ELECTION_DELETE,
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Update the scheduled WAT voting window
+adminRouter.post('/elections/:id/schedule', csrfProtection, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    const election = await getElectionById(id);
+    if (!election) throw new HttpError(404, 'Election not found.');
+    const parsed = scheduleSchema.safeParse(req.body);
+    if (!parsed.success) throw new HttpError(400, 'Invalid date/time.');
+    const opensAt = watInputToUtc(parsed.data.opensAt);
+    const closesAt = watInputToUtc(parsed.data.closesAt);
+    if (opensAt && closesAt && closesAt <= opensAt) {
+      throw new HttpError(400, 'The closing time must be after the opening time.');
+    }
+    await updateSchedule(id, opensAt, closesAt);
+    await logAction({
+      adminId: req.session.adminId!,
+      action: 'update_schedule',
+      electionId: id,
+      detail: { opensAt: opensAt?.toISOString() ?? null, closesAt: closesAt?.toISOString() ?? null },
+      ip: req.ip,
+    });
+    res.redirect(`/admin/elections/${id}`);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Delete an election (guarded by canDeleteElection)
+adminRouter.post('/elections/:id/delete', csrfProtection, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    const election = await getElectionById(id);
+    if (!election) throw new HttpError(404, 'Election not found.');
+    if (!canDeleteElection(election, config.ALLOW_ELECTION_DELETE)) {
+      throw new HttpError(
+        403,
+        'This election has been opened and can no longer be deleted — close it instead.',
+      );
+    }
+    await logAction({
+      adminId: req.session.adminId!,
+      action: 'delete_election',
+      electionId: id,
+      detail: { title: election.title, status: election.status },
+      ip: req.ip,
+    });
+    await deleteElection(id);
+    res.redirect('/admin');
   } catch (err) {
     next(err);
   }
@@ -151,6 +226,8 @@ adminRouter.post('/elections/:id/codes', csrfProtection, csrfToken, async (req, 
       audit,
       baseUrl: config.PUBLIC_BASE_URL,
       generatedCodes: codes,
+      canDelete: canDeleteElection(election, config.ALLOW_ELECTION_DELETE),
+      allowDeleteAny: config.ALLOW_ELECTION_DELETE,
     });
   } catch (err) {
     next(err);

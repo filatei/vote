@@ -186,6 +186,21 @@ textarea { resize: vertical; }
 
 .error-status { font-size: 3rem; margin: 0 0 6px; color: var(--brand); }
 
+/* Schedule inputs */
+.schedule-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.schedule-grid label { display: block; font-weight: 600; margin-bottom: 4px; }
+input[type="datetime-local"] {
+  width: 100%; padding: 11px 12px; border: 1px solid #cbd2de; border-radius: 8px;
+  font: inherit; background: #fff; color: var(--ink);
+}
+.window-note { color: var(--muted); margin: 0 0 12px; }
+
+/* Danger zone + delete button */
+.danger-zone { border-color: #f0c2c2; }
+.danger-zone .h3 { color: var(--error); }
+.button-danger { background: var(--error); color: #fff; }
+.button-danger:hover { background: #a82d31; }
+
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
 
 /* ===========================================================================

@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 import pinoHttp from 'pino-http';
 
 import { config } from './config';
+import { formatWat, toWatInput } from './util/datetime';
 import { logger } from './logger';
 import { redis } from './redis';
 import { healthCheck } from './db';
@@ -77,10 +78,12 @@ app.use(
   }),
 );
 
-// Expose base url + year to all templates
+// Expose base url + year + WAT formatters to all templates
 app.use((_req, res, next) => {
   res.locals.baseUrl = config.PUBLIC_BASE_URL;
   res.locals.year = new Date().getFullYear();
+  res.locals.formatWat = formatWat;
+  res.locals.toWatInput = toWatInput;
   next();
 });
 

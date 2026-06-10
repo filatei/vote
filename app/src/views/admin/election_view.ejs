@@ -42,6 +42,34 @@
   </section>
 
   <section class="card">
+    <h2 class="h3">Voting window <span class="muted">(WAT)</span></h2>
+    <form method="post" action="/admin/elections/<%= election.id %>/schedule" class="stack">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <div class="schedule-grid">
+        <div>
+          <label for="opensAt">Opens</label>
+          <input id="opensAt" name="opensAt" type="datetime-local"
+                 value="<%= toWatInput(election.opens_at) %>" />
+        </div>
+        <div>
+          <label for="closesAt">Closes</label>
+          <input id="closesAt" name="closesAt" type="datetime-local"
+                 value="<%= toWatInput(election.closes_at) %>" />
+        </div>
+      </div>
+      <p class="help">
+        <% if (election.opens_at || election.closes_at) { %>
+          Now: opens <strong><%= election.opens_at ? formatWat(election.opens_at) : 'manual' %></strong>,
+          closes <strong><%= election.closes_at ? formatWat(election.closes_at) : 'manual' %></strong>.
+        <% } else { %>
+          No window set — opening/closing is manual.
+        <% } %>
+      </p>
+      <button class="button button-ghost" type="submit">Save window</button>
+    </form>
+  </section>
+
+  <section class="card">
     <h2 class="h3">Share link</h2>
     <p class="help">Send voters here, with their code:</p>
     <p class="share-url"><code><%= baseUrl %>/e/<%= election.public_id %></code></p>
@@ -103,5 +131,24 @@
       </tbody>
     </table>
   </div>
+</section>
+<section class="card danger-zone">
+  <h2 class="h3">Danger zone</h2>
+  <% if (canDelete) { %>
+    <p class="help">
+      <% if (allowDeleteAny) { %>
+        Testing mode: this permanently deletes the election and all its codes and ballots. This cannot be undone.
+      <% } else { %>
+        This election is still a draft (never opened), so it can be deleted. Once opened it can only be closed.
+      <% } %>
+    </p>
+    <form method="post" action="/admin/elections/<%= election.id %>/delete"
+          class="confirm-delete" data-confirm="Permanently delete &quot;<%= election.title %>&quot; and all its data? This cannot be undone.">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <button class="button button-danger" type="submit">Delete this election</button>
+    </form>
+  <% } else { %>
+    <p class="help">This election has been opened, so it can no longer be deleted — use <strong>Close</strong> in the Status panel to end it. Its record is preserved for audit.</p>
+  <% } %>
 </section>
 <%- include('../partials/foot') %>

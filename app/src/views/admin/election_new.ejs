@@ -50,6 +50,23 @@
       </label>
     </fieldset>
 
+    <fieldset class="inline-fieldset">
+      <legend>Voting window <span class="muted">(optional, times in WAT)</span></legend>
+      <div class="schedule-grid">
+        <div>
+          <label for="opensAt">Opens</label>
+          <input id="opensAt" name="opensAt" type="datetime-local"
+                 value="<%= form && form.opensAt ? form.opensAt : '' %>" />
+        </div>
+        <div>
+          <label for="closesAt">Closes</label>
+          <input id="closesAt" name="closesAt" type="datetime-local"
+                 value="<%= form && form.closesAt ? form.closesAt : '' %>" />
+        </div>
+      </div>
+      <p class="help">Leave blank to control opening/closing manually. When set, votes are only accepted between these West Africa Time (UTC+1) times while the election is open.</p>
+    </fieldset>
+
     <label>Options <span class="muted">(at least two)</span></label>
     <div id="options-list" class="options-editor">
       <% var opts = (form && form.options && form.options.length) ? form.options : ['', '']; %>

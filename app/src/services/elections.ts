@@ -60,6 +60,8 @@ interface CreateElectionInput {
   maxSelections: number;
   resultsVisibility: 'live' | 'after_close';
   options: string[];
+  opensAt: Date | null;
+  closesAt: Date | null;
   createdBy: number;
 }
 
@@ -70,8 +72,9 @@ export async function createElection(input: CreateElectionInput): Promise<number
     const maxSel = input.ballotType === 'single' ? 1 : Math.max(1, input.maxSelections);
     const { rows } = await client.query<{ id: number }>(
       `INSERT INTO elections
-         (title, description, ballot_type, max_selections, results_visibility, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6)
+         (title, description, ballot_type, max_selections, results_visibility,
+          opens_at, closes_at, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING id`,
       [
         input.title,
@@ -79,6 +82,8 @@ export async function createElection(input: CreateElectionInput): Promise<number
         input.ballotType,
         maxSel,
         input.resultsVisibility,
+        input.opensAt,
+        input.closesAt,
         input.createdBy,
       ],
     );
@@ -112,8 +117,61 @@ export async function setStatus(
   await pool.query(`UPDATE elections SET ${cols.join(', ')} WHERE id = $1`, [electionId, status]);
 }
 
+/** Set or clear the scheduled WAT voting window (stored as UTC). */
+export async function updateSchedule(
+  electionId: number,
+  opensAt: Date | null,
+  closesAt: Date | null,
+): Promise<void> {
+  await pool.query(`UPDATE elections SET opens_at = $2, closes_at = $3 WHERE id = $1`, [
+    electionId,
+    opensAt,
+    closesAt,
+  ]);
+}
+
+/** Permanently delete an election. FK cascades remove its options, codes and
+ * (anonymous) ballots. Callers must gate this with canDeleteElection(). */
+export async function deleteElection(electionId: number): Promise<void> {
+  await pool.query(`DELETE FROM elections WHERE id = $1`, [electionId]);
+}
+
+/**
+ * Whether an election may be deleted. During testing (allowDelete) any election
+ * can be removed. In production only an unopened 'draft' can be deleted — once
+ * opened it can only be closed, so its record is preserved.
+ */
+export function canDeleteElection(election: Election, allowDelete: boolean): boolean {
+  if (allowDelete) return true;
+  return election.status === 'draft';
+}
+
+export type VotingReason = 'draft' | 'closed' | 'before' | 'after' | 'open';
+
+/**
+ * Effective voting state, combining the admin status with the scheduled WAT
+ * window. Voting is accepted only when the admin has opened the election AND
+ * the current time is within [opens_at, closes_at] (when those are set).
+ */
+export function votingState(
+  election: Election,
+  now: Date = new Date(),
+): { open: boolean; reason: VotingReason } {
+  if (election.status === 'closed') return { open: false, reason: 'closed' };
+  if (election.status === 'draft') return { open: false, reason: 'draft' };
+  if (election.opens_at && now < new Date(election.opens_at)) {
+    return { open: false, reason: 'before' };
+  }
+  if (election.closes_at && now >= new Date(election.closes_at)) {
+    return { open: false, reason: 'after' };
+  }
+  return { open: true, reason: 'open' };
+}
+
 /** Whether results may be shown publicly right now. */
 export function resultsArePublic(election: Election): boolean {
   if (election.results_visibility === 'live') return true;
-  return election.status === 'closed';
+  if (election.status === 'closed') return true;
+  // Also treat a passed close time as closed for results purposes.
+  return votingState(election).reason === 'after';
 }

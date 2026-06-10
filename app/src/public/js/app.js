@@ -56,6 +56,16 @@
     }
   }
 
+  // 2b. Confirm destructive actions (delete election).
+  var confirmForms = document.querySelectorAll('[data-confirm]');
+  for (var c = 0; c < confirmForms.length; c++) {
+    confirmForms[c].addEventListener('submit', function (e) {
+      if (!window.confirm(this.getAttribute('data-confirm'))) {
+        e.preventDefault();
+      }
+    });
+  }
+
   // 3. One-time codes view: copy-all button.
   var copyBtn = document.getElementById('copy-codes');
   var dump = document.getElementById('code-dump');

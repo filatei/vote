@@ -25,6 +25,11 @@ const schema = z.object({
   SESSION_SECRET: z.string().min(16),
   CSRF_SECRET: z.string().min(16),
   CODE_PEPPER: z.string().min(16),
+
+  // When true, admins may delete ANY election (testing). When false
+  // (production default), only unopened 'draft' elections can be deleted — an
+  // election that has been opened can only be closed, preserving its record.
+  ALLOW_ELECTION_DELETE: bool(false),
 });
 
 const parsed = schema.safeParse(process.env);
