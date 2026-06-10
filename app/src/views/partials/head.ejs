@@ -5,14 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex" />
   <title><%= typeof title !== 'undefined' ? title : 'Torama Vote' %></title>
-  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="stylesheet" href="/static/css/style.css?v=<%= typeof assetVer !== 'undefined' ? assetVer : '1' %>" />
+  <link rel="icon" href="/static/favicon.svg?v=<%= typeof assetVer !== 'undefined' ? assetVer : '1' %>" type="image/svg+xml" />
+  <link rel="alternate icon" href="/static/favicon.ico" sizes="any" />
+  <link rel="apple-touch-icon" href="/static/apple-touch-icon.png" />
+  <meta name="theme-color" content="#2f6df4" />
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="site-header">
   <div class="container header-row">
     <a class="brand" href="/">
-      <span class="brand-mark" aria-hidden="true">✓</span>
+      <svg class="brand-logo" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="tvh" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#3b82f6"/>
+            <stop offset="1" stop-color="#1f50c0"/>
+          </linearGradient>
+        </defs>
+        <rect x="2" y="2" width="36" height="36" rx="11" fill="url(#tvh)"/>
+        <path d="M11.5 20.5l5.5 5.5L29 13" fill="none" stroke="#fff" stroke-width="4.2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
       <span class="brand-name">Torama&nbsp;Vote</span>
     </a>
     <% if (typeof adminUsername !== 'undefined' && adminUsername) { %>

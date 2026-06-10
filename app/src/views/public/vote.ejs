@@ -25,11 +25,13 @@
     <fieldset class="options">
       <legend class="sr-only">Ballot options</legend>
       <% election.options.forEach(function(opt) { %>
-        <label class="option<%= opt.image_path ? ' has-photo' : '' %>">
+        <label class="option has-photo">
           <input type="<%= election.ballot_type === 'single' ? 'radio' : 'checkbox' %>"
                  name="option" value="<%= opt.id %>" />
           <% if (opt.image_path) { %>
             <img class="option-thumb" src="/uploads/<%= opt.image_path %>" alt="" loading="lazy" />
+          <% } else { %>
+            <%- avatarSvg(opt.label, opt.id) %>
           <% } %>
           <span class="option-body">
             <span class="option-label"><%= opt.label %></span>

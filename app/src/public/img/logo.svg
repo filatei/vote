@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 56" width="256" height="56">
+  <defs>
+    <linearGradient id="tvl" x1="4" y1="4" x2="52" y2="52" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#1f50c0"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="48" height="48" rx="14" fill="url(#tvl)"/>
+  <path d="M16 28l7 7 15-18" fill="none" stroke="#fff" stroke-width="5"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="66" y="37" font-family="'Poppins','Segoe UI',Arial,sans-serif"
+        font-size="27" font-weight="700" fill="#1c2230">Torama Vote</text>
+</svg>

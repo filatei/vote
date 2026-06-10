@@ -51,6 +51,7 @@ a:hover { text-decoration: underline; }
   display: inline-grid; place-items: center; width: 28px; height: 28px;
   background: var(--brand); color: #fff; border-radius: 8px; font-size: 16px;
 }
+.brand-logo { width: 30px; height: 30px; display: block; flex: 0 0 auto; }
 .header-nav { display: flex; align-items: center; gap: 16px; }
 .inline-form { display: inline; margin: 0; }
 .link-button {
@@ -429,6 +430,28 @@ input[type="text"], input[type="password"], input[type="number"], textarea, .opt
 .step h3 { margin: 0 0 6px; font-size: 1.08rem; }
 .step p { margin: 0; color: var(--muted); }
 .fairness { margin-top: 4px; }
+
+/* FAQ accordion (native <details>) */
+.faq { margin: 12px 0 28px; }
+.faq-item {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  margin-bottom: 10px; box-shadow: var(--shadow); overflow: hidden;
+}
+.faq-item > summary {
+  cursor: pointer; padding: 16px 18px; font-weight: 600; color: var(--ink);
+  list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 14px;
+}
+.faq-item > summary::-webkit-details-marker { display: none; }
+.faq-item > summary::after {
+  content: "+"; font-size: 1.5rem; line-height: 1; color: var(--brand); flex: 0 0 auto;
+  transition: transform .2s ease;
+}
+.faq-item[open] > summary::after { content: "\2212"; }
+.faq-item > summary:hover { color: var(--brand-dark); }
+.faq-body { padding: 0 18px 16px; color: var(--muted); }
+
+/* Initials-avatar default thumbnails */
+.option-thumb.avatar, .thumb-lg.avatar { border: 0; background: none; }
 
 @media (max-width: 860px) {
   .landing-hero { grid-template-columns: 1fr; padding: 30px 24px; }

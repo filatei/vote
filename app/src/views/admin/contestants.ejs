@@ -21,7 +21,7 @@
           <% if (opt.image_path) { %>
             <img src="/uploads/<%= opt.image_path %>" alt="Photo of <%= opt.label %>" class="thumb-lg" />
           <% } else { %>
-            <div class="thumb-lg thumb-empty" aria-hidden="true">No photo</div>
+            <%- avatarSvg(opt.label, opt.id, 'thumb-lg') %>
           <% } %>
         </div>
         <div class="contestant-fields">

@@ -8,6 +8,10 @@ import pinoHttp from 'pino-http';
 
 import { config } from './config';
 import { formatWat, toWatInput } from './util/datetime';
+import { avatarSvg } from './util/avatar';
+
+// Changes each process start → used to cache-bust /static assets after a deploy.
+const ASSET_VER = String(Date.now());
 import { logger } from './logger';
 import { redis } from './redis';
 import { healthCheck } from './db';
@@ -106,11 +110,19 @@ app.use((_req, res, next) => {
   res.locals.toWatInput = toWatInput;
   res.locals.priceLabel = priceLabel();
   res.locals.paymentsEnabled = paymentsEnabled();
-  res.locals.landingVideoUrl = config.LANDING_VIDEO_URL || null;
+  // The bundled explainer video is served at /static/landing.mp4 by default.
+  res.locals.landingVideoUrl = config.LANDING_VIDEO_URL || '/static/landing.mp4';
+  res.locals.assetVer = ASSET_VER;
+  res.locals.avatarSvg = avatarSvg;
   next();
 });
 
 app.use(generalLimiter);
+
+// Serve the favicon at the conventional root path browsers auto-request.
+app.get('/favicon.ico', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'favicon.ico'));
+});
 
 // Health endpoint for the container/orchestrator.
 app.get('/healthz', async (_req, res) => {
