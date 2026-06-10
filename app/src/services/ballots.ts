@@ -54,13 +54,22 @@ export function validateSelection(
  * traced back to the code or the voter. Serializable isolation + the row lock
  * guarantee a code is spent at most once even under concurrent submits.
  */
+/**
+ * How the voter is authorised:
+ *  - code: redeem a pre-issued voting code (spent exactly once).
+ *  - open: anyone with the link; limited to one ballot per device fingerprint.
+ */
+export type Credential =
+  | { mode: 'code'; rawCode: string }
+  | { mode: 'open'; fingerprint: string };
+
 export async function castBallot(params: {
   election: Election;
   options: Option[];
-  rawCode: string;
   selectedOptionIds: number[];
+  credential: Credential;
 }): Promise<CastResult> {
-  const { election, options, rawCode, selectedOptionIds } = params;
+  const { election, options, selectedOptionIds, credential } = params;
 
   const state = votingState(election);
   if (!state.open) {
@@ -74,30 +83,43 @@ export async function castBallot(params: {
   }
 
   const selected = validateSelection(election, options, selectedOptionIds);
-  const codeHash = hashCode(rawCode);
 
   return withSerializableTx<CastResult>(async (client) => {
-    // Lock the code row so concurrent attempts serialize on it.
-    const codeRes = await client.query<{ id: number; used: boolean }>(
-      `SELECT id, used FROM voting_codes
-        WHERE election_id = $1 AND code_hash = $2
-        FOR UPDATE`,
-      [election.id, codeHash],
-    );
-    const codeRow = codeRes.rows[0];
-    if (!codeRow) {
-      throw new HttpError(400, 'That voting code is not valid for this election.');
+    if (credential.mode === 'code') {
+      // Lock the code row so concurrent attempts serialize on it.
+      const codeRes = await client.query<{ id: number; used: boolean }>(
+        `SELECT id, used FROM voting_codes
+          WHERE election_id = $1 AND code_hash = $2
+          FOR UPDATE`,
+        [election.id, hashCode(credential.rawCode)],
+      );
+      const codeRow = codeRes.rows[0];
+      if (!codeRow) {
+        throw new HttpError(400, 'That voting code is not valid for this election.');
+      }
+      if (codeRow.used) {
+        throw new HttpError(409, 'This voting code has already been used.');
+      }
+      // Spend the code. Record only a coarse date (anti-correlation).
+      await client.query(
+        `UPDATE voting_codes SET used = TRUE, used_on = (now() AT TIME ZONE 'UTC')::date
+          WHERE id = $1`,
+        [codeRow.id],
+      );
+    } else {
+      // Open mode: claim this device fingerprint. The UNIQUE constraint makes
+      // the insert fail (0 rows) if it already voted — atomic one-per-device.
+      const claim = await client.query(
+        `INSERT INTO device_votes (election_id, fingerprint)
+         VALUES ($1, $2)
+         ON CONFLICT (election_id, fingerprint) DO NOTHING
+         RETURNING id`,
+        [election.id, credential.fingerprint],
+      );
+      if (claim.rowCount === 0) {
+        throw new HttpError(409, 'A vote has already been recorded from this device.');
+      }
     }
-    if (codeRow.used) {
-      throw new HttpError(409, 'This voting code has already been used.');
-    }
-
-    // Spend the code. Record only a coarse date (anti-correlation).
-    await client.query(
-      `UPDATE voting_codes SET used = TRUE, used_on = (now() AT TIME ZONE 'UTC')::date
-        WHERE id = $1`,
-      [codeRow.id],
-    );
 
     // Insert the anonymous ballot with a unique receipt (retry on rare clash).
     let receipt = '';

@@ -1,19 +1,50 @@
-import { Router } from 'express';
+import { Request, Response, Router } from 'express';
 import { csrfProtection, csrfToken } from '../middleware/csrf';
 import { codeAttemptLimiter } from '../middleware/rateLimit';
 import { HttpError } from '../middleware/errors';
-import { normalizeCode } from '../util/crypto';
+import { config } from '../config';
+import { deviceFingerprint, normalizeCode } from '../util/crypto';
 import { toArray } from '../util/validate';
 import {
   getElectionWithOptionsByPublicId,
   resultsArePublic,
   votingState,
 } from '../services/elections';
+import { deviceHasVoted } from '../services/devices';
 import { formatWat } from '../util/datetime';
 import { castBallot } from '../services/ballots';
 import { bulletinBoard, findReceipt, tallyElection } from '../services/tally';
+import { Election } from '../services/types';
 
 export const publicRouter = Router();
+
+/** Cookie name marking that this browser already voted in an open election. */
+function votedCookieName(publicId: string): string {
+  return `vd_${publicId.replace(/[^a-zA-Z0-9]/g, '')}`;
+}
+
+function fingerprintFor(req: Request): string {
+  return deviceFingerprint({
+    ip: req.ip,
+    ua: req.headers['user-agent'],
+    lang: req.headers['accept-language'],
+  });
+}
+
+/** True if this device already voted (cookie marker or server-side fingerprint). */
+async function deviceAlreadyVoted(req: Request, election: Election): Promise<boolean> {
+  if (req.cookies?.[votedCookieName(election.public_id)]) return true;
+  return deviceHasVoted(election.id, fingerprintFor(req));
+}
+
+function setVotedCookie(res: Response, publicId: string): void {
+  res.cookie(votedCookieName(publicId), '1', {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: config.isProd,
+    maxAge: 1000 * 60 * 60 * 24 * 365, // 1 year
+  });
+}
 
 // Landing page: enter a voting code.
 publicRouter.get('/', csrfToken, (_req, res) => {
@@ -61,7 +92,7 @@ publicRouter.post('/vote', codeAttemptLimiter, csrfProtection, csrfToken, async 
       });
       return;
     }
-    res.render('public/vote', { title: election.title, election, code, error: null });
+    res.render('public/vote', { title: election.title, election, code, openMode: false, error: null });
   } catch (err) {
     next(err);
   }
@@ -80,13 +111,33 @@ publicRouter.post('/cast', codeAttemptLimiter, csrfProtection, csrfToken, async 
     const election = await getElectionWithOptionsByPublicId(publicId);
     if (!election) throw new HttpError(404, 'Election not found.');
 
+    const openMode = election.access_mode === 'open';
+
+    // Open mode: short-circuit if this device already has a cookie marker.
+    if (openMode && (await deviceAlreadyVoted(req, election))) {
+      res.status(409).render('public/election', {
+        title: election.title,
+        election,
+        state: votingState(election),
+        openMode: true,
+        alreadyVoted: true,
+        opensWat: formatWat(election.opens_at),
+        closesWat: formatWat(election.closes_at),
+        error: null,
+      });
+      return;
+    }
+
     try {
       const { receipt } = await castBallot({
         election,
         options: election.options,
-        rawCode: code,
         selectedOptionIds,
+        credential: openMode
+          ? { mode: 'open', fingerprint: fingerprintFor(req) }
+          : { mode: 'code', rawCode: code },
       });
+      if (openMode) setVotedCookie(res, election.public_id);
       const verifyUrl = `/e/${election.public_id}/verify`;
       res.render('public/receipt', {
         title: 'Vote recorded',
@@ -97,11 +148,12 @@ publicRouter.post('/cast', codeAttemptLimiter, csrfProtection, csrfToken, async 
     } catch (err) {
       if (err instanceof HttpError && err.status < 500) {
         // Re-render the ballot with the error so the voter can retry if it was
-        // recoverable (e.g. nothing selected). For "already used" we explain.
+        // recoverable (e.g. nothing selected).
         res.status(err.status).render('public/vote', {
           title: election.title,
           election,
           code,
+          openMode,
           error: err.message,
         });
         return;
@@ -118,10 +170,21 @@ publicRouter.get('/e/:publicId', csrfToken, async (req, res, next) => {
   try {
     const election = await getElectionWithOptionsByPublicId(req.params.publicId);
     if (!election) throw new HttpError(404, 'Election not found.');
+    const state = votingState(election);
+    const openMode = election.access_mode === 'open';
+
+    // Open + currently votable + this device hasn't voted → show ballot directly.
+    if (openMode && state.open && !(await deviceAlreadyVoted(req, election))) {
+      res.render('public/vote', { title: election.title, election, code: '', openMode: true, error: null });
+      return;
+    }
+
     res.render('public/election', {
       title: election.title,
       election,
-      state: votingState(election),
+      state,
+      openMode,
+      alreadyVoted: openMode && state.open ? await deviceAlreadyVoted(req, election) : false,
       opensWat: formatWat(election.opens_at),
       closesWat: formatWat(election.closes_at),
       error: null,

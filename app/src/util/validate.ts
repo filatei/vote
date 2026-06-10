@@ -18,6 +18,7 @@ export const createElectionSchema = z.object({
   description: z.string().trim().max(5000).optional().default(''),
   ballotType: z.enum(['single', 'multiple']),
   maxSelections: z.coerce.number().int().min(1).max(50).default(1),
+  accessMode: z.enum(['code', 'open']).default('code'),
   resultsVisibility: z.enum(['live', 'after_close']),
   // Options arrive as repeated form fields; normalise to a clean array.
   options: z

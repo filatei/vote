@@ -8,7 +8,13 @@ process.env.CSRF_SECRET ||= 'y'.repeat(32);
 process.env.CODE_PEPPER ||= 'z'.repeat(32);
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-import { generateVotingCode, hashCode, normalizeCode, generateReceiptCode } from './crypto';
+import {
+  generateVotingCode,
+  hashCode,
+  normalizeCode,
+  generateReceiptCode,
+  deviceFingerprint,
+} from './crypto';
 
 test('voting codes are formatted in 4 groups of 4', () => {
   const code = generateVotingCode();
@@ -35,4 +41,13 @@ test('hashCode is stable and matches across equivalent inputs', () => {
 
 test('receipt codes have the expected shape', () => {
   assert.match(generateReceiptCode(), /^[2-9A-Z]{4}-[2-9A-Z]{4}-[2-9A-Z]{4}$/);
+});
+
+test('deviceFingerprint is deterministic and sensitive to inputs', () => {
+  const a = deviceFingerprint({ ip: '1.2.3.4', ua: 'Mozilla', lang: 'en' });
+  const b = deviceFingerprint({ ip: '1.2.3.4', ua: 'Mozilla', lang: 'en' });
+  const c = deviceFingerprint({ ip: '5.6.7.8', ua: 'Mozilla', lang: 'en' });
+  assert.strictEqual(a, b); // same device -> same hash
+  assert.notStrictEqual(a, c); // different IP -> different hash
+  assert.strictEqual(a.length, 64); // sha256 hex
 });

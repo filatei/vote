@@ -14,7 +14,14 @@
     </p>
   <% } %>
 
-  <% if (state.open) { %>
+  <% if (openMode && alreadyVoted) { %>
+    <div class="alert alert-success" role="status">Thanks — a vote has already been recorded from this device.</div>
+    <p class="lead">This election allows one vote per device, so you can't vote again here.</p>
+  <% } else if (openMode && state.open) { %>
+    <h2 class="h3">Ready to vote?</h2>
+    <p class="lead">Anyone with this link can vote once per device.</p>
+    <a class="button button-primary" href="/e/<%= election.public_id %>">Go to ballot</a>
+  <% } else if (!openMode && state.open) { %>
     <h2 class="h3">Ready to vote?</h2>
     <form method="post" action="/vote" class="stack" novalidate>
       <input type="hidden" name="_csrf" value="<%= csrfToken %>" />

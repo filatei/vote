@@ -1,6 +1,7 @@
 export type BallotType = 'single' | 'multiple';
 export type ElectionStatus = 'draft' | 'open' | 'closed';
 export type ResultsVisibility = 'live' | 'after_close';
+export type AccessMode = 'code' | 'open';
 
 export interface Option {
   id: number;
@@ -18,6 +19,7 @@ export interface Election {
   description: string;
   ballot_type: BallotType;
   max_selections: number;
+  access_mode: AccessMode;
   status: ElectionStatus;
   results_visibility: ResultsVisibility;
   opens_at: Date | null;

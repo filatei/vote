@@ -37,6 +37,9 @@ CREATE TABLE elections (
     ballot_type        TEXT NOT NULL DEFAULT 'single'
                          CHECK (ballot_type IN ('single', 'multiple')),
     max_selections     INTEGER NOT NULL DEFAULT 1 CHECK (max_selections >= 1),
+    -- 'code' = pre-issued voting codes; 'open' = anyone with the link, one vote per device.
+    access_mode        TEXT NOT NULL DEFAULT 'code'
+                         CHECK (access_mode IN ('code', 'open')),
     status             TEXT NOT NULL DEFAULT 'draft'
                          CHECK (status IN ('draft', 'open', 'closed')),
     results_visibility TEXT NOT NULL DEFAULT 'after_close'
@@ -98,6 +101,17 @@ CREATE TABLE ballot_selections (
 );
 CREATE INDEX idx_selections_option ON ballot_selections(option_id);
 CREATE INDEX idx_selections_ballot ON ballot_selections(ballot_id);
+
+-- ── Device markers (open-link elections) ────────────────────────────────────
+-- One row per device that has voted in an 'open' election. Hashed fingerprint
+-- only; no link to the ballot, preserving secrecy.
+CREATE TABLE device_votes (
+    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    election_id BIGINT NOT NULL REFERENCES elections(id) ON DELETE CASCADE,
+    fingerprint TEXT NOT NULL,
+    created_on  DATE NOT NULL DEFAULT (now() AT TIME ZONE 'UTC')::date,
+    UNIQUE (election_id, fingerprint)
+);
 
 -- ── Audit log ───────────────────────────────────────────────────────────────
 -- Administrative actions only. Never records voter identity or ballot content.

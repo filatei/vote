@@ -57,6 +57,7 @@ adminRouter.post('/elections', csrfProtection, async (req, res, next) => {
       description: req.body.description,
       ballotType: req.body.ballotType,
       maxSelections: req.body.maxSelections,
+      accessMode: req.body.accessMode,
       resultsVisibility: req.body.resultsVisibility,
       options: toArray(req.body.option).map((s) => s.trim()).filter((s) => s.length > 0),
       opensAt: req.body.opensAt,

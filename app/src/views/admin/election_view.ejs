@@ -84,6 +84,13 @@
   </section>
 </div>
 
+<% if (election.access_mode === 'open') { %>
+<section class="card">
+  <h2 class="h3">Open-link voting</h2>
+  <p class="help">Anyone with the share link can vote, limited to <strong>one vote per device</strong> (cookie + device fingerprint). No codes needed — just share the link. Note: this is convenient but a determined person could clear cookies and switch networks; use code-based elections for high-stakes votes.</p>
+  <p class="share-url"><code><%= baseUrl %>/e/<%= election.public_id %></code></p>
+</section>
+<% } else { %>
 <section class="card">
   <h2 class="h3">Voting codes</h2>
   <div class="stat-row">
@@ -102,6 +109,7 @@
     <p class="muted">Election closed — code generation disabled.</p>
   <% } %>
 </section>
+<% } %>
 
 <section class="card">
   <h2 class="h3">Live tally <span class="muted">(<%= tally.totalBallots %> ballots)</span></h2>

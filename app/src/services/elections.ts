@@ -93,6 +93,7 @@ interface CreateElectionInput {
   description: string;
   ballotType: 'single' | 'multiple';
   maxSelections: number;
+  accessMode: 'code' | 'open';
   resultsVisibility: 'live' | 'after_close';
   options: string[];
   opensAt: Date | null;
@@ -107,15 +108,16 @@ export async function createElection(input: CreateElectionInput): Promise<number
     const maxSel = input.ballotType === 'single' ? 1 : Math.max(1, input.maxSelections);
     const { rows } = await client.query<{ id: number }>(
       `INSERT INTO elections
-         (title, description, ballot_type, max_selections, results_visibility,
-          opens_at, closes_at, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         (title, description, ballot_type, max_selections, access_mode,
+          results_visibility, opens_at, closes_at, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING id`,
       [
         input.title,
         input.description,
         input.ballotType,
         maxSel,
+        input.accessMode,
         input.resultsVisibility,
         input.opensAt,
         input.closesAt,

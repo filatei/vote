@@ -50,6 +50,21 @@ export function hashCode(code: string): string {
   return createHmac('sha256', config.CODE_PEPPER).update(normalizeCode(code)).digest('hex');
 }
 
+/**
+ * Best-effort device fingerprint for open-link elections. A keyed hash of the
+ * client IP + user-agent + language. Not foolproof (clearing cookies and
+ * switching networks defeats it), but combined with a persistent cookie it
+ * stops casual double-voting. Stored only as this hash.
+ */
+export function deviceFingerprint(parts: {
+  ip?: string;
+  ua?: string;
+  lang?: string;
+}): string {
+  const raw = `device|${parts.ip ?? ''}|${parts.ua ?? ''}|${parts.lang ?? ''}`;
+  return createHmac('sha256', config.CODE_PEPPER).update(raw).digest('hex');
+}
+
 /** Constant-time string comparison helper. */
 export function safeEqual(a: string, b: string): boolean {
   const ab = Buffer.from(a);

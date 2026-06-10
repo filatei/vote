@@ -37,6 +37,21 @@
     </div>
 
     <fieldset class="inline-fieldset">
+      <legend>Who can vote?</legend>
+      <label class="radio-inline">
+        <input type="radio" name="accessMode" value="code"
+               <%= !form || form.accessMode !== 'open' ? 'checked' : '' %> />
+        Pre-issued voting codes (strongest)
+      </label>
+      <label class="radio-inline">
+        <input type="radio" name="accessMode" value="open"
+               <%= form && form.accessMode === 'open' ? 'checked' : '' %> />
+        Open link — one vote per device
+      </label>
+      <p class="help">Codes give the strongest guarantee (one code = one vote). Open link lets anyone with the URL vote, limited to one per device — convenient, but a determined person could clear cookies / change networks. Use codes for high-stakes elections.</p>
+    </fieldset>
+
+    <fieldset class="inline-fieldset">
       <legend>When are results visible?</legend>
       <label class="radio-inline">
         <input type="radio" name="resultsVisibility" value="after_close"
