@@ -86,11 +86,26 @@ if [[ $HARDEN_ONLY -eq 1 ]]; then
 fi
 
 echo "==> Installing packages"
-apt-get update -qq
-apt-get install -y -qq \
-  docker.io docker-compose-plugin \
-  apache2 certbot python3-certbot-apache \
-  git
+# Don't let an unrelated broken third-party repo (e.g. a stale key) abort the
+# whole run — warn and continue; the packages below come from the signed
+# Ubuntu repos anyway.
+apt-get update -qq || echo "   (warning: some apt sources failed to refresh — continuing; check third-party repos with: apt-get update)"
+
+# Docker: if it's already installed (e.g. docker-ce from Docker's own repo),
+# do NOT pull in docker.io — the two conflict and apt will refuse. Only install
+# the Ubuntu docker.io package when no docker is present.
+if command -v docker >/dev/null 2>&1; then
+  echo "   docker already installed ($(docker --version 2>/dev/null)) — skipping docker.io"
+else
+  apt-get install -y -qq docker.io
+fi
+# Ensure a compose plugin exists (works with either docker.io or docker-ce).
+if ! docker compose version >/dev/null 2>&1; then
+  apt-get install -y -qq docker-compose-plugin || true
+fi
+
+# The rest come from the standard Ubuntu repos.
+apt-get install -y -qq apache2 certbot python3-certbot-apache git
 
 echo "==> Enabling services"
 systemctl enable --now docker apache2
