@@ -53,3 +53,12 @@ test('de-duplicates repeated selections before counting', () => {
   // [1,1] collapses to [1], which is valid for single choice.
   assert.deepStrictEqual(validateSelection({ ballot_type: 'single', max_selections: 1 }, options, [1, 1]), [1]);
 });
+
+test('matches string option ids (as Postgres returns BIGINT) against numeric selections', () => {
+  // Regression: pg returns BIGINT ids as strings; the form submits numbers.
+  const dbOptions = [{ id: '4' }, { id: '5' }, { id: '6' }] as unknown as { id: number }[];
+  assert.deepStrictEqual(
+    validateSelection({ ballot_type: 'single', max_selections: 1 }, dbOptions, [5]),
+    [5],
+  );
+});

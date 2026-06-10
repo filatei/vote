@@ -25,7 +25,14 @@ export async function getOptions(electionId: number): Promise<Option[]> {
     `SELECT * FROM options WHERE election_id = $1 ORDER BY position, id`,
     [electionId],
   );
-  return rows;
+  // Postgres returns BIGINT as a string; coerce numeric columns so Option.id
+  // is a real number throughout the app (matches the declared type).
+  return rows.map((r) => ({
+    ...r,
+    id: Number(r.id),
+    election_id: Number(r.election_id),
+    position: Number(r.position),
+  }));
 }
 
 export async function getElectionWithOptions(

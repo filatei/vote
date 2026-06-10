@@ -17,13 +17,16 @@ export function validateSelection(
   options: Pick<Option, 'id'>[],
   selectedOptionIds: number[],
 ): number[] {
-  const selected = Array.from(new Set(selectedOptionIds));
+  // Coerce both sides to Number before comparing. Postgres returns BIGINT
+  // columns (option ids) as strings, while form-submitted ids arrive as
+  // numbers — without this, every option would look invalid.
+  const selected = Array.from(new Set(selectedOptionIds.map((n) => Number(n))));
   if (selected.length === 0) {
     throw new HttpError(400, 'Please select at least one option.');
   }
-  const validOptionIds = new Set(options.map((o) => o.id));
+  const validOptionIds = new Set(options.map((o) => Number(o.id)));
   for (const id of selected) {
-    if (!validOptionIds.has(id)) {
+    if (!Number.isInteger(id) || !validOptionIds.has(id)) {
       throw new HttpError(400, 'Invalid option selected.');
     }
   }
