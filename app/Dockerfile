@@ -21,13 +21,16 @@ FROM node:20-bookworm-slim AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
 
-# Run as non-root.
-USER node
+# Uploads dir (persisted via a docker volume), owned by the non-root node user.
+RUN mkdir -p /app/uploads && chown node:node /app/uploads
 
 COPY --chown=node:node package.json ./
 COPY --chown=node:node --from=deps  /app/node_modules ./node_modules
 # dist/ already contains compiled JS plus copied views/ and public/ assets.
 COPY --chown=node:node --from=build /app/dist ./dist
+
+# Run as non-root.
+USER node
 
 EXPOSE 8090
 

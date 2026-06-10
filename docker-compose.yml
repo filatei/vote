@@ -15,6 +15,10 @@ services:
     environment:
       # Ensure the in-container listen port matches APP_PORT.
       APP_PORT: ${APP_PORT:-8090}
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      # Persist uploaded contestant photos across rebuilds.
+      - vote_uploads:/app/uploads
     depends_on:
       vote_postgres:
         condition: service_healthy
@@ -68,3 +72,5 @@ networks:
 volumes:
   vote_pgdata:
     name: vote_pgdata
+  vote_uploads:
+    name: vote_uploads

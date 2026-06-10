@@ -7,6 +7,7 @@ export interface Option {
   election_id: number;
   label: string;
   description: string;
+  image_path: string | null;
   position: number;
 }
 

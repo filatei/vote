@@ -30,6 +30,10 @@ const schema = z.object({
   // (production default), only unopened 'draft' elections can be deleted — an
   // election that has been opened can only be closed, preserving its record.
   ALLOW_ELECTION_DELETE: bool(false),
+
+  // Where uploaded contestant photos are stored (a persisted docker volume in
+  // production). Served read-only at /uploads.
+  UPLOAD_DIR: z.string().default('/app/uploads'),
 });
 
 const parsed = schema.safeParse(process.env);

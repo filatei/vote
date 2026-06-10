@@ -11,15 +11,20 @@ import {
 } from '../util/validate';
 import {
   canDeleteElection,
+  clearOptionImage,
   createElection,
   deleteElection,
   getElectionById,
   getElectionWithOptions,
+  getOptionById,
   listElections,
   setStatus,
+  updateOptionContent,
   updateSchedule,
 } from '../services/elections';
 import { watInputToUtc } from '../util/datetime';
+import { uploadContestantImage, uploadPath } from '../middleware/upload';
+import fs from 'fs';
 import { generateCodes, getCodeStats } from '../services/codes';
 import { tallyElection } from '../services/tally';
 import { getAuditLog, logAction } from '../services/admins';
@@ -146,6 +151,59 @@ adminRouter.post('/elections/:id/schedule', csrfProtection, async (req, res, nex
     next(err);
   }
 });
+
+// Manage contestants (photos + bios)
+adminRouter.get('/elections/:id/contestants', csrfToken, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    const election = await getElectionWithOptions(id);
+    if (!election) throw new HttpError(404, 'Election not found.');
+    res.render('admin/contestants', { title: `Contestants — ${election.title}`, election });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Update one contestant's bio + optional photo (multipart). multer runs first
+// so req.body (incl. the CSRF token) is populated before csrfProtection.
+adminRouter.post(
+  '/elections/:id/options/:optionId',
+  uploadContestantImage,
+  csrfProtection,
+  async (req, res, next) => {
+    try {
+      const id = Number(req.params.id);
+      const optionId = Number(req.params.optionId);
+      const option = await getOptionById(optionId);
+      if (!option || option.election_id !== id) throw new HttpError(404, 'Contestant not found.');
+
+      const description = String(req.body.description || '').trim().slice(0, 5000);
+
+      if (req.body.removePhoto === '1') {
+        const old = await clearOptionImage(optionId);
+        await updateOptionContent(optionId, description);
+        if (old) fs.promises.unlink(uploadPath(old)).catch(() => undefined);
+      } else if (req.file) {
+        const oldPath = option.image_path;
+        await updateOptionContent(optionId, description, req.file.filename);
+        if (oldPath) fs.promises.unlink(uploadPath(oldPath)).catch(() => undefined);
+      } else {
+        await updateOptionContent(optionId, description);
+      }
+
+      await logAction({
+        adminId: req.session.adminId!,
+        action: 'update_contestant',
+        electionId: id,
+        detail: { optionId, hasPhoto: Boolean(req.file) },
+        ip: req.ip,
+      });
+      res.redirect(`/admin/elections/${id}/contestants`);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // Delete an election (guarded by canDeleteElection)
 adminRouter.post('/elections/:id/delete', csrfProtection, async (req, res, next) => {

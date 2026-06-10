@@ -11,6 +11,7 @@ import { formatWat, toWatInput } from './util/datetime';
 import { logger } from './logger';
 import { redis } from './redis';
 import { healthCheck } from './db';
+import { runMigrations } from './migrate';
 import { generalLimiter } from './middleware/rateLimit';
 import { errorHandler, notFound } from './middleware/errors';
 import { publicRouter } from './routes/public';
@@ -78,6 +79,16 @@ app.use(
   }),
 );
 
+// Uploaded contestant photos (persisted volume in production).
+app.use(
+  '/uploads',
+  express.static(config.UPLOAD_DIR, {
+    maxAge: config.isProd ? '7d' : 0,
+    index: false,
+    setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff'),
+  }),
+);
+
 // Expose base url + year + WAT formatters to all templates
 app.use((_req, res, next) => {
   res.locals.baseUrl = config.PUBLIC_BASE_URL;
@@ -103,6 +114,12 @@ app.use('/', publicRouter);
 // 404 + error handling
 app.use(notFound);
 app.use(errorHandler);
+
+// Apply idempotent migrations, then start listening.
+runMigrations().catch((err) => {
+  logger.error({ err }, 'Migration failed at startup');
+  process.exit(1);
+});
 
 const server = app.listen(config.APP_PORT, () => {
   logger.info(`Torama Vote listening on :${config.APP_PORT} (${config.NODE_ENV})`);

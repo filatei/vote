@@ -66,6 +66,19 @@
     });
   }
 
+  // 2c. Contestant bio toggle (tap/click) — hover is handled by CSS.
+  var bioToggles = document.querySelectorAll('.bio-toggle');
+  for (var b2 = 0; b2 < bioToggles.length; b2++) {
+    bioToggles[b2].addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var opt = this.closest('.option');
+      if (!opt) return;
+      var open = opt.classList.toggle('bio-open');
+      this.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  }
+
   // 3. One-time codes view: copy-all button.
   var copyBtn = document.getElementById('copy-codes');
   var dump = document.getElementById('code-dump');

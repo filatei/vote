@@ -1,0 +1,49 @@
+<%- include('../partials/head') %>
+<section class="page-head">
+  <div>
+    <h1>Contestants</h1>
+    <p class="lead"><%= election.title %></p>
+  </div>
+  <a class="button button-ghost" href="/admin/elections/<%= election.id %>">← Back to election</a>
+</section>
+
+<p class="help">Add a photo and a short bio for each contestant. Voters see the photo as a thumbnail and the bio when they hover or tap the option. JPG, PNG or WebP up to 2&nbsp;MB.</p>
+
+<% election.options.forEach(function(opt) { %>
+  <section class="card contestant-editor">
+    <h2 class="h3"><%= opt.label %></h2>
+    <form method="post" action="/admin/elections/<%= election.id %>/options/<%= opt.id %>"
+          enctype="multipart/form-data" class="contestant-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+      <div class="contestant-row">
+        <div class="contestant-photo">
+          <% if (opt.image_path) { %>
+            <img src="/uploads/<%= opt.image_path %>" alt="Photo of <%= opt.label %>" class="thumb-lg" />
+          <% } else { %>
+            <div class="thumb-lg thumb-empty" aria-hidden="true">No photo</div>
+          <% } %>
+        </div>
+        <div class="contestant-fields">
+          <label for="bio-<%= opt.id %>">Bio / description</label>
+          <textarea id="bio-<%= opt.id %>" name="description" rows="3" maxlength="5000"
+                    placeholder="A short bio shown to voters"><%= opt.description %></textarea>
+
+          <label for="img-<%= opt.id %>">Photo <span class="muted">(optional)</span></label>
+          <input id="img-<%= opt.id %>" name="image" type="file" accept="image/jpeg,image/png,image/webp" />
+
+          <% if (opt.image_path) { %>
+            <label class="checkbox-inline">
+              <input type="checkbox" name="removePhoto" value="1" /> Remove current photo
+            </label>
+          <% } %>
+
+          <div class="actions">
+            <button class="button button-primary" type="submit">Save</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </section>
+<% }) %>
+<%- include('../partials/foot') %>

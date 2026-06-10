@@ -23,12 +23,18 @@
     <fieldset class="options">
       <legend class="sr-only">Ballot options</legend>
       <% election.options.forEach(function(opt) { %>
-        <label class="option">
+        <label class="option<%= opt.image_path ? ' has-photo' : '' %>">
           <input type="<%= election.ballot_type === 'single' ? 'radio' : 'checkbox' %>"
                  name="option" value="<%= opt.id %>" />
+          <% if (opt.image_path) { %>
+            <img class="option-thumb" src="/uploads/<%= opt.image_path %>" alt="" loading="lazy" />
+          <% } %>
           <span class="option-body">
             <span class="option-label"><%= opt.label %></span>
-            <% if (opt.description) { %><span class="option-desc"><%= opt.description %></span><% } %>
+            <% if (opt.description) { %>
+              <span class="option-desc"><%= opt.description %></span>
+              <button type="button" class="bio-toggle" aria-expanded="false">Bio</button>
+            <% } %>
           </span>
         </label>
       <% }) %>

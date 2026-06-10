@@ -35,6 +35,41 @@ export async function getOptions(electionId: number): Promise<Option[]> {
   }));
 }
 
+export async function getOptionById(optionId: number): Promise<Option | null> {
+  const { rows } = await pool.query<Option>(`SELECT * FROM options WHERE id = $1`, [optionId]);
+  const r = rows[0];
+  if (!r) return null;
+  return { ...r, id: Number(r.id), election_id: Number(r.election_id), position: Number(r.position) };
+}
+
+/** Update a contestant's bio (description) and optionally their photo path. */
+export async function updateOptionContent(
+  optionId: number,
+  description: string,
+  imagePath?: string | null,
+): Promise<void> {
+  if (imagePath === undefined) {
+    await pool.query(`UPDATE options SET description = $2 WHERE id = $1`, [optionId, description]);
+  } else {
+    await pool.query(`UPDATE options SET description = $2, image_path = $3 WHERE id = $1`, [
+      optionId,
+      description,
+      imagePath,
+    ]);
+  }
+}
+
+/** Clear a contestant's photo. Returns the previous path so the file can be deleted. */
+export async function clearOptionImage(optionId: number): Promise<string | null> {
+  const before = await pool.query<{ image_path: string | null }>(
+    `SELECT image_path FROM options WHERE id = $1`,
+    [optionId],
+  );
+  const old = before.rows[0]?.image_path ?? null;
+  await pool.query(`UPDATE options SET image_path = NULL WHERE id = $1`, [optionId]);
+  return old;
+}
+
 export async function getElectionWithOptions(
   id: number,
 ): Promise<ElectionWithOptions | null> {
