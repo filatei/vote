@@ -1,0 +1,36 @@
+<%- include('../partials/head') %>
+<section class="hero">
+  <h1>Verify your vote</h1>
+  <p class="lead">Enter your receipt code to confirm your ballot is recorded for <strong><%= election.title %></strong>.</p>
+</section>
+
+<section class="card narrow">
+  <form method="post" action="/e/<%= election.public_id %>/verify" class="stack" novalidate>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <label for="receipt">Receipt code</label>
+    <input id="receipt" name="receipt" type="text" autocomplete="off" spellcheck="false"
+           class="code-input" value="<%= query %>" placeholder="XXXX-XXXX-XXXX" required />
+    <button class="button button-primary" type="submit">Check</button>
+  </form>
+
+  <% if (typeof result !== 'undefined') { %>
+    <% if (result) { %>
+      <div class="alert alert-success" role="status">
+        <strong>Found.</strong> Your ballot is recorded.
+      </div>
+      <table class="kv">
+        <tr><th>Receipt</th><td><code><%= result.receipt_code %></code></td></tr>
+        <tr><th>Date</th><td><%= result.cast_date %></td></tr>
+        <tr><th>Recorded choice<%= result.options.length > 1 ? 's' : '' %></th>
+            <td><%= result.options.join(', ') %></td></tr>
+      </table>
+    <% } else if (query) { %>
+      <div class="alert alert-error" role="alert">
+        No ballot found for that receipt. Check the code and try again.
+      </div>
+    <% } %>
+  <% } %>
+
+  <p class="links-row"><a href="/e/<%= election.public_id %>/results">See full results board</a></p>
+</section>
+<%- include('../partials/foot') %>

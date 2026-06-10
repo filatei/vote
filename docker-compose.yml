@@ -1,0 +1,70 @@
+# Torama Vote — container stack.
+# Namespaced (vote_*) so it coexists with other apps on the shared Linode host.
+# Only the app port is published to 127.0.0.1; Postgres and Redis stay private
+# on the internal vote_net network and are NOT reachable from the host/internet.
+
+name: vote
+
+services:
+  vote_app:
+    container_name: vote_app
+    build:
+      context: ./app
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Ensure the in-container listen port matches APP_PORT.
+      APP_PORT: ${APP_PORT:-8090}
+    depends_on:
+      vote_postgres:
+        condition: service_healthy
+      vote_redis:
+        condition: service_healthy
+    networks:
+      - vote_net
+    ports:
+      # Bind to loopback only — Apache (on the host) reverse-proxies to this.
+      - "127.0.0.1:${APP_PORT:-8090}:${APP_PORT:-8090}"
+
+  vote_postgres:
+    container_name: vote_postgres
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-votedb}
+      POSTGRES_USER: ${POSTGRES_USER:-voteuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - vote_pgdata:/var/lib/postgresql/data
+      # Schema auto-loads ONLY on first init (empty data dir).
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - vote_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-voteuser} -d ${POSTGRES_DB:-votedb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  vote_redis:
+    container_name: vote_redis
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    networks:
+      - vote_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# Dedicated network so vote_* containers don't collide with other stacks.
+networks:
+  vote_net:
+    name: vote_net
+    driver: bridge
+
+volumes:
+  vote_pgdata:
+    name: vote_pgdata

@@ -1,0 +1,48 @@
+<%- include('../partials/head') %>
+<section class="hero">
+  <h1>Results</h1>
+  <p class="lead"><%= election.title %></p>
+  <p class="status-pill status-<%= election.status %>"><%= election.status %></p>
+</section>
+
+<section class="card">
+  <h2 class="h3">Tally <span class="muted">(<%= tally.totalBallots %> ballot<%= tally.totalBallots === 1 ? '' : 's' %>)</span></h2>
+  <% var max = tally.rows.reduce(function(m, r){ return Math.max(m, r.votes); }, 0) || 1; %>
+  <ul class="results">
+    <% tally.rows.forEach(function(r) { %>
+      <li class="result-row">
+        <div class="result-head">
+          <span class="result-label"><%= r.label %></span>
+          <span class="result-count"><%= r.votes %></span>
+        </div>
+        <div class="bar"><div class="bar-fill" style="width: <%= Math.round((r.votes / max) * 100) %>%"></div></div>
+      </li>
+    <% }) %>
+  </ul>
+  <% if (election.ballot_type === 'multiple') { %>
+    <p class="help">This is an approval ballot: voters could select up to <%= election.max_selections %> option(s), so totals may exceed the ballot count.</p>
+  <% } %>
+</section>
+
+<section class="card">
+  <h2 class="h3">Bulletin board</h2>
+  <p class="help">Every anonymous ballot is listed by its receipt code so anyone can audit the count. Find your receipt to confirm it's included.</p>
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>Receipt</th><th>Date</th><th>Choice(s)</th></tr></thead>
+      <tbody>
+        <% if (board.length === 0) { %>
+          <tr><td colspan="3" class="muted">No ballots yet.</td></tr>
+        <% } %>
+        <% board.forEach(function(b) { %>
+          <tr>
+            <td><code><%= b.receipt_code %></code></td>
+            <td><%= b.cast_date %></td>
+            <td><%= b.options.join(', ') %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+<%- include('../partials/foot') %>

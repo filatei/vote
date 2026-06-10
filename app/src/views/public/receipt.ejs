@@ -1,0 +1,20 @@
+<%- include('../partials/head') %>
+<section class="card narrow success-card">
+  <div class="success-badge" aria-hidden="true">✓</div>
+  <h1>Your vote was recorded</h1>
+  <p class="lead">Thank you for voting in <strong><%= election.title %></strong>.</p>
+
+  <div class="receipt-box">
+    <p class="receipt-label">Your receipt code</p>
+    <p class="receipt-code"><%= receipt %></p>
+  </div>
+
+  <p>Keep this code. You can use it at any time to confirm your ballot was counted —
+     without revealing who you are.</p>
+
+  <div class="actions">
+    <a class="button button-primary" href="<%= verifyUrl %>">Verify my vote now</a>
+    <a class="button button-ghost" href="/e/<%= election.public_id %>/results">View results</a>
+  </div>
+</section>
+<%- include('../partials/foot') %>

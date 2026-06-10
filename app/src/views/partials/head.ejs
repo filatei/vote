@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title><%= typeof title !== 'undefined' ? title : 'Torama Vote' %></title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="container header-row">
+    <a class="brand" href="/">
+      <span class="brand-mark" aria-hidden="true">✓</span>
+      <span class="brand-name">Torama&nbsp;Vote</span>
+    </a>
+    <% if (typeof adminUsername !== 'undefined' && adminUsername) { %>
+      <nav class="header-nav">
+        <a href="/admin">Dashboard</a>
+        <form method="post" action="/admin/logout" class="inline-form">
+          <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>" />
+          <button class="link-button" type="submit">Sign out</button>
+        </form>
+      </nav>
+    <% } %>
+  </div>
+</header>
+<main id="main" class="container">

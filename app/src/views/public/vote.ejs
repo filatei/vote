@@ -1,0 +1,46 @@
+<%- include('../partials/head') %>
+<section class="hero">
+  <h1><%= election.title %></h1>
+  <% if (election.description) { %><p class="lead"><%= election.description %></p><% } %>
+</section>
+
+<section class="card">
+  <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+
+  <% if (election.ballot_type === 'single') { %>
+    <p class="ballot-instruction">Select <strong>one</strong> option.</p>
+  <% } else { %>
+    <p class="ballot-instruction">Select up to <strong><%= election.max_selections %></strong> option(s).</p>
+  <% } %>
+
+  <form method="post" action="/cast" class="stack ballot-form"
+        data-ballot-type="<%= election.ballot_type %>"
+        data-max="<%= election.max_selections %>" novalidate>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <input type="hidden" name="election" value="<%= election.public_id %>" />
+    <input type="hidden" name="code" value="<%= code %>" />
+
+    <fieldset class="options">
+      <legend class="sr-only">Ballot options</legend>
+      <% election.options.forEach(function(opt) { %>
+        <label class="option">
+          <input type="<%= election.ballot_type === 'single' ? 'radio' : 'checkbox' %>"
+                 name="option" value="<%= opt.id %>" />
+          <span class="option-body">
+            <span class="option-label"><%= opt.label %></span>
+            <% if (opt.description) { %><span class="option-desc"><%= opt.description %></span><% } %>
+          </span>
+        </label>
+      <% }) %>
+    </fieldset>
+
+    <p class="help" data-selection-hint hidden></p>
+
+    <div class="actions">
+      <button class="button button-primary" type="submit">Cast my vote</button>
+      <a class="button button-ghost" href="/e/<%= election.public_id %>">Cancel</a>
+    </div>
+    <p class="help">Once you submit, your code is spent and your ballot is final.</p>
+  </form>
+</section>
+<%- include('../partials/foot') %>

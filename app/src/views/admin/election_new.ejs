@@ -1,0 +1,65 @@
+<%- include('../partials/head') %>
+<section class="page-head">
+  <h1>New election</h1>
+  <a class="button button-ghost" href="/admin">Cancel</a>
+</section>
+
+<section class="card">
+  <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+  <form method="post" action="/admin/elections" class="stack" id="election-form" novalidate>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+    <label for="title">Title</label>
+    <input id="title" name="title" type="text" required maxlength="200"
+           value="<%= form ? form.title : '' %>" />
+
+    <label for="description">Description <span class="muted">(optional)</span></label>
+    <textarea id="description" name="description" rows="3" maxlength="5000"><%= form ? form.description : '' %></textarea>
+
+    <fieldset class="inline-fieldset">
+      <legend>Ballot type</legend>
+      <label class="radio-inline">
+        <input type="radio" name="ballotType" value="single"
+               <%= !form || form.ballotType !== 'multiple' ? 'checked' : '' %> data-ballot-toggle />
+        Single choice (pick one)
+      </label>
+      <label class="radio-inline">
+        <input type="radio" name="ballotType" value="multiple"
+               <%= form && form.ballotType === 'multiple' ? 'checked' : '' %> data-ballot-toggle />
+        Multiple choice (approval)
+      </label>
+    </fieldset>
+
+    <div data-max-wrap <%= (form && form.ballotType === 'multiple') ? '' : 'hidden' %>>
+      <label for="maxSelections">Maximum selections allowed</label>
+      <input id="maxSelections" name="maxSelections" type="number" min="1" max="50"
+             value="<%= form && form.maxSelections ? form.maxSelections : 2 %>" />
+    </div>
+
+    <fieldset class="inline-fieldset">
+      <legend>When are results visible?</legend>
+      <label class="radio-inline">
+        <input type="radio" name="resultsVisibility" value="after_close"
+               <%= !form || form.resultsVisibility !== 'live' ? 'checked' : '' %> />
+        After the election closes
+      </label>
+      <label class="radio-inline">
+        <input type="radio" name="resultsVisibility" value="live"
+               <%= form && form.resultsVisibility === 'live' ? 'checked' : '' %> />
+        Live (as votes come in)
+      </label>
+    </fieldset>
+
+    <label>Options <span class="muted">(at least two)</span></label>
+    <div id="options-list" class="options-editor">
+      <% var opts = (form && form.options && form.options.length) ? form.options : ['', '']; %>
+      <% opts.forEach(function(o) { %>
+        <input class="option-input" type="text" name="option" maxlength="200" value="<%= o %>" placeholder="Option label" />
+      <% }) %>
+    </div>
+    <button type="button" class="button button-ghost" id="add-option">+ Add option</button>
+
+    <button class="button button-primary" type="submit">Create election</button>
+  </form>
+</section>
+<%- include('../partials/foot') %>

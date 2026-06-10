@@ -1,0 +1,21 @@
+# secrets
+.env
+*.env.local
+
+# node
+node_modules/
+app/node_modules/
+app/dist/
+npm-debug.log*
+
+# data / certs
+data/
+certs/
+*.pem
+
+# os
+.DS_Store
+Thumbs.db
+
+# logs
+*.log

@@ -1,0 +1,30 @@
+<%- include('../partials/head') %>
+<section class="page-head">
+  <h1>Elections</h1>
+  <a class="button button-primary" href="/admin/elections/new">+ New election</a>
+</section>
+
+<section class="card">
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr><th>Title</th><th>Type</th><th>Status</th><th>Results</th><th></th></tr>
+      </thead>
+      <tbody>
+        <% if (elections.length === 0) { %>
+          <tr><td colspan="5" class="muted">No elections yet. Create your first one.</td></tr>
+        <% } %>
+        <% elections.forEach(function(e) { %>
+          <tr>
+            <td><a href="/admin/elections/<%= e.id %>"><%= e.title %></a></td>
+            <td><%= e.ballot_type === 'single' ? 'Single choice' : 'Multiple (max ' + e.max_selections + ')' %></td>
+            <td><span class="status-pill status-<%= e.status %>"><%= e.status %></span></td>
+            <td class="muted"><%= e.results_visibility === 'live' ? 'Live' : 'After close' %></td>
+            <td><a href="/admin/elections/<%= e.id %>">Manage</a></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+<%- include('../partials/foot') %>

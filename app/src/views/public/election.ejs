@@ -1,0 +1,30 @@
+<%- include('../partials/head') %>
+<section class="hero">
+  <h1><%= election.title %></h1>
+  <% if (election.description) { %><p class="lead"><%= election.description %></p><% } %>
+  <p class="status-pill status-<%= election.status %>"><%= election.status %></p>
+</section>
+
+<section class="card narrow">
+  <% if (election.status === 'open') { %>
+    <h2 class="h3">Ready to vote?</h2>
+    <form method="post" action="/vote" class="stack" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <input type="hidden" name="election" value="<%= election.public_id %>" />
+      <label for="code">Enter your voting code</label>
+      <input id="code" name="code" type="text" autocomplete="off" spellcheck="false"
+             placeholder="XXXX-XXXX-XXXX-XXXX" class="code-input" required />
+      <button class="button button-primary" type="submit">Continue to ballot</button>
+    </form>
+  <% } else if (election.status === 'closed') { %>
+    <p class="lead">This election is closed.</p>
+  <% } else { %>
+    <p class="lead">This election has not opened yet. Please check back later.</p>
+  <% } %>
+  <p class="links-row">
+    <a href="/e/<%= election.public_id %>/results">View results</a>
+    <span aria-hidden="true">·</span>
+    <a href="/e/<%= election.public_id %>/verify">Verify a receipt</a>
+  </p>
+</section>
+<%- include('../partials/foot') %>

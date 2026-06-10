@@ -1,0 +1,14 @@
+<%- include('../partials/head') %>
+<section class="card narrow">
+  <h1>Admin sign in</h1>
+  <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+  <form method="post" action="/admin/login" class="stack" novalidate>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <label for="username">Username</label>
+    <input id="username" name="username" type="text" autocomplete="username" required />
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required />
+    <button class="button button-primary" type="submit">Sign in</button>
+  </form>
+</section>
+<%- include('../partials/foot') %>

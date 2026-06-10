@@ -1,0 +1,107 @@
+<%- include('../partials/head') %>
+<section class="page-head">
+  <div>
+    <h1><%= election.title %></h1>
+    <p class="status-pill status-<%= election.status %>"><%= election.status %></p>
+  </div>
+  <a class="button button-ghost" href="/admin">← All elections</a>
+</section>
+
+<% if (generatedCodes && generatedCodes.length) { %>
+<section class="card highlight-card">
+  <h2 class="h3">Voting codes generated — shown once</h2>
+  <div class="alert alert-warn" role="alert">
+    These <strong><%= generatedCodes.length %></strong> codes are displayed only now. Download the CSV
+    and distribute them. They are stored only as hashes and cannot be retrieved again.
+  </div>
+  <form method="post" action="/admin/elections/<%= election.id %>/codes.csv">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <% generatedCodes.forEach(function(c) { %><input type="hidden" name="code" value="<%= c %>" /><% }) %>
+    <button class="button button-primary" type="submit">Download CSV</button>
+    <button class="button button-ghost" type="button" id="copy-codes">Copy all</button>
+  </form>
+  <pre class="code-dump" id="code-dump"><% generatedCodes.forEach(function(c){ %><%= c %>
+<% }) %></pre>
+</section>
+<% } %>
+
+<div class="grid-2">
+  <section class="card">
+    <h2 class="h3">Status</h2>
+    <p class="help">Ballots are accepted only while <strong>open</strong>.</p>
+    <div class="button-row">
+      <% ['draft','open','closed'].forEach(function(s) { %>
+        <form method="post" action="/admin/elections/<%= election.id %>/status" class="inline-form">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+          <input type="hidden" name="status" value="<%= s %>" />
+          <button class="button <%= election.status === s ? 'button-primary' : 'button-ghost' %>"
+                  type="submit" <%= election.status === s ? 'disabled' : '' %>><%= s %></button>
+        </form>
+      <% }) %>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 class="h3">Share link</h2>
+    <p class="help">Send voters here, with their code:</p>
+    <p class="share-url"><code><%= baseUrl %>/e/<%= election.public_id %></code></p>
+    <p class="links-row">
+      <a href="/e/<%= election.public_id %>" target="_blank" rel="noopener">Open voter page ↗</a>
+      <span aria-hidden="true">·</span>
+      <a href="/e/<%= election.public_id %>/results" target="_blank" rel="noopener">Results ↗</a>
+    </p>
+  </section>
+</div>
+
+<section class="card">
+  <h2 class="h3">Voting codes</h2>
+  <div class="stat-row">
+    <div class="stat"><span class="stat-num"><%= codeStats.total %></span><span class="stat-label">issued</span></div>
+    <div class="stat"><span class="stat-num"><%= codeStats.used %></span><span class="stat-label">used</span></div>
+    <div class="stat"><span class="stat-num"><%= codeStats.unused %></span><span class="stat-label">unused</span></div>
+  </div>
+  <% if (election.status !== 'closed') { %>
+    <form method="post" action="/admin/elections/<%= election.id %>/codes" class="inline-form-wide">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <label for="count" class="sr-only">Number of codes</label>
+      <input id="count" name="count" type="number" min="1" max="50000" value="50" />
+      <button class="button button-primary" type="submit">Generate codes</button>
+    </form>
+  <% } else { %>
+    <p class="muted">Election closed — code generation disabled.</p>
+  <% } %>
+</section>
+
+<section class="card">
+  <h2 class="h3">Live tally <span class="muted">(<%= tally.totalBallots %> ballots)</span></h2>
+  <% var max = tally.rows.reduce(function(m, r){ return Math.max(m, r.votes); }, 0) || 1; %>
+  <ul class="results">
+    <% tally.rows.forEach(function(r) { %>
+      <li class="result-row">
+        <div class="result-head"><span class="result-label"><%= r.label %></span><span class="result-count"><%= r.votes %></span></div>
+        <div class="bar"><div class="bar-fill" style="width: <%= Math.round((r.votes / max) * 100) %>%"></div></div>
+      </li>
+    <% }) %>
+  </ul>
+</section>
+
+<section class="card">
+  <h2 class="h3">Audit log</h2>
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>When</th><th>Who</th><th>Action</th><th>Detail</th></tr></thead>
+      <tbody>
+        <% if (audit.length === 0) { %><tr><td colspan="4" class="muted">No actions logged.</td></tr><% } %>
+        <% audit.forEach(function(a) { %>
+          <tr>
+            <td class="muted"><%= new Date(a.created_at).toISOString().replace('T',' ').slice(0,19) %></td>
+            <td><%= a.username || '—' %></td>
+            <td><%= a.action %></td>
+            <td class="muted"><%= JSON.stringify(a.detail) %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+<%- include('../partials/foot') %>

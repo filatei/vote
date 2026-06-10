@@ -1,0 +1,33 @@
+<%- include('../partials/head') %>
+<section class="hero">
+  <h1>Cast your vote</h1>
+  <p class="lead">Enter your election ID and the voting code you were given. Your code is anonymous and can be used once.</p>
+</section>
+
+<section class="card narrow">
+  <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+  <form method="post" action="/vote" class="stack" novalidate>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <label for="election">Election ID or link</label>
+    <input id="election" name="election" type="text" inputmode="text" autocomplete="off"
+           value="<%= electionId || '' %>" placeholder="e.g. 3f1c… (from your invitation)" required />
+    <p class="help">This is the long ID in the election link, e.g. <code>vote.torama.money/e/<strong>THIS-PART</strong></code>.</p>
+
+    <label for="code">Voting code</label>
+    <input id="code" name="code" type="text" inputmode="text" autocomplete="off"
+           spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX" class="code-input" required />
+    <p class="help">Not case-sensitive. Spaces and dashes don't matter.</p>
+
+    <button class="button button-primary" type="submit">Continue to ballot</button>
+  </form>
+</section>
+
+<section class="card narrow muted-card">
+  <h2 class="h3">How this stays fair</h2>
+  <ul class="tick-list">
+    <li>Your code is never linked to the choice you make — the ballot is secret.</li>
+    <li>Each code works only once, so no one can vote twice.</li>
+    <li>You'll get a receipt to confirm your vote was counted.</li>
+  </ul>
+</section>
+<%- include('../partials/foot') %>
