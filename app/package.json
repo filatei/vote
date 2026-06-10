@@ -13,7 +13,7 @@
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "create-admin": "node dist/scripts/createAdmin.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "node --test dist/**/*.test.js"
+    "test": "node --test $(find dist -name '*.test.js')"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
