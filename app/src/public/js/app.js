@@ -33,27 +33,33 @@
     });
   }
 
-  // 2. Ballot page: enforce max selections for approval voting + live hint.
+  // 2. Ballot page: highlight selected candidate cards (both radio + checkbox)
+  //    and enforce max selections for approval voting + live hint.
   var ballotForm = document.querySelector('.ballot-form');
   if (ballotForm) {
     var type = ballotForm.getAttribute('data-ballot-type');
     var max = parseInt(ballotForm.getAttribute('data-max'), 10) || 1;
     var hint = ballotForm.querySelector('[data-selection-hint]');
-    if (type === 'multiple') {
-      var boxes = ballotForm.querySelectorAll('input[name="option"]');
-      var update = function () {
-        var checked = ballotForm.querySelectorAll('input[name="option"]:checked').length;
-        for (var j = 0; j < boxes.length; j++) {
-          boxes[j].disabled = !boxes[j].checked && checked >= max;
+    var inputs = ballotForm.querySelectorAll('input[name="option"]');
+    var update = function () {
+      var checked = ballotForm.querySelectorAll('input[name="option"]:checked').length;
+      for (var j = 0; j < inputs.length; j++) {
+        var inp = inputs[j];
+        var lab = inp.closest('.option');
+        if (lab) lab.classList.toggle('is-selected', inp.checked);
+        if (type === 'multiple') {
+          var dis = !inp.checked && checked >= max;
+          inp.disabled = dis;
+          if (lab) lab.classList.toggle('is-disabled', dis);
         }
-        if (hint) {
-          hint.hidden = false;
-          hint.textContent = checked + ' of ' + max + ' selected';
-        }
-      };
-      for (var k = 0; k < boxes.length; k++) boxes[k].addEventListener('change', update);
-      update();
-    }
+      }
+      if (type === 'multiple' && hint) {
+        hint.hidden = false;
+        hint.textContent = checked + ' of ' + max + ' selected';
+      }
+    };
+    for (var k = 0; k < inputs.length; k++) inputs[k].addEventListener('change', update);
+    update();
   }
 
   // 2b. Confirm destructive actions (delete election).

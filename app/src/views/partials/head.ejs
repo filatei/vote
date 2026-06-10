@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
   <meta name="robots" content="noindex" />
   <title><%= typeof title !== 'undefined' ? title : 'Torama Vote' %></title>
   <link rel="stylesheet" href="/static/css/style.css?v=<%= typeof assetVer !== 'undefined' ? assetVer : '1' %>" />
@@ -39,7 +40,7 @@
       </nav>
     <% } else if (typeof customerEmail !== 'undefined' && customerEmail) { %>
       <nav class="header-nav">
-        <a href="/account">My elections</a>
+        <a href="/account">Dashboard</a>
         <span class="muted nav-email"><%= customerEmail %></span>
         <form method="post" action="/account/logout" class="inline-form">
           <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>" />

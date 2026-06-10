@@ -2,6 +2,7 @@
    Plain CSS, no build step, no external fonts. Works on legacy + modern. */
 
 :root {
+  color-scheme: light; /* render the intended light theme; opt out of UA auto-dark */
   --bg: #f4f6fb;
   --surface: #ffffff;
   --ink: #1c2230;
@@ -53,6 +54,9 @@ a:hover { text-decoration: underline; }
 }
 .brand-logo { width: 30px; height: 30px; display: block; flex: 0 0 auto; }
 .header-nav { display: flex; align-items: center; gap: 16px; }
+.header-nav a, .header-nav .link-button { white-space: nowrap; }
+.brand-name { white-space: nowrap; }
+.nav-email { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .inline-form { display: inline; margin: 0; }
 .link-button {
   background: none; border: 0; color: var(--brand); cursor: pointer;
@@ -309,9 +313,11 @@ input[type="text"], input[type="password"], input[type="number"], textarea, .opt
   .container { padding: 0 16px; }
   main { padding: 18px 0 4px; }
 
-  .header-row { height: 56px; }
+  .header-row { height: 56px; gap: 10px; }
   .brand-name { font-size: 1rem; }
   .header-nav { gap: 12px; }
+  .nav-email { display: none; }            /* too long for a phone header */
+  .header-nav a, .header-nav .link-button { font-size: .92rem; }
 
   .hero { padding: 8px 0 14px; }
   .hero h1 { font-size: 1.5rem; line-height: 1.2; }
@@ -323,8 +329,7 @@ input[type="text"], input[type="password"], input[type="number"], textarea, .opt
   .card.narrow { max-width: none; }
 
   /* Comfortable tap targets + bigger ballot rows */
-  .option { padding: 16px; }
-  .option input { width: 22px; height: 22px; }
+  .option { padding: 14px; }
   input[type="text"], input[type="password"], input[type="number"], textarea, .option-input {
     font-size: 16px;            /* prevents iOS zoom-on-focus */
     padding: 13px 12px;
@@ -456,6 +461,45 @@ input[type="text"], input[type="password"], input[type="number"], textarea, .opt
 
 /* Initials-avatar default thumbnails */
 .option-thumb.avatar, .thumb-lg.avatar { border: 0; background: none; }
+
+/* ===========================================================================
+   Candidate-card ballot options
+   =========================================================================== */
+.options { gap: 12px; }
+.option {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px; border: 1.5px solid var(--line); border-radius: 14px;
+  background: #fff; cursor: pointer; position: relative;
+  transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
+}
+.option:hover { border-color: #b9c6ea; background: #fafbff; }
+.option:focus-within { outline: 3px solid rgba(47, 109, 244, .35); outline-offset: 2px; }
+.option .option-native { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+.option .option-thumb { width: 52px; height: 52px; border-radius: 12px; flex: 0 0 auto; }
+.option .option-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.option .option-label { font-weight: 700; color: var(--ink); }
+.option-sub {
+  color: var(--muted); font-size: .9rem; line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* Right-hand select circle */
+.option-check {
+  position: relative; flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%;
+  border: 2px solid #cbd2de; background: #fff;
+  transition: background-color .15s ease, border-color .15s ease;
+}
+.option.is-selected, .option:has(.option-native:checked) {
+  border-color: var(--brand); background: #f1f6ff; box-shadow: 0 0 0 1px var(--brand) inset;
+}
+.option.is-selected .option-check, .option:has(.option-native:checked) .option-check {
+  background: var(--brand); border-color: var(--brand);
+}
+.option.is-selected .option-check::after, .option:has(.option-native:checked) .option-check::after {
+  content: ""; position: absolute; left: 9px; top: 4px; width: 6px; height: 11px;
+  border: solid #fff; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg);
+}
+.option.is-disabled { opacity: .5; cursor: default; }
 
 @media (max-width: 860px) {
   .landing-hero { grid-template-columns: 1fr; padding: 30px 24px; }

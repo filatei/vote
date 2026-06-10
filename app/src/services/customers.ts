@@ -8,7 +8,8 @@ function normalizeEmail(email: string): string {
 
 export async function getCustomerById(id: number): Promise<Customer | null> {
   const { rows } = await pool.query<Customer>(`SELECT id, email FROM customers WHERE id = $1`, [id]);
-  return rows[0] ?? null;
+  const r = rows[0];
+  return r ? { id: Number(r.id), email: r.email } : null;
 }
 
 /** Issue a magic-link token for an email. Returns the raw token (emailed). */
@@ -45,6 +46,7 @@ export async function consumeMagicToken(raw: string): Promise<Customer | null> {
        RETURNING id, email`,
       [tok.email],
     );
-    return cust.rows[0];
+    const r = cust.rows[0];
+    return { id: Number(r.id), email: r.email };
   });
 }

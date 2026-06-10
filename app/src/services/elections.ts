@@ -16,9 +16,10 @@ export async function listElectionsByOwner(ownerId: number): Promise<Election[]>
   return rows;
 }
 
-/** True if the given customer owns this election. */
-export function ownsElection(election: Election, customerId: number): boolean {
-  return Number(election.owner_id) === customerId;
+/** True if the given customer owns this election. Both sides are coerced to
+ * Number because Postgres returns BIGINT columns (and our session id) as strings. */
+export function ownsElection(election: Election, customerId: number | string): boolean {
+  return Number(election.owner_id) === Number(customerId);
 }
 
 export async function getElectionById(id: number): Promise<Election | null> {
