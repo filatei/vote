@@ -25,6 +25,19 @@ export async function recordLogin(adminId: number): Promise<void> {
   await pool.query(`UPDATE admins SET last_login_at = now() WHERE id = $1`, [adminId]);
 }
 
+/** Find or create the admin row for a Google-authenticated email. Password
+ * login is impossible for these (placeholder hash never matches bcrypt). */
+export async function upsertGoogleAdmin(email: string): Promise<number> {
+  const { rows } = await pool.query<{ id: number }>(
+    `INSERT INTO admins (username, email, password_hash)
+       VALUES ($1, $1, 'google-oauth')
+     ON CONFLICT (username) DO UPDATE SET last_login_at = now(), email = EXCLUDED.email
+     RETURNING id`,
+    [email.toLowerCase()],
+  );
+  return rows[0].id;
+}
+
 export async function createAdmin(
   username: string,
   email: string | null,

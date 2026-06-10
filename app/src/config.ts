@@ -26,6 +26,15 @@ const schema = z.object({
   CSRF_SECRET: z.string().min(16),
   CODE_PEPPER: z.string().min(16),
 
+  // ── Admin Google Sign-In (OIDC) ──────────────────────────────────────
+  // When client id + secret are set, /admin is gated behind Google sign-in
+  // restricted to ADMIN_ALLOWED_EMAILS. If unset, the password login is used
+  // (fallback, so you're never locked out before configuring OAuth).
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_REDIRECT_URI: z.string().optional(), // default PUBLIC_BASE_URL/admin/auth/google/callback
+  ADMIN_ALLOWED_EMAILS: z.string().default('filatei@gmail.com,filatei@torama.money'),
+
   // When true, admins may delete ANY election (testing). When false
   // (production default), only unopened 'draft' elections can be deleted — an
   // election that has been opened can only be closed, preserving its record.
@@ -34,6 +43,16 @@ const schema = z.object({
   // Where uploaded contestant photos are stored (a persisted docker volume in
   // production). Served read-only at /uploads.
   UPLOAD_DIR: z.string().default('/app/uploads'),
+
+  // ── Paystack (same keys/var names as the other torama.money apps) ─────
+  // Leave the secret blank to disable payments (customers can't launch).
+  PAYSTACK_SECRET_KEY: z.string().optional(),
+  PAYSTACK_PUBLIC_KEY: z.string().optional(),
+  // Base URL Paystack returns to after checkout (defaults to PUBLIC_BASE_URL).
+  PAYSTACK_CALLBACK_URL: z.string().optional(),
+  // Flat fee to launch one election, in MAJOR units (naira / dollars).
+  PAYMENT_CURRENCY: z.string().default('NGN'),
+  PAYMENT_AMOUNT: z.coerce.number().positive().default(100000),
 
   // ── Transactional email ──────────────────────────────────────────────
   // Defaults target Google Workspace SMTP relay (smtp-relay.gmail.com),

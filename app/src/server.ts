@@ -18,6 +18,8 @@ import { publicRouter } from './routes/public';
 import { authRouter } from './routes/auth';
 import { adminRouter } from './routes/admin';
 import { accountAuthRouter, accountRouter } from './routes/account';
+import { webhookRouter } from './routes/webhooks';
+import { paymentsEnabled, priceLabel } from './services/payments';
 
 const app = express();
 
@@ -50,6 +52,11 @@ app.use(
 );
 
 app.use(pinoHttp({ logger }));
+
+// Paystack webhook needs the RAW body for signature verification, so mount it
+// before the urlencoded body parser.
+app.use('/webhooks', webhookRouter);
+
 app.use(express.urlencoded({ extended: false, limit: '256kb' }));
 app.use(cookieParser());
 
@@ -96,6 +103,8 @@ app.use((_req, res, next) => {
   res.locals.year = new Date().getFullYear();
   res.locals.formatWat = formatWat;
   res.locals.toWatInput = toWatInput;
+  res.locals.priceLabel = priceLabel();
+  res.locals.paymentsEnabled = paymentsEnabled();
   next();
 });
 

@@ -43,6 +43,25 @@ const STATEMENTS: string[] = [
   // Elections can be owned by a customer (admin-created ones have NULL owner).
   `ALTER TABLE elections ADD COLUMN IF NOT EXISTS owner_id BIGINT REFERENCES customers(id) ON DELETE SET NULL`,
   `CREATE INDEX IF NOT EXISTS idx_elections_owner ON elections(owner_id)`,
+
+  // Phase 3: Paystack payment to launch. Mirrors otuburu's paystack_payments
+  // (unique reference; status pending|processing|confirmed|failed).
+  `ALTER TABLE elections ADD COLUMN IF NOT EXISTS paid BOOLEAN NOT NULL DEFAULT FALSE`,
+  `CREATE TABLE IF NOT EXISTS paystack_payments (
+     id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+     reference       TEXT UNIQUE NOT NULL,
+     election_id     BIGINT NOT NULL REFERENCES elections(id) ON DELETE CASCADE,
+     customer_id     BIGINT REFERENCES customers(id) ON DELETE SET NULL,
+     email           TEXT NOT NULL,
+     amount_subunits BIGINT NOT NULL,
+     currency        TEXT NOT NULL,
+     status          TEXT NOT NULL DEFAULT 'pending'
+                       CHECK (status IN ('pending','processing','confirmed','failed')),
+     paystack_status TEXT,
+     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+     confirmed_at    TIMESTAMPTZ
+   )`,
+  `CREATE INDEX IF NOT EXISTS idx_paystack_payments_election ON paystack_payments(election_id)`,
 ];
 
 export async function runMigrations(): Promise<void> {

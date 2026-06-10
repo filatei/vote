@@ -7,6 +7,27 @@
   <a class="button button-ghost" href="<%= basePath %>">← All elections</a>
 </section>
 
+<% if (typeof payFlash !== 'undefined' && payFlash === 'ok') { %>
+  <div class="alert alert-success" role="status">Payment received — your election is launched.</div>
+<% } else if (typeof payFlash !== 'undefined' && payFlash === 'fail') { %>
+  <div class="alert alert-error" role="alert">We couldn't confirm that payment. If you were charged, please contact support before retrying.</div>
+<% } %>
+
+<% if (area === 'account' && paymentsEnabled && !election.paid) { %>
+<section class="card highlight-card">
+  <h2 class="h3">Launch this election</h2>
+  <p>Pay the one-time fee of <strong><%= priceLabel %></strong> to open <strong><%= election.title %></strong> for voting. Payment is handled securely by Paystack.</p>
+  <form method="post" action="<%= basePath %>/elections/<%= election.id %>/pay">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <button class="button button-primary" type="submit">Pay <%= priceLabel %> &amp; launch</button>
+  </form>
+</section>
+<% } else if (area === 'account' && election.paid) { %>
+<section class="card">
+  <p><span class="status-pill status-open">Paid</span> &nbsp;This election's launch fee has been paid.</p>
+</section>
+<% } %>
+
 <% if (generatedCodes && generatedCodes.length) { %>
 <section class="card highlight-card">
   <h2 class="h3">Voting codes generated — shown once</h2>

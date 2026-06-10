@@ -13,6 +13,7 @@ import {
   clearOptionImage,
   createElection,
   deleteElection,
+  getElectionById,
   getElectionWithOptions,
   getOptionById,
   listElectionsByOwner,
@@ -21,6 +22,7 @@ import {
   updateOptionContent,
   updateSchedule,
 } from '../services/elections';
+import { initializePayment, paymentsEnabled, verifyPayment } from '../services/payments';
 import { generateCodes, getCodeStats } from '../services/codes';
 import { tallyElection } from '../services/tally';
 import { logAction } from '../services/admins';
@@ -158,6 +160,7 @@ async function renderElectionView(req: Request, res: import('express').Response,
   const election = await loadOwned(req);
   const codeStats = await getCodeStats(election.id);
   const tally = await tallyElection(election.id);
+  const paid = req.query.paid;
   res.render('admin/election_view', {
     title: election.title,
     election,
@@ -168,6 +171,8 @@ async function renderElectionView(req: Request, res: import('express').Response,
     generatedCodes,
     canDelete: canDeleteElection(election, config.ALLOW_ELECTION_DELETE),
     allowDeleteAny: config.ALLOW_ELECTION_DELETE,
+    paymentsEnabled: paymentsEnabled(),
+    payFlash: paid === '1' ? 'ok' : paid === '0' ? 'fail' : null,
   });
 }
 
@@ -184,8 +189,54 @@ accountRouter.post('/elections/:id/status', csrfProtection, async (req, res, nex
     const election = await loadOwned(req);
     const status = String(req.body.status);
     if (!['draft', 'open', 'closed'].includes(status)) throw new HttpError(400, 'Invalid status.');
+    // Opening requires the launch fee to be paid (when payments are enabled).
+    if (status === 'open' && paymentsEnabled() && !election.paid) {
+      throw new HttpError(402, 'Please pay the launch fee before opening this election.');
+    }
     await setStatus(election.id, status as 'draft' | 'open' | 'closed');
     res.redirect(`/account/elections/${election.id}`);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Start payment for launching this election → redirect to Paystack checkout.
+accountRouter.post('/elections/:id/pay', csrfProtection, async (req, res, next) => {
+  try {
+    const election = await loadOwned(req);
+    if (!paymentsEnabled()) throw new HttpError(503, 'Payments are not configured yet.');
+    if (election.paid) {
+      res.redirect(`/account/elections/${election.id}`);
+      return;
+    }
+    const url = await initializePayment({
+      electionId: election.id,
+      customerId: req.session.customerId!,
+      email: req.session.customerEmail!,
+    });
+    res.redirect(url);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Paystack returns here after checkout. Verify is authoritative.
+accountRouter.get('/pay/callback', async (req, res, next) => {
+  try {
+    const reference = String(req.query.reference || req.query.trxref || '');
+    if (!reference) {
+      res.redirect('/account');
+      return;
+    }
+    const result = await verifyPayment(reference);
+    if (result.ok && result.electionId) {
+      // Auto-open a draft on successful payment.
+      const el = await getElectionById(result.electionId);
+      if (el && el.status === 'draft') await setStatus(result.electionId, 'open');
+      res.redirect(`/account/elections/${result.electionId}?paid=1`);
+    } else {
+      res.redirect(result.electionId ? `/account/elections/${result.electionId}?paid=0` : '/account');
+    }
   } catch (err) {
     next(err);
   }

@@ -7,6 +7,7 @@ declare module 'express-session' {
     adminUsername?: string;
     customerId?: number;
     customerEmail?: string;
+    oauthState?: string;
   }
 }
 

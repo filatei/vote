@@ -201,6 +201,14 @@ input[type="datetime-local"] {
 .button-danger { background: var(--error); color: #fff; }
 .button-danger:hover { background: #a82d31; }
 
+/* Google sign-in button */
+.google-btn { display: inline-flex; align-items: center; gap: 10px; }
+.google-g {
+  display: inline-grid; place-items: center; width: 22px; height: 22px;
+  background: #fff; color: #4285f4; border-radius: 4px; font-weight: 800;
+  font-family: Arial, sans-serif;
+}
+
 /* Contestant photos on the ballot */
 .option-thumb {
   flex: 0 0 auto; width: 52px; height: 52px; border-radius: 10px;

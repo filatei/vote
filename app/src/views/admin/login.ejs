@@ -2,13 +2,22 @@
 <section class="card narrow">
   <h1>Admin sign in</h1>
   <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
-  <form method="post" action="/admin/login" class="stack" novalidate>
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-    <label for="username">Username</label>
-    <input id="username" name="username" type="text" autocomplete="username" required />
-    <label for="password">Password</label>
-    <input id="password" name="password" type="password" autocomplete="current-password" required />
-    <button class="button button-primary" type="submit">Sign in</button>
-  </form>
+
+  <% if (googleEnabled) { %>
+    <p class="lead">Admin access is restricted to authorised Google accounts.</p>
+    <a class="button button-primary google-btn" href="/admin/auth/google">
+      <span class="google-g" aria-hidden="true">G</span> Sign in with Google
+    </a>
+  <% } else { %>
+    <form method="post" action="/admin/login" class="stack" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <label for="username">Username</label>
+      <input id="username" name="username" type="text" autocomplete="username" required />
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required />
+      <button class="button button-primary" type="submit">Sign in</button>
+    </form>
+    <p class="help">Google sign-in isn't configured yet — using password login.</p>
+  <% } %>
 </section>
 <%- include('../partials/foot') %>
