@@ -24,6 +24,25 @@ const STATEMENTS: string[] = [
      created_on  DATE NOT NULL DEFAULT (now() AT TIME ZONE 'UTC')::date,
      UNIQUE (election_id, fingerprint)
    )`,
+
+  // Phase 2: self-service customer accounts (passwordless magic-link).
+  `CREATE TABLE IF NOT EXISTS customers (
+     id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+     email         TEXT NOT NULL UNIQUE,
+     created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+     last_login_at TIMESTAMPTZ
+   )`,
+  `CREATE TABLE IF NOT EXISTS magic_tokens (
+     id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+     email      TEXT NOT NULL,
+     token_hash TEXT NOT NULL UNIQUE,
+     expires_at TIMESTAMPTZ NOT NULL,
+     used_at    TIMESTAMPTZ,
+     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+   )`,
+  // Elections can be owned by a customer (admin-created ones have NULL owner).
+  `ALTER TABLE elections ADD COLUMN IF NOT EXISTS owner_id BIGINT REFERENCES customers(id) ON DELETE SET NULL`,
+  `CREATE INDEX IF NOT EXISTS idx_elections_owner ON elections(owner_id)`,
 ];
 
 export async function runMigrations(): Promise<void> {

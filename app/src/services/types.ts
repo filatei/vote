@@ -24,8 +24,14 @@ export interface Election {
   results_visibility: ResultsVisibility;
   opens_at: Date | null;
   closes_at: Date | null;
+  owner_id: number | null;
   created_at: Date;
   updated_at: Date;
+}
+
+export interface Customer {
+  id: number;
+  email: string;
 }
 
 export interface ElectionWithOptions extends Election {

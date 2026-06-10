@@ -8,6 +8,19 @@ export async function listElections(): Promise<Election[]> {
   return rows;
 }
 
+export async function listElectionsByOwner(ownerId: number): Promise<Election[]> {
+  const { rows } = await pool.query<Election>(
+    `SELECT * FROM elections WHERE owner_id = $1 ORDER BY created_at DESC`,
+    [ownerId],
+  );
+  return rows;
+}
+
+/** True if the given customer owns this election. */
+export function ownsElection(election: Election, customerId: number): boolean {
+  return Number(election.owner_id) === customerId;
+}
+
 export async function getElectionById(id: number): Promise<Election | null> {
   const { rows } = await pool.query<Election>(`SELECT * FROM elections WHERE id = $1`, [id]);
   return rows[0] ?? null;
@@ -98,7 +111,8 @@ interface CreateElectionInput {
   options: string[];
   opensAt: Date | null;
   closesAt: Date | null;
-  createdBy: number;
+  createdBy: number | null;
+  ownerId?: number | null;
 }
 
 export async function createElection(input: CreateElectionInput): Promise<number> {
@@ -109,8 +123,8 @@ export async function createElection(input: CreateElectionInput): Promise<number
     const { rows } = await client.query<{ id: number }>(
       `INSERT INTO elections
          (title, description, ballot_type, max_selections, access_mode,
-          results_visibility, opens_at, closes_at, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          results_visibility, opens_at, closes_at, created_by, owner_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING id`,
       [
         input.title,
@@ -122,6 +136,7 @@ export async function createElection(input: CreateElectionInput): Promise<number
         input.opensAt,
         input.closesAt,
         input.createdBy,
+        input.ownerId ?? null,
       ],
     );
     const electionId = rows[0].id;

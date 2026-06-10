@@ -4,7 +4,7 @@
     <h1>Contestants</h1>
     <p class="lead"><%= election.title %></p>
   </div>
-  <a class="button button-ghost" href="/admin/elections/<%= election.id %>">← Back to election</a>
+  <a class="button button-ghost" href="<%= basePath %>/elections/<%= election.id %>">← Back to election</a>
 </section>
 
 <p class="help">Add a photo and a short bio for each contestant. Voters see the photo as a thumbnail and the bio when they hover or tap the option. JPG, PNG or WebP up to 2&nbsp;MB.</p>
@@ -12,7 +12,7 @@
 <% election.options.forEach(function(opt) { %>
   <section class="card contestant-editor">
     <h2 class="h3"><%= opt.label %></h2>
-    <form method="post" action="/admin/elections/<%= election.id %>/options/<%= opt.id %>"
+    <form method="post" action="<%= basePath %>/elections/<%= election.id %>/options/<%= opt.id %>"
           enctype="multipart/form-data" class="contestant-form">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
 

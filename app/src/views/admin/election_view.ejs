@@ -4,7 +4,7 @@
     <h1><%= election.title %></h1>
     <p class="status-pill status-<%= election.status %>"><%= election.status %></p>
   </div>
-  <a class="button button-ghost" href="/admin">← All elections</a>
+  <a class="button button-ghost" href="<%= basePath %>">← All elections</a>
 </section>
 
 <% if (generatedCodes && generatedCodes.length) { %>
@@ -14,7 +14,7 @@
     These <strong><%= generatedCodes.length %></strong> codes are displayed only now. Download the CSV
     and distribute them. They are stored only as hashes and cannot be retrieved again.
   </div>
-  <form method="post" action="/admin/elections/<%= election.id %>/codes.csv">
+  <form method="post" action="<%= basePath %>/elections/<%= election.id %>/codes.csv">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
     <% generatedCodes.forEach(function(c) { %><input type="hidden" name="code" value="<%= c %>" /><% }) %>
     <button class="button button-primary" type="submit">Download CSV</button>
@@ -31,7 +31,7 @@
     <p class="help">Ballots are accepted only while <strong>open</strong>.</p>
     <div class="button-row">
       <% ['draft','open','closed'].forEach(function(s) { %>
-        <form method="post" action="/admin/elections/<%= election.id %>/status" class="inline-form">
+        <form method="post" action="<%= basePath %>/elections/<%= election.id %>/status" class="inline-form">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
           <input type="hidden" name="status" value="<%= s %>" />
           <button class="button <%= election.status === s ? 'button-primary' : 'button-ghost' %>"
@@ -43,7 +43,7 @@
 
   <section class="card">
     <h2 class="h3">Voting window <span class="muted">(WAT)</span></h2>
-    <form method="post" action="/admin/elections/<%= election.id %>/schedule" class="stack">
+    <form method="post" action="<%= basePath %>/elections/<%= election.id %>/schedule" class="stack">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
       <div class="schedule-grid">
         <div>
@@ -79,7 +79,7 @@
       <a href="/e/<%= election.public_id %>/results" target="_blank" rel="noopener">Results ↗</a>
     </p>
     <p class="links-row">
-      <a href="/admin/elections/<%= election.id %>/contestants">Manage contestant photos &amp; bios →</a>
+      <a href="<%= basePath %>/elections/<%= election.id %>/contestants">Manage contestant photos &amp; bios →</a>
     </p>
   </section>
 </div>
@@ -99,7 +99,7 @@
     <div class="stat"><span class="stat-num"><%= codeStats.unused %></span><span class="stat-label">unused</span></div>
   </div>
   <% if (election.status !== 'closed') { %>
-    <form method="post" action="/admin/elections/<%= election.id %>/codes" class="inline-form-wide">
+    <form method="post" action="<%= basePath %>/elections/<%= election.id %>/codes" class="inline-form-wide">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
       <label for="count" class="sr-only">Number of codes</label>
       <input id="count" name="count" type="number" min="1" max="50000" value="50" />
@@ -153,7 +153,7 @@
         This election is still a draft (never opened), so it can be deleted. Once opened it can only be closed.
       <% } %>
     </p>
-    <form method="post" action="/admin/elections/<%= election.id %>/delete"
+    <form method="post" action="<%= basePath %>/elections/<%= election.id %>/delete"
           class="confirm-delete" data-confirm="Permanently delete &quot;<%= election.title %>&quot; and all its data? This cannot be undone.">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
       <button class="button button-danger" type="submit">Delete this election</button>

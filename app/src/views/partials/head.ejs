@@ -23,6 +23,15 @@
           <button class="link-button" type="submit">Sign out</button>
         </form>
       </nav>
+    <% } else if (typeof customerEmail !== 'undefined' && customerEmail) { %>
+      <nav class="header-nav">
+        <a href="/account">My elections</a>
+        <span class="muted nav-email"><%= customerEmail %></span>
+        <form method="post" action="/account/logout" class="inline-form">
+          <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>" />
+          <button class="link-button" type="submit">Sign out</button>
+        </form>
+      </nav>
     <% } %>
   </div>
 </header>

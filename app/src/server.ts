@@ -17,6 +17,7 @@ import { errorHandler, notFound } from './middleware/errors';
 import { publicRouter } from './routes/public';
 import { authRouter } from './routes/auth';
 import { adminRouter } from './routes/admin';
+import { accountAuthRouter, accountRouter } from './routes/account';
 
 const app = express();
 
@@ -109,6 +110,8 @@ app.get('/healthz', async (_req, res) => {
 // Routes
 app.use('/admin', authRouter); // /admin/login, /admin/logout
 app.use('/admin', adminRouter); // protected admin area
+app.use('/account', accountAuthRouter); // /account/login, /verify, /logout
+app.use('/account', accountRouter); // protected customer area
 app.use('/', publicRouter);
 
 // 404 + error handling

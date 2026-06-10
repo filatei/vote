@@ -31,6 +31,16 @@ export const loginLimiter = rateLimit({
   message: 'Too many login attempts. Please wait and try again.',
 });
 
+/** Throttle magic-link requests to limit email spam / enumeration. */
+export const magicLinkLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 8,
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: store('rl:magic:'),
+  message: 'Too many sign-in requests. Please wait a few minutes and try again.',
+});
+
 /** General protection for the rest of the site. */
 export const generalLimiter = rateLimit({
   windowMs: 60 * 1000,

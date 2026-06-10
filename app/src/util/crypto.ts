@@ -31,6 +31,16 @@ export function generateReceiptCode(): string {
   return `${randomString(4)}-${randomString(4)}-${randomString(4)}`;
 }
 
+/** A URL-safe, high-entropy token (e.g. for magic sign-in links). */
+export function generateUrlToken(bytes = 32): string {
+  return randomBytes(bytes).toString('base64url');
+}
+
+/** Keyed hash of an opaque token (stored instead of the raw token). */
+export function hashToken(raw: string): string {
+  return createHmac('sha256', config.CODE_PEPPER).update(`tok:${raw}`).digest('hex');
+}
+
 /** Normalise user-entered codes: uppercase, strip spaces, unify separators. */
 export function normalizeCode(input: string): string {
   return input
