@@ -1,0 +1,44 @@
+<%- include('../partials/head') %>
+<section class="page-head">
+  <h1>Email</h1>
+  <a class="button button-ghost" href="/admin">← Dashboard</a>
+</section>
+
+<% if (result) { %>
+  <div class="alert <%= result.ok ? 'alert-success' : 'alert-error' %>" role="status"><%= result.msg %></div>
+<% } %>
+
+<section class="card">
+  <h2 class="h3">Status</h2>
+  <table class="kv">
+    <tr><th>Mode</th><td>
+      <% if (status.mode === 'smtp') { %>
+        <span class="status-pill status-open">SMTP</span> sending live
+      <% } else { %>
+        <span class="status-pill status-draft">LOG</span> not configured — emails are written to the server logs
+      <% } %>
+    </td></tr>
+    <tr><th>SMTP host</th><td><%= status.host || '—' %></td></tr>
+    <tr><th>Authentication</th><td><%= status.auth ? 'username/password' : 'IP-authorised (no password)' %></td></tr>
+    <tr><th>From</th><td><%= status.from %></td></tr>
+  </table>
+
+  <div class="button-row" style="margin-top:14px;">
+    <form method="post" action="/admin/email/verify" class="inline-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <button class="button button-ghost" type="submit">Verify connection</button>
+    </form>
+  </div>
+</section>
+
+<section class="card">
+  <h2 class="h3">Send a test email</h2>
+  <form method="post" action="/admin/email/test" class="inline-form-wide">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <label for="to" class="sr-only">Recipient</label>
+    <input id="to" name="to" type="email" placeholder="you@example.com" required />
+    <button class="button button-primary" type="submit">Send test</button>
+  </form>
+  <p class="help">For Google Workspace SMTP relay, set <code>SMTP_HOST=smtp-relay.gmail.com</code> and <code>SMTP_PORT=587</code> in <code>.env</code> (no username/password needed if this server's IP is authorised in the relay). See EMAIL-SETUP.md.</p>
+</section>
+<%- include('../partials/foot') %>

@@ -24,6 +24,7 @@ import {
 } from '../services/elections';
 import { watInputToUtc } from '../util/datetime';
 import { uploadContestantImage, uploadPath } from '../middleware/upload';
+import { mailStatus, sendMail, verifyMailer } from '../mailer';
 import fs from 'fs';
 import { generateCodes, getCodeStats } from '../services/codes';
 import { tallyElection } from '../services/tally';
@@ -40,6 +41,63 @@ adminRouter.get('/', async (_req, res, next) => {
   try {
     const elections = await listElections();
     res.render('admin/dashboard', { title: 'Dashboard', elections });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Email settings: status, verify connection, send a test.
+adminRouter.get('/email', csrfToken, async (_req, res, next) => {
+  try {
+    res.render('admin/email', { title: 'Email', status: mailStatus(), result: null });
+  } catch (err) {
+    next(err);
+  }
+});
+
+adminRouter.post('/email/verify', csrfProtection, csrfToken, async (_req, res, next) => {
+  try {
+    const v = await verifyMailer();
+    res.render('admin/email', {
+      title: 'Email',
+      status: mailStatus(),
+      result: v.ok
+        ? { ok: true, msg: 'SMTP connection verified successfully.' }
+        : { ok: false, msg: `Verify failed: ${v.error}` },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+adminRouter.post('/email/test', csrfProtection, csrfToken, async (req, res, next) => {
+  try {
+    const to = String(req.body.to || '').trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) {
+      res.status(400).render('admin/email', {
+        title: 'Email',
+        status: mailStatus(),
+        result: { ok: false, msg: 'Enter a valid email address.' },
+      });
+      return;
+    }
+    const r = await sendMail({
+      to,
+      subject: 'Torama Vote — test email',
+      text: 'This is a test email from Torama Vote. If you received it, email sending works.',
+    });
+    await logAction({ adminId: req.session.adminId!, action: 'send_test_email', detail: { to, mode: r.mode }, ip: req.ip });
+    res.render('admin/email', {
+      title: 'Email',
+      status: mailStatus(),
+      result: {
+        ok: true,
+        msg:
+          r.mode === 'smtp'
+            ? `Test email sent to ${to}.`
+            : `Log mode: no SMTP configured, so the email was written to the server logs instead of sent.`,
+      },
+    });
   } catch (err) {
     next(err);
   }

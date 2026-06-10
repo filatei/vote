@@ -34,6 +34,17 @@ const schema = z.object({
   // Where uploaded contestant photos are stored (a persisted docker volume in
   // production). Served read-only at /uploads.
   UPLOAD_DIR: z.string().default('/app/uploads'),
+
+  // ── Transactional email ──────────────────────────────────────────────
+  // Defaults target Google Workspace SMTP relay (smtp-relay.gmail.com),
+  // IP-authorised — same setup the other torama.money apps use. With no
+  // SMTP_HOST set the app runs in "log" mode (emails printed to logs).
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().int().positive().default(587),
+  SMTP_SECURE: bool(false), // true only for port 465
+  SMTP_USER: z.string().optional(), // omit for IP-authorised relay
+  SMTP_PASS: z.string().optional(),
+  MAIL_FROM: z.string().default('Torama Vote <no-reply@torama.money>'),
 });
 
 const parsed = schema.safeParse(process.env);
