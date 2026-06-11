@@ -3,6 +3,13 @@
 (function () {
   'use strict';
 
+  // 0. Register the service worker (installable PWA / app-like experience).
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/sw.js').catch(function () { /* ignore */ });
+    });
+  }
+
   // 1. New-election form: toggle "max selections" + add/remove option rows.
   var ballotToggles = document.querySelectorAll('[data-ballot-toggle]');
   var maxWrap = document.querySelector('[data-max-wrap]');

@@ -127,6 +127,19 @@ app.get('/favicon.ico', (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'favicon.ico'));
 });
 
+// PWA: service worker (served at root so its scope covers the whole app) +
+// web app manifest with the correct content type.
+app.get('/sw.js', (_req, res) => {
+  res.setHeader('Service-Worker-Allowed', '/');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.type('application/javascript');
+  res.sendFile(path.join(__dirname, 'public', 'sw.js'));
+});
+app.get('/manifest.webmanifest', (_req, res) => {
+  res.type('application/manifest+json');
+  res.sendFile(path.join(__dirname, 'public', 'manifest.webmanifest'));
+});
+
 // Health endpoint for the container/orchestrator.
 app.get('/healthz', async (_req, res) => {
   const dbOk = await healthCheck();
