@@ -1,7 +1,7 @@
 export type BallotType = 'single' | 'multiple';
 export type ElectionStatus = 'draft' | 'open' | 'closed';
 export type ResultsVisibility = 'live' | 'after_close';
-export type AccessMode = 'code' | 'open';
+export type AccessMode = 'code' | 'open' | 'hybrid';
 
 export interface Option {
   id: number;

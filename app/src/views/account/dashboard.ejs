@@ -18,7 +18,7 @@
           <tr>
             <td><a href="/account/elections/<%= e.id %>"><%= e.title %></a></td>
             <td><%= e.ballot_type === 'single' ? 'Single choice' : 'Multiple (max ' + e.max_selections + ')' %></td>
-            <td><%= e.access_mode === 'open' ? 'Open link' : 'Codes' %></td>
+            <td><%= e.access_mode === 'open' ? 'Open link' : e.access_mode === 'hybrid' ? 'Link + codes' : 'Codes' %></td>
             <td><span class="status-pill status-<%= e.status %>"><%= e.status %></span></td>
             <td><a href="/account/elections/<%= e.id %>">Manage</a></td>
           </tr>

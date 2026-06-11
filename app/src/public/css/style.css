@@ -526,6 +526,11 @@ input[type="text"], input[type="password"], input[type="number"], textarea, .opt
 }
 .option.is-disabled { opacity: .5; cursor: default; }
 
+/* Hybrid ballot: optional code entry at the top */
+.code-optional { background: #f7f9fe; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 4px; }
+.code-optional label { font-weight: 600; display: block; margin-bottom: 6px; }
+.code-optional .code-input { margin-bottom: 0; }
+
 @media (max-width: 860px) {
   .landing-hero { grid-template-columns: 1fr; padding: 30px 24px; }
   .landing-visual { order: -1; }

@@ -48,7 +48,12 @@
                <%= form && form.accessMode === 'open' ? 'checked' : '' %> />
         Open link — one vote per device
       </label>
-      <p class="help">Codes give the strongest guarantee (one code = one vote). Open link lets anyone with the URL vote, limited to one per device — convenient, but a determined person could clear cookies / change networks. Use codes for high-stakes elections.</p>
+      <label class="radio-inline">
+        <input type="radio" name="accessMode" value="hybrid"
+               <%= form && form.accessMode === 'hybrid' ? 'checked' : '' %> />
+        Link + codes (hybrid)
+      </label>
+      <p class="help">Codes give the strongest guarantee (one code = one vote). Open link lets anyone with the URL vote, limited to one per device. Hybrid combines both: people with a code use it, and anyone else can vote once per device via the link. Use codes for high-stakes elections.</p>
     </fieldset>
 
     <fieldset class="inline-fieldset">

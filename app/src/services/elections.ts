@@ -107,7 +107,7 @@ interface CreateElectionInput {
   description: string;
   ballotType: 'single' | 'multiple';
   maxSelections: number;
-  accessMode: 'code' | 'open';
+  accessMode: 'code' | 'open' | 'hybrid';
   resultsVisibility: 'live' | 'after_close';
   options: string[];
   opensAt: Date | null;

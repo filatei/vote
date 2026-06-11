@@ -92,11 +92,18 @@ publicRouter.post('/vote', codeAttemptLimiter, csrfProtection, csrfToken, async 
       });
       return;
     }
-    res.render('public/vote', { title: election.title, election, code, openMode: false, error: null });
+    res.render('public/vote', { title: election.title, election, code, codeMode: 'hidden', error: null });
   } catch (err) {
     next(err);
   }
 });
+
+/** How the ballot's code field renders for a given access mode. */
+function ballotCodeMode(accessMode: string): 'hidden' | 'optional' | 'none' {
+  if (accessMode === 'code') return 'hidden';
+  if (accessMode === 'hybrid') return 'optional';
+  return 'none';
+}
 
 /**
  * Step 2 — voter confirms their selection. This is where the code is actually
@@ -111,20 +118,36 @@ publicRouter.post('/cast', codeAttemptLimiter, csrfProtection, csrfToken, async 
     const election = await getElectionWithOptionsByPublicId(publicId);
     if (!election) throw new HttpError(404, 'Election not found.');
 
-    const openMode = election.access_mode === 'open';
+    const am = election.access_mode;
+    const hasCode = code.length > 0;
+    // Use the device (open) path for open elections, and for hybrid when no code
+    // is entered; otherwise spend a code.
+    const useOpen = am === 'open' || (am === 'hybrid' && !hasCode);
+    const codeMode = ballotCodeMode(am);
 
-    // Open mode: short-circuit if this device already has a cookie marker.
-    if (openMode && (await deviceAlreadyVoted(req, election))) {
-      res.status(409).render('public/election', {
-        title: election.title,
-        election,
-        state: votingState(election),
-        openMode: true,
-        alreadyVoted: true,
-        opensWat: formatWat(election.opens_at),
-        closesWat: formatWat(election.closes_at),
-        error: null,
-      });
+    // For the open path, block a device that already voted. In hybrid, keep the
+    // voter on the ballot so they can still enter a code to vote.
+    if (useOpen && (await deviceAlreadyVoted(req, election))) {
+      if (am === 'hybrid') {
+        res.status(409).render('public/vote', {
+          title: election.title,
+          election,
+          code,
+          codeMode,
+          error: 'This device has already voted. If you have a voting code, enter it to vote again.',
+        });
+      } else {
+        res.status(409).render('public/election', {
+          title: election.title,
+          election,
+          state: votingState(election),
+          openMode: true,
+          alreadyVoted: true,
+          opensWat: formatWat(election.opens_at),
+          closesWat: formatWat(election.closes_at),
+          error: null,
+        });
+      }
       return;
     }
 
@@ -133,11 +156,11 @@ publicRouter.post('/cast', codeAttemptLimiter, csrfProtection, csrfToken, async 
         election,
         options: election.options,
         selectedOptionIds,
-        credential: openMode
+        credential: useOpen
           ? { mode: 'open', fingerprint: fingerprintFor(req) }
           : { mode: 'code', rawCode: code },
       });
-      if (openMode) setVotedCookie(res, election.public_id);
+      if (useOpen) setVotedCookie(res, election.public_id);
       const verifyUrl = `/e/${election.public_id}/verify`;
       res.render('public/receipt', {
         title: 'Vote recorded',
@@ -148,12 +171,12 @@ publicRouter.post('/cast', codeAttemptLimiter, csrfProtection, csrfToken, async 
     } catch (err) {
       if (err instanceof HttpError && err.status < 500) {
         // Re-render the ballot with the error so the voter can retry if it was
-        // recoverable (e.g. nothing selected).
+        // recoverable (e.g. nothing selected, or an invalid code in hybrid mode).
         res.status(err.status).render('public/vote', {
           title: election.title,
           election,
           code,
-          openMode,
+          codeMode,
           error: err.message,
         });
         return;
@@ -171,20 +194,42 @@ publicRouter.get('/e/:publicId', csrfToken, async (req, res, next) => {
     const election = await getElectionWithOptionsByPublicId(req.params.publicId);
     if (!election) throw new HttpError(404, 'Election not found.');
     const state = votingState(election);
-    const openMode = election.access_mode === 'open';
+    const am = election.access_mode;
 
-    // Open + currently votable + this device hasn't voted → show ballot directly.
-    if (openMode && state.open && !(await deviceAlreadyVoted(req, election))) {
-      res.render('public/vote', { title: election.title, election, code: '', openMode: true, error: null });
+    // Link-accessible modes show the ballot directly when votable.
+    if ((am === 'open' || am === 'hybrid') && state.open) {
+      // Open mode blocks a device that already voted; hybrid still shows the
+      // ballot (the voter may have a code).
+      if (am === 'open' && (await deviceAlreadyVoted(req, election))) {
+        res.render('public/election', {
+          title: election.title,
+          election,
+          state,
+          openMode: true,
+          alreadyVoted: true,
+          opensWat: formatWat(election.opens_at),
+          closesWat: formatWat(election.closes_at),
+          error: null,
+        });
+        return;
+      }
+      res.render('public/vote', {
+        title: election.title,
+        election,
+        code: '',
+        codeMode: ballotCodeMode(am),
+        error: null,
+      });
       return;
     }
 
+    // Code mode, or any mode that isn't currently open → the landing page.
     res.render('public/election', {
       title: election.title,
       election,
       state,
-      openMode,
-      alreadyVoted: openMode && state.open ? await deviceAlreadyVoted(req, election) : false,
+      openMode: am !== 'code',
+      alreadyVoted: false,
       opensWat: formatWat(election.opens_at),
       closesWat: formatWat(election.closes_at),
       error: null,

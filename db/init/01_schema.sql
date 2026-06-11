@@ -37,9 +37,10 @@ CREATE TABLE elections (
     ballot_type        TEXT NOT NULL DEFAULT 'single'
                          CHECK (ballot_type IN ('single', 'multiple')),
     max_selections     INTEGER NOT NULL DEFAULT 1 CHECK (max_selections >= 1),
-    -- 'code' = pre-issued voting codes; 'open' = anyone with the link, one vote per device.
+    -- 'code' = pre-issued voting codes; 'open' = anyone with the link (one vote
+    -- per device); 'hybrid' = either a code OR a per-device link vote.
     access_mode        TEXT NOT NULL DEFAULT 'code'
-                         CHECK (access_mode IN ('code', 'open')),
+                         CHECK (access_mode IN ('code', 'open', 'hybrid')),
     status             TEXT NOT NULL DEFAULT 'draft'
                          CHECK (status IN ('draft', 'open', 'closed')),
     results_visibility TEXT NOT NULL DEFAULT 'after_close'
