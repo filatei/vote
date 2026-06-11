@@ -1,0 +1,67 @@
+<%- include('../partials/head') %>
+<section class="page-head">
+  <h1>Edit election</h1>
+  <a class="button button-ghost" href="<%= basePath %>/elections/<%= election.id %>">Cancel</a>
+</section>
+
+<section class="card">
+  <div class="alert" role="status" style="background:#eef3ff;border:1px solid #cdd9f5;color:#1f50c0;">
+    Editing is only available while the election is a <strong>draft</strong>. Changes here won't affect any photos or bios — manage those on the Contestants page.
+  </div>
+  <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+
+  <form method="post" action="<%= basePath %>/elections/<%= election.id %>/edit" class="stack" id="election-form" novalidate>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+    <label for="title">Title / question</label>
+    <input id="title" name="title" type="text" required maxlength="200" value="<%= data.title %>" />
+
+    <label for="description">Description <span class="muted">(optional)</span></label>
+    <textarea id="description" name="description" rows="3" maxlength="5000"><%= data.description %></textarea>
+
+    <fieldset class="inline-fieldset">
+      <legend>Ballot type</legend>
+      <label class="radio-inline">
+        <input type="radio" name="ballotType" value="single" <%= data.ballotType !== 'multiple' ? 'checked' : '' %> data-ballot-toggle />
+        Single choice (pick one)
+      </label>
+      <label class="radio-inline">
+        <input type="radio" name="ballotType" value="multiple" <%= data.ballotType === 'multiple' ? 'checked' : '' %> data-ballot-toggle />
+        Multiple choice (approval)
+      </label>
+    </fieldset>
+
+    <div data-max-wrap <%= data.ballotType === 'multiple' ? '' : 'hidden' %>>
+      <label for="maxSelections">Maximum selections allowed</label>
+      <input id="maxSelections" name="maxSelections" type="number" min="1" max="50" value="<%= data.maxSelections %>" />
+    </div>
+
+    <fieldset class="inline-fieldset">
+      <legend>Who can vote?</legend>
+      <label class="radio-inline"><input type="radio" name="accessMode" value="code" <%= data.accessMode === 'code' ? 'checked' : '' %> /> Voting codes</label>
+      <label class="radio-inline"><input type="radio" name="accessMode" value="open" <%= data.accessMode === 'open' ? 'checked' : '' %> /> Open link</label>
+      <label class="radio-inline"><input type="radio" name="accessMode" value="hybrid" <%= data.accessMode === 'hybrid' ? 'checked' : '' %> /> Link + codes</label>
+    </fieldset>
+
+    <fieldset class="inline-fieldset">
+      <legend>Results visible</legend>
+      <label class="radio-inline"><input type="radio" name="resultsVisibility" value="after_close" <%= data.resultsVisibility !== 'live' ? 'checked' : '' %> /> After close</label>
+      <label class="radio-inline"><input type="radio" name="resultsVisibility" value="live" <%= data.resultsVisibility === 'live' ? 'checked' : '' %> /> Live</label>
+    </fieldset>
+
+    <label>Candidates / options <span class="muted">(at least two)</span></label>
+    <div id="options-list" class="options-editor">
+      <% data.options.forEach(function(o) { %>
+        <div class="option-edit-row">
+          <input type="hidden" name="optionId" value="<%= o.id == null ? '' : o.id %>" />
+          <input class="option-input" type="text" name="option" maxlength="200" value="<%= o.label %>" placeholder="Candidate name" />
+          <button type="button" class="button button-ghost option-remove" aria-label="Remove">&times;</button>
+        </div>
+      <% }) %>
+    </div>
+    <button type="button" class="button button-ghost" id="add-option">+ Add candidate</button>
+
+    <button class="button button-primary" type="submit">Save changes</button>
+  </form>
+</section>
+<%- include('../partials/foot') %>

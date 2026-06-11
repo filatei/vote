@@ -1,11 +1,22 @@
 import { pool } from '../db';
 import { Election, ElectionWithOptions, Option } from './types';
 
+// Postgres returns BIGINT columns as strings; coerce numeric fields so the
+// Election object matches its declared types and id comparisons are reliable.
+function coerceElection(r: Election): Election {
+  return {
+    ...r,
+    id: Number(r.id),
+    owner_id: r.owner_id == null ? null : Number(r.owner_id),
+    max_selections: Number(r.max_selections),
+  };
+}
+
 export async function listElections(): Promise<Election[]> {
   const { rows } = await pool.query<Election>(
     `SELECT * FROM elections ORDER BY created_at DESC`,
   );
-  return rows;
+  return rows.map(coerceElection);
 }
 
 export async function listElectionsByOwner(ownerId: number): Promise<Election[]> {
@@ -13,7 +24,7 @@ export async function listElectionsByOwner(ownerId: number): Promise<Election[]>
     `SELECT * FROM elections WHERE owner_id = $1 ORDER BY created_at DESC`,
     [ownerId],
   );
-  return rows;
+  return rows.map(coerceElection);
 }
 
 /** True if the given customer owns this election. Both sides are coerced to
@@ -24,14 +35,14 @@ export function ownsElection(election: Election, customerId: number | string): b
 
 export async function getElectionById(id: number): Promise<Election | null> {
   const { rows } = await pool.query<Election>(`SELECT * FROM elections WHERE id = $1`, [id]);
-  return rows[0] ?? null;
+  return rows[0] ? coerceElection(rows[0]) : null;
 }
 
 export async function getElectionByPublicId(publicId: string): Promise<Election | null> {
   const { rows } = await pool.query<Election>(`SELECT * FROM elections WHERE public_id = $1`, [
     publicId,
   ]);
-  return rows[0] ?? null;
+  return rows[0] ? coerceElection(rows[0]) : null;
 }
 
 export async function getOptions(electionId: number): Promise<Option[]> {
@@ -168,6 +179,93 @@ export async function setStatus(
   if (status === 'open') cols.push('opens_at = COALESCE(opens_at, now())');
   if (status === 'closed') cols.push('closes_at = now()');
   await pool.query(`UPDATE elections SET ${cols.join(', ')} WHERE id = $1`, [electionId, status]);
+}
+
+export interface EditOption {
+  id: number | null; // null = a new candidate
+  label: string;
+}
+
+/**
+ * Amend a DRAFT election's parameters and candidate list. Existing options are
+ * renamed in place (preserving their id, photo and bio); new ones are inserted;
+ * omitted ones are deleted. Returns the image paths of any removed candidates so
+ * the caller can delete the files. Caller must ensure the election is a draft.
+ */
+export async function updateElectionDraft(
+  electionId: number,
+  input: {
+    title: string;
+    description: string;
+    ballotType: 'single' | 'multiple';
+    maxSelections: number;
+    accessMode: 'code' | 'open' | 'hybrid';
+    resultsVisibility: 'live' | 'after_close';
+    options: EditOption[];
+  },
+): Promise<string[]> {
+  const client = await pool.connect();
+  const removedImages: string[] = [];
+  try {
+    await client.query('BEGIN');
+    const maxSel = input.ballotType === 'single' ? 1 : Math.max(1, input.maxSelections);
+    await client.query(
+      `UPDATE elections
+          SET title = $2, description = $3, ballot_type = $4, max_selections = $5,
+              access_mode = $6, results_visibility = $7
+        WHERE id = $1`,
+      [
+        electionId,
+        input.title,
+        input.description,
+        input.ballotType,
+        maxSel,
+        input.accessMode,
+        input.resultsVisibility,
+      ],
+    );
+
+    const existing = await client.query<{ id: string; image_path: string | null }>(
+      `SELECT id, image_path FROM options WHERE election_id = $1`,
+      [electionId],
+    );
+    const existingIds = new Set(existing.rows.map((r) => Number(r.id)));
+    const keptIds = new Set<number>();
+
+    let position = 0;
+    for (const opt of input.options) {
+      if (opt.id != null && existingIds.has(opt.id)) {
+        await client.query(`UPDATE options SET label = $2, position = $3 WHERE id = $1`, [
+          opt.id,
+          opt.label,
+          position,
+        ]);
+        keptIds.add(opt.id);
+      } else {
+        await client.query(
+          `INSERT INTO options (election_id, label, position) VALUES ($1, $2, $3)`,
+          [electionId, opt.label, position],
+        );
+      }
+      position += 1;
+    }
+
+    for (const row of existing.rows) {
+      const idNum = Number(row.id);
+      if (!keptIds.has(idNum)) {
+        if (row.image_path) removedImages.push(row.image_path);
+        await client.query(`DELETE FROM options WHERE id = $1`, [idNum]);
+      }
+    }
+
+    await client.query('COMMIT');
+    return removedImages;
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => undefined);
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 /** Set or clear the scheduled WAT voting window (stored as UTC). */

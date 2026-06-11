@@ -104,6 +104,9 @@ textarea { resize: vertical; }
 .inline-fieldset { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin: 10px 0 0; }
 .radio-inline { display: inline-flex; align-items: center; gap: 6px; margin-right: 18px; font-weight: 400; }
 .options-editor { display: flex; flex-direction: column; gap: 8px; }
+.option-edit-row { display: flex; gap: 8px; align-items: center; }
+.option-edit-row .option-input { flex: 1 1 auto; }
+.option-edit-row .option-remove { flex: 0 0 auto; padding: 9px 13px; line-height: 1; font-size: 1.1rem; }
 
 /* Buttons */
 .button {

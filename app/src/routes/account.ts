@@ -19,9 +19,11 @@ import {
   listElectionsByOwner,
   ownsElection,
   setStatus,
+  updateElectionDraft,
   updateOptionContent,
   updateSchedule,
 } from '../services/elections';
+import { editDataFromElection, parseEditForm } from '../util/electionEdit';
 import { initializePayment, paymentsEnabled, verifyPayment } from '../services/payments';
 import { generateCodes, getCodeStats } from '../services/codes';
 import { tallyElection } from '../services/tally';
@@ -179,6 +181,48 @@ async function renderElectionView(req: Request, res: import('express').Response,
 accountRouter.get('/elections/:id', async (req, res, next) => {
   try {
     await renderElectionView(req, res, null);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Edit a draft election (title, candidates, parameters)
+accountRouter.get('/elections/:id/edit', async (req, res, next) => {
+  try {
+    const election = await loadOwned(req);
+    if (election.status !== 'draft') {
+      throw new HttpError(409, 'This election can only be edited while it is a draft.');
+    }
+    res.render('admin/election_edit', {
+      title: 'Edit election',
+      election,
+      data: editDataFromElection(election),
+      error: null,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+accountRouter.post('/elections/:id/edit', csrfProtection, async (req, res, next) => {
+  try {
+    const election = await loadOwned(req);
+    if (election.status !== 'draft') {
+      throw new HttpError(409, 'This election can only be edited while it is a draft.');
+    }
+    const result = parseEditForm(req);
+    if (!result.ok) {
+      res.status(400).render('admin/election_edit', {
+        title: 'Edit election',
+        election,
+        data: result.data,
+        error: result.error,
+      });
+      return;
+    }
+    const removed = await updateElectionDraft(election.id, result.data);
+    for (const p of removed) fs.promises.unlink(uploadPath(p)).catch(() => undefined);
+    res.redirect(`/account/elections/${election.id}`);
   } catch (err) {
     next(err);
   }

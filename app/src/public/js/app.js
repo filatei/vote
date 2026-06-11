@@ -22,14 +22,33 @@
   var optionsList = document.getElementById('options-list');
   if (addOption && optionsList) {
     addOption.addEventListener('click', function () {
-      var input = document.createElement('input');
-      input.className = 'option-input';
-      input.type = 'text';
-      input.name = 'option';
-      input.maxLength = 200;
-      input.placeholder = 'Option label';
-      optionsList.appendChild(input);
-      input.focus();
+      if (optionsList.querySelector('.option-edit-row')) {
+        // Edit form: paired hidden id + label + remove button.
+        var row = document.createElement('div');
+        row.className = 'option-edit-row';
+        row.innerHTML =
+          '<input type="hidden" name="optionId" value="" />' +
+          '<input class="option-input" type="text" name="option" maxlength="200" placeholder="Candidate name" />' +
+          '<button type="button" class="button button-ghost option-remove" aria-label="Remove">×</button>';
+        optionsList.appendChild(row);
+        row.querySelector('.option-input').focus();
+      } else {
+        var input = document.createElement('input');
+        input.className = 'option-input';
+        input.type = 'text';
+        input.name = 'option';
+        input.maxLength = 200;
+        input.placeholder = 'Option label';
+        optionsList.appendChild(input);
+        input.focus();
+      }
+    });
+    optionsList.addEventListener('click', function (e) {
+      var btn = e.target && e.target.closest ? e.target.closest('.option-remove') : null;
+      if (btn) {
+        var row = btn.closest('.option-edit-row');
+        if (row) row.remove();
+      }
     });
   }
 

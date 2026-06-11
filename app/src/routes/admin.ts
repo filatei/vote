@@ -19,12 +19,14 @@ import {
   getOptionById,
   listElections,
   setStatus,
+  updateElectionDraft,
   updateOptionContent,
   updateSchedule,
 } from '../services/elections';
 import { watInputToUtc } from '../util/datetime';
 import { uploadContestantImage, uploadPath } from '../middleware/upload';
 import { mailStatus, sendMail, verifyMailer } from '../mailer';
+import { editDataFromElection, parseEditForm } from '../util/electionEdit';
 import fs from 'fs';
 import { generateCodes, getCodeStats } from '../services/codes';
 import { tallyElection } from '../services/tally';
@@ -179,6 +181,51 @@ adminRouter.get('/elections/:id', csrfToken, async (req, res, next) => {
       canDelete: canDeleteElection(election, config.ALLOW_ELECTION_DELETE),
       allowDeleteAny: config.ALLOW_ELECTION_DELETE,
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Edit a draft election (title, candidates, parameters)
+adminRouter.get('/elections/:id/edit', csrfToken, async (req, res, next) => {
+  try {
+    const election = await getElectionWithOptions(Number(req.params.id));
+    if (!election) throw new HttpError(404, 'Election not found.');
+    if (election.status !== 'draft') {
+      throw new HttpError(409, 'This election can only be edited while it is a draft.');
+    }
+    res.render('admin/election_edit', {
+      title: 'Edit election',
+      election,
+      data: editDataFromElection(election),
+      error: null,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+adminRouter.post('/elections/:id/edit', csrfProtection, async (req, res, next) => {
+  try {
+    const election = await getElectionWithOptions(Number(req.params.id));
+    if (!election) throw new HttpError(404, 'Election not found.');
+    if (election.status !== 'draft') {
+      throw new HttpError(409, 'This election can only be edited while it is a draft.');
+    }
+    const result = parseEditForm(req);
+    if (!result.ok) {
+      res.status(400).render('admin/election_edit', {
+        title: 'Edit election',
+        election,
+        data: result.data,
+        error: result.error,
+      });
+      return;
+    }
+    const removed = await updateElectionDraft(election.id, result.data);
+    for (const p of removed) fs.promises.unlink(uploadPath(p)).catch(() => undefined);
+    await logAction({ adminId: req.session.adminId!, action: 'edit_election', electionId: election.id, ip: req.ip });
+    res.redirect(`/admin/elections/${election.id}`);
   } catch (err) {
     next(err);
   }

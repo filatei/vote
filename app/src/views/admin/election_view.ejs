@@ -60,6 +60,11 @@
         </form>
       <% }) %>
     </div>
+    <% if (election.status === 'draft') { %>
+      <p class="links-row" style="margin-top:12px;">
+        <a class="button button-ghost" href="<%= basePath %>/elections/<%= election.id %>/edit">Edit details &amp; candidates</a>
+      </p>
+    <% } %>
   </section>
 
   <section class="card">
