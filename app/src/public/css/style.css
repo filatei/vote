@@ -223,6 +223,20 @@ button.receipt-code:hover { background: rgba(47, 109, 244, .08); }
 
 .error-status { font-size: 3rem; margin: 0 0 6px; color: var(--brand); }
 
+/* Auth / sign-in card */
+.auth-wrap { display: flex; justify-content: center; padding: 16px 0 28px; }
+.auth-card { width: 100%; max-width: 460px; text-align: center; padding: 34px 28px; }
+.auth-badge {
+  display: inline-grid; place-items: center; width: 58px; height: 58px; margin: 0 auto 14px;
+  background: #e9efff; color: var(--brand-dark); border-radius: 50%; font-size: 26px;
+}
+.auth-title { font-size: 1.6rem; margin: 0 0 6px; }
+.auth-sub { margin: 0 0 20px; }
+.auth-form { text-align: left; }
+.auth-form label { font-weight: 600; }
+.auth-form .button { margin-top: 10px; }
+.auth-foot { margin: 16px 0 0; font-size: .88rem; color: var(--muted); }
+
 /* Schedule inputs */
 .schedule-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .schedule-grid label { display: block; font-weight: 600; margin-bottom: 4px; }

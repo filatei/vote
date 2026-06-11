@@ -5,7 +5,7 @@
 </section>
 
 <section class="card narrow">
-  <form method="post" action="/e/<%= election.public_id %>/verify" class="stack" novalidate>
+  <form method="post" action="/e/<%= election.public_id %>/verify" class="stack">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
     <label for="receipt">Receipt code</label>
     <input id="receipt" name="receipt" type="text" autocomplete="off" spellcheck="false"

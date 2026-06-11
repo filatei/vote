@@ -6,7 +6,7 @@
 
 <section class="card">
   <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
-  <form method="post" action="<%= basePath %>/elections" class="stack" id="election-form" novalidate>
+  <form method="post" action="<%= basePath %>/elections" class="stack" id="election-form">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
 
     <label for="title">Title</label>
@@ -32,7 +32,7 @@
 
     <div data-max-wrap <%= (form && form.ballotType === 'multiple') ? '' : 'hidden' %>>
       <label for="maxSelections">Maximum selections allowed</label>
-      <input id="maxSelections" name="maxSelections" type="number" min="1" max="50"
+      <input id="maxSelections" name="maxSelections" type="number" inputmode="numeric" min="1" max="50" step="1"
              value="<%= form && form.maxSelections ? form.maxSelections : 2 %>" />
     </div>
 

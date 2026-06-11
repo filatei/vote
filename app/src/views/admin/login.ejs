@@ -9,7 +9,7 @@
       <span class="google-g" aria-hidden="true">G</span> Sign in with Google
     </a>
   <% } else { %>
-    <form method="post" action="/admin/login" class="stack" novalidate>
+    <form method="post" action="/admin/login" class="stack">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
       <label for="username">Username</label>
       <input id="username" name="username" type="text" autocomplete="username" required />

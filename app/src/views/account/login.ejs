@@ -1,17 +1,22 @@
 <%- include('../partials/head') %>
-<section class="hero">
-  <h1>Sign in to run a vote</h1>
-  <p class="lead">Enter your email and we'll send you a secure sign-in link — no password needed.</p>
-</section>
+<section class="auth-wrap">
+  <div class="card narrow auth-card">
+    <div class="auth-badge" aria-hidden="true">✉</div>
+    <h1 class="auth-title">Sign in to run a vote</h1>
+    <p class="lead auth-sub">Enter your email and we'll send a secure sign-in link — no password needed.</p>
 
-<section class="card narrow">
-  <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
-  <form method="post" action="/account/login" class="stack" novalidate>
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-    <label for="email">Email address</label>
-    <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required />
-    <button class="button button-primary" type="submit">Email me a sign-in link</button>
-  </form>
-  <p class="help">New here? Signing in creates your account automatically.</p>
+    <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+
+    <form method="post" action="/account/login" class="stack auth-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <label for="email">Email address</label>
+      <input id="email" name="email" type="email" inputmode="email" autocomplete="email"
+             placeholder="you@example.com" required autofocus
+             pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Enter a valid email, e.g. you@example.com" />
+      <button class="button button-primary full" type="submit">Email me a sign-in link</button>
+    </form>
+
+    <p class="auth-foot">New here? Signing in creates your account automatically.</p>
+  </div>
 </section>
 <%- include('../partials/foot') %>

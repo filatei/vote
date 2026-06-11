@@ -138,7 +138,7 @@
     <form method="post" action="<%= basePath %>/elections/<%= election.id %>/codes" class="inline-form-wide">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
       <label for="count" class="sr-only">Number of codes</label>
-      <input id="count" name="count" type="number" min="1" max="50000" value="50" />
+      <input id="count" name="count" type="number" inputmode="numeric" min="1" max="50000" step="1" value="50" />
       <button class="button button-primary" type="submit">Generate codes</button>
     </form>
   <% } else { %>

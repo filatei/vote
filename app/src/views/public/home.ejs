@@ -55,7 +55,7 @@
     <h2 class="h3">Cast your vote</h2>
     <p>Have a voting code or an election link? Enter your details below to cast a secret ballot. Your code is never linked to your choice.</p>
     <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
-    <form method="post" action="/vote" class="stack" novalidate>
+    <form method="post" action="/vote" class="stack">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
       <label for="election">Election ID or link</label>
       <input id="election" name="election" type="text" autocomplete="off" value="<%= electionId || '' %>"

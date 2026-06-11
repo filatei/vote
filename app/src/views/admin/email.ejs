@@ -36,7 +36,7 @@
   <form method="post" action="/admin/email/test" class="inline-form-wide">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
     <label for="to" class="sr-only">Recipient</label>
-    <input id="to" name="to" type="email" placeholder="you@example.com" required />
+    <input id="to" name="to" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" required />
     <button class="button button-primary" type="submit">Send test</button>
   </form>
   <p class="help">For Google Workspace SMTP relay, set <code>SMTP_HOST=smtp-relay.gmail.com</code> and <code>SMTP_PORT=587</code> in <code>.env</code> (no username/password needed if this server's IP is authorised in the relay). See EMAIL-SETUP.md.</p>

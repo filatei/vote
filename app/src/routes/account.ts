@@ -24,6 +24,7 @@ import {
   updateSchedule,
 } from '../services/elections';
 import { editDataFromElection, parseEditForm } from '../util/electionEdit';
+import { logger } from '../logger';
 import { initializePayment, paymentsEnabled, verifyPayment } from '../services/payments';
 import { generateCodes, getCodeStats } from '../services/codes';
 import { tallyElection } from '../services/tally';
@@ -43,18 +44,32 @@ accountAuthRouter.get('/login', csrfToken, (req, res) => {
 accountAuthRouter.post('/login', magicLinkLimiter, csrfProtection, async (req, res, next) => {
   try {
     const email = String(req.body.email || '').trim().toLowerCase();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      res.status(400).render('account/login', { title: 'Sign in', error: 'Enter a valid email address.' });
+    // Reasonable email check: local@domain.tld, sane lengths.
+    const validEmail = email.length <= 254 && /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(email);
+    if (!validEmail) {
+      res.status(400).render('account/login', {
+        title: 'Sign in',
+        error: 'Please enter a valid email address (e.g. you@example.com).',
+      });
       return;
     }
-    const token = await createMagicToken(email);
-    const link = `${config.PUBLIC_BASE_URL}/account/verify?token=${encodeURIComponent(token)}`;
-    await sendMail({
-      to: email,
-      subject: 'Your Torama Vote sign-in link',
-      text: `Click to sign in to Torama Vote:\n\n${link}\n\nThis link expires in 20 minutes. If you didn't request it, ignore this email.`,
-      html: `<p>Click to sign in to Torama Vote:</p><p><a href="${link}">Sign in</a></p><p>This link expires in 20 minutes. If you didn't request it, ignore this email.</p>`,
-    });
+    try {
+      const token = await createMagicToken(email);
+      const link = `${config.PUBLIC_BASE_URL}/account/verify?token=${encodeURIComponent(token)}`;
+      await sendMail({
+        to: email,
+        subject: 'Your Torama Vote sign-in link',
+        text: `Click to sign in to Torama Vote:\n\n${link}\n\nThis link expires in 20 minutes. If you didn't request it, ignore this email.`,
+        html: `<p>Click to sign in to Torama Vote:</p><p><a href="${link}">Sign in</a></p><p>This link expires in 20 minutes. If you didn't request it, ignore this email.</p>`,
+      });
+    } catch (mailErr) {
+      logger.error({ err: mailErr }, 'magic-link send failed');
+      res.status(503).render('account/login', {
+        title: 'Sign in',
+        error: "We couldn't send the sign-in email right now. Please check the address and try again shortly.",
+      });
+      return;
+    }
     res.render('account/check_email', { title: 'Check your email', email });
   } catch (err) {
     next(err);
