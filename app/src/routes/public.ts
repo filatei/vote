@@ -157,7 +157,12 @@ publicRouter.post('/cast', codeAttemptLimiter, csrfProtection, csrfToken, async 
         options: election.options,
         selectedOptionIds,
         credential: useOpen
-          ? { mode: 'open', fingerprint: fingerprintFor(req) }
+          ? {
+              mode: 'open',
+              fingerprint: fingerprintFor(req),
+              ip: req.ip,
+              userAgent: String(req.headers['user-agent'] || ''),
+            }
           : { mode: 'code', rawCode: code },
       });
       if (useOpen) setVotedCookie(res, election.public_id);

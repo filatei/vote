@@ -44,6 +44,11 @@ const schema = z.object({
   // production). Served read-only at /uploads.
   UPLOAD_DIR: z.string().default('/app/uploads'),
 
+  // Platform-admin-only device forensic audit. When true, open/hybrid (per-
+  // device) votes also record the client IP + user-agent in device_votes (still
+  // unlinked from the ballot). OFF by default for privacy. See admin/devices.
+  DEVICE_AUDIT_ENABLED: bool(false),
+
   // ── Paystack (same keys/var names as the other torama.money apps) ─────
   // Leave the secret blank to disable payments (customers can't launch).
   PAYSTACK_SECRET_KEY: z.string().optional(),

@@ -62,6 +62,12 @@ const STATEMENTS: string[] = [
      confirmed_at    TIMESTAMPTZ
    )`,
   `CREATE INDEX IF NOT EXISTS idx_paystack_payments_election ON paystack_payments(election_id)`,
+
+  // Optional forensic columns on device_votes (populated only when
+  // DEVICE_AUDIT_ENABLED). Still unlinked from any ballot.
+  `ALTER TABLE device_votes ADD COLUMN IF NOT EXISTS ip TEXT`,
+  `ALTER TABLE device_votes ADD COLUMN IF NOT EXISTS user_agent TEXT`,
+  `ALTER TABLE device_votes ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ`,
 ];
 
 export async function runMigrations(): Promise<void> {

@@ -116,6 +116,7 @@
   <h2 class="h3">Open-link voting</h2>
   <p class="help">Anyone with the share link can vote, limited to <strong>one vote per device</strong> (cookie + device fingerprint). No codes needed — just share the link. Note: this is convenient but a determined person could clear cookies and switch networks; use code-based elections for high-stakes votes.</p>
   <p class="share-url"><code><%= baseUrl %>/e/<%= election.public_id %></code></p>
+  <% if (area === 'admin') { %><p class="links-row"><a href="<%= basePath %>/elections/<%= election.id %>/devices">Device audit →</a></p><% } %>
 </section>
 <% } else { %>
 <% if (election.access_mode === 'hybrid') { %>
@@ -123,6 +124,7 @@
   <h2 class="h3">Hybrid voting <span class="muted">(link + codes)</span></h2>
   <p class="help">Voters who have a code enter it (one code = one vote); anyone else can vote once per device via the link. Generate codes below for your known voters, and share the link with everyone.</p>
   <p class="share-url"><code><%= baseUrl %>/e/<%= election.public_id %></code></p>
+  <% if (area === 'admin') { %><p class="links-row"><a href="<%= basePath %>/elections/<%= election.id %>/devices">Device audit →</a></p><% } %>
 </section>
 <% } %>
 <section class="card">

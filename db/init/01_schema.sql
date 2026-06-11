@@ -110,6 +110,11 @@ CREATE TABLE device_votes (
     id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     election_id BIGINT NOT NULL REFERENCES elections(id) ON DELETE CASCADE,
     fingerprint TEXT NOT NULL,
+    -- Forensic columns, populated only when DEVICE_AUDIT_ENABLED (platform-admin
+    -- audit). Still unlinked from any ballot.
+    ip          TEXT,
+    user_agent  TEXT,
+    created_at  TIMESTAMPTZ,
     created_on  DATE NOT NULL DEFAULT (now() AT TIME ZONE 'UTC')::date,
     UNIQUE (election_id, fingerprint)
 );

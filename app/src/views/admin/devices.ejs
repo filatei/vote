@@ -1,0 +1,57 @@
+<%- include('../partials/head') %>
+<section class="page-head">
+  <div>
+    <h1>Device audit</h1>
+    <p class="lead"><%= election.title %></p>
+  </div>
+  <a class="button button-ghost" href="<%= basePath %>/elections/<%= election.id %>">← Back to election</a>
+</section>
+
+<section class="card">
+  <div class="stat-row">
+    <div class="stat"><span class="stat-num"><%= devices.length %></span><span class="stat-label">unique devices</span></div>
+  </div>
+  <p class="help">
+    Each row is one device that voted via the link (open / hybrid access). The
+    <code>UNIQUE(election_id, fingerprint)</code> database constraint guarantees no
+    two of these share a fingerprint — so this count <strong>is</strong> the number
+    of distinct devices, and proves one-vote-per-device.
+  </p>
+  <% if (!auditEnabled) { %>
+    <div class="alert alert-warn" role="status">
+      Device details (IP, browser) are <strong>not</strong> being recorded — only anonymous
+      fingerprints are stored. To record IP + user-agent for future votes, set
+      <code>DEVICE_AUDIT_ENABLED=true</code> in <code>.env</code> and redeploy.
+    </div>
+  <% } else { %>
+    <div class="alert" role="status" style="background:#fff6e0;border:1px solid #f0dea6;color:#9a6700;">
+      Privacy note: IP + browser are recorded for fraud investigation, decoupled from ballot choices.
+      For <strong>open-link</strong> voting this is best-effort secrecy (not as strong as code-based voting).
+      Disclose this collection in your privacy notice.
+    </div>
+  <% } %>
+</section>
+
+<section class="card">
+  <h2 class="h3">Devices</h2>
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>#</th><th>When</th><th>IP</th><th>Browser / device</th><th>Fingerprint</th></tr></thead>
+      <tbody>
+        <% if (devices.length === 0) { %>
+          <tr><td colspan="5" class="muted">No device votes recorded for this election.</td></tr>
+        <% } %>
+        <% devices.forEach(function(d, i) { %>
+          <tr>
+            <td class="muted"><%= i + 1 %></td>
+            <td class="muted"><%= d.created_at ? new Date(d.created_at).toISOString().replace('T',' ').slice(0,19) : d.created_on %></td>
+            <td><%= d.ip || '—' %></td>
+            <td class="muted" style="max-width:340px;word-break:break-word;"><%= d.user_agent || '—' %></td>
+            <td><code><%= d.fingerprint.slice(0, 12) %>…</code></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+<%- include('../partials/foot') %>

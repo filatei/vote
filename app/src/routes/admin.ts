@@ -30,6 +30,7 @@ import { editDataFromElection, parseEditForm } from '../util/electionEdit';
 import fs from 'fs';
 import { generateCodes, getCodeStats } from '../services/codes';
 import { tallyElection } from '../services/tally';
+import { getDeviceVotes } from '../services/devices';
 import { getAuditLog, logAction } from '../services/admins';
 
 export const adminRouter = Router();
@@ -253,6 +254,23 @@ adminRouter.post('/elections/:id/schedule', csrfProtection, async (req, res, nex
       ip: req.ip,
     });
     res.redirect(`/admin/elections/${id}`);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Platform-admin device audit (open/hybrid elections)
+adminRouter.get('/elections/:id/devices', csrfToken, async (req, res, next) => {
+  try {
+    const election = await getElectionById(Number(req.params.id));
+    if (!election) throw new HttpError(404, 'Election not found.');
+    const devices = await getDeviceVotes(election.id);
+    res.render('admin/devices', {
+      title: `Device audit — ${election.title}`,
+      election,
+      devices,
+      auditEnabled: config.DEVICE_AUDIT_ENABLED,
+    });
   } catch (err) {
     next(err);
   }

@@ -1,3 +1,4 @@
+import { config } from '../config';
 import { withSerializableTx } from '../db';
 import { HttpError } from '../middleware/errors';
 import { generateReceiptCode, hashCode } from '../util/crypto';
@@ -61,7 +62,7 @@ export function validateSelection(
  */
 export type Credential =
   | { mode: 'code'; rawCode: string }
-  | { mode: 'open'; fingerprint: string };
+  | { mode: 'open'; fingerprint: string; ip?: string; userAgent?: string };
 
 export async function castBallot(params: {
   election: Election;
@@ -109,13 +110,23 @@ export async function castBallot(params: {
     } else {
       // Open mode: claim this device fingerprint. The UNIQUE constraint makes
       // the insert fail (0 rows) if it already voted — atomic one-per-device.
-      const claim = await client.query(
-        `INSERT INTO device_votes (election_id, fingerprint)
-         VALUES ($1, $2)
-         ON CONFLICT (election_id, fingerprint) DO NOTHING
-         RETURNING id`,
-        [election.id, credential.fingerprint],
-      );
+      // When the platform device audit is enabled, also record IP + user-agent
+      // (still unlinked from the ballot).
+      const claim = config.DEVICE_AUDIT_ENABLED
+        ? await client.query(
+            `INSERT INTO device_votes (election_id, fingerprint, ip, user_agent, created_at)
+             VALUES ($1, $2, $3, $4, now())
+             ON CONFLICT (election_id, fingerprint) DO NOTHING
+             RETURNING id`,
+            [election.id, credential.fingerprint, credential.ip ?? null, credential.userAgent ?? null],
+          )
+        : await client.query(
+            `INSERT INTO device_votes (election_id, fingerprint)
+             VALUES ($1, $2)
+             ON CONFLICT (election_id, fingerprint) DO NOTHING
+             RETURNING id`,
+            [election.id, credential.fingerprint],
+          );
       if (claim.rowCount === 0) {
         throw new HttpError(409, 'A vote has already been recorded from this device.');
       }
