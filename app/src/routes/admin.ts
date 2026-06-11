@@ -276,6 +276,38 @@ adminRouter.get('/elections/:id/devices', csrfToken, async (req, res, next) => {
   }
 });
 
+// Device audit CSV export
+adminRouter.get('/elections/:id/devices.csv', async (req, res, next) => {
+  try {
+    const election = await getElectionById(Number(req.params.id));
+    if (!election) throw new HttpError(404, 'Election not found.');
+    const devices = await getDeviceVotes(election.id);
+    const esc = (v: unknown) => {
+      const s = v == null ? '' : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const header = 'index,timestamp_utc,ip,user_agent,fingerprint\n';
+    const body = devices
+      .map((d, i) =>
+        [
+          i + 1,
+          d.created_at ? new Date(d.created_at).toISOString() : d.created_on,
+          d.ip || '',
+          d.user_agent || '',
+          d.fingerprint,
+        ]
+          .map(esc)
+          .join(','),
+      )
+      .join('\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="device-audit-${election.public_id}.csv"`);
+    res.send(header + body + '\n');
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Manage contestants (photos + bios)
 adminRouter.get('/elections/:id/contestants', csrfToken, async (req, res, next) => {
   try {

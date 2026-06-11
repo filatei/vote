@@ -33,7 +33,12 @@
 </section>
 
 <section class="card">
-  <h2 class="h3">Devices</h2>
+  <div class="page-head" style="margin-bottom:14px;">
+    <h2 class="h3">Devices</h2>
+    <% if (devices.length) { %>
+      <a class="button button-ghost button-sm" href="<%= basePath %>/elections/<%= election.id %>/devices.csv">Download CSV</a>
+    <% } %>
+  </div>
   <div class="table-scroll">
     <table class="data-table">
       <thead><tr><th>#</th><th>When</th><th>IP</th><th>Browser / device</th><th>Fingerprint</th></tr></thead>
