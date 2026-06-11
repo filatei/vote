@@ -126,12 +126,18 @@ docker compose up -d --build
 ```
 
 **Backups** (do this regularly, and before closing important elections)
+
+Use the bundled script — it dumps the DB from the container, gzips it into
+`/opt/vote/backups`, verifies it, and prunes dumps older than 14 days:
+
 ```bash
-# database
-docker compose exec -T vote_postgres \
-  pg_dump -U voteuser votedb | gzip > /opt/vote/backups/votedb-$(date +%F).sql.gz
+sudo bash /opt/vote/infra/backup.sh                 # run a backup now
+sudo bash /opt/vote/infra/backup.sh --install-cron  # schedule nightly @ 02:00
 ```
-Add a cron entry for nightly dumps and copy them off-box.
+
+`--install-cron` writes `/etc/cron.d/vote-backup` (logs to `/var/log/vote-backup.log`).
+**Copy the backups off-box** (e.g. a periodic `rsync`/`scp` to another host or
+object storage) so they survive loss of the server.
 
 **Restore**
 ```bash

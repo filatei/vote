@@ -29,7 +29,7 @@ export async function tallyElection(electionId: number): Promise<Tally> {
   return {
     totalBallots,
     rows: rows.map((r) => ({
-      option_id: r.option_id,
+      option_id: Number(r.option_id),
       label: r.label,
       image_path: r.image_path,
       votes: Number(r.votes),
