@@ -179,21 +179,7 @@
 </section>
 <section class="card danger-zone">
   <h2 class="h3">Danger zone</h2>
-  <% if (canDelete) { %>
-    <p class="help">
-      <% if (allowDeleteAny) { %>
-        Testing mode: this permanently deletes the election and all its codes and ballots. This cannot be undone.
-      <% } else { %>
-        This election is still a draft (never opened), so it can be deleted. Once opened it can only be closed.
-      <% } %>
-    </p>
-    <form method="post" action="<%= basePath %>/elections/<%= election.id %>/delete"
-          class="confirm-delete" data-confirm="Permanently delete &quot;<%= election.title %>&quot; and all its data? This cannot be undone.">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-      <button class="button button-danger" type="submit">Delete this election</button>
-    </form>
-  <% } else { %>
-    <p class="help">This election has been opened, so it can no longer be deleted — use <strong>Close</strong> in the Status panel to end it. Its record is preserved for audit.</p>
-  <% } %>
+  <p class="help">Deleting an election is currently disabled to prevent accidental, irreversible removal. To end an election, use <strong>Close</strong> in the Status panel.</p>
+  <button class="button button-danger" type="button" disabled>Delete this election</button>
 </section>
 <%- include('../partials/foot') %>

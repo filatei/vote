@@ -42,6 +42,7 @@ export interface ElectionWithOptions extends Election {
 export interface TallyRow {
   option_id: number;
   label: string;
+  description: string;
   votes: number;
   image_path: string | null;
 }

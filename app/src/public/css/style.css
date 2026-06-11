@@ -518,6 +518,16 @@ input[type="text"], input[type="password"], input[type="number"], textarea, .opt
   letter-spacing: .05em; background: var(--success-bg); color: var(--success);
   padding: 2px 8px; border-radius: 999px; vertical-align: middle; margin-left: 2px;
 }
+/* Tap a candidate row to reveal their bio */
+.lb-row.has-bio { cursor: pointer; }
+.lb-caret { display: inline-block; font-size: .8em; color: var(--muted); margin-left: 4px; transition: transform .2s ease; }
+.lb-row.bio-open .lb-caret { transform: rotate(180deg); }
+.lb-bio {
+  max-height: 0; opacity: 0; overflow: hidden; margin-top: 0; color: var(--muted);
+  font-size: .9rem; line-height: 1.45;
+  transition: max-height .3s ease, opacity .25s ease, margin-top .25s ease;
+}
+.lb-row.bio-open .lb-bio { max-height: 260px; opacity: 1; margin-top: 8px; }
 
 /* ===========================================================================
    Candidate-card ballot options

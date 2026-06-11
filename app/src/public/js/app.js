@@ -150,6 +150,16 @@
     });
   }
 
+  // 2e-i. Tap a leaderboard candidate to reveal their bio (delegated so it
+  //       keeps working after the live poll re-renders the list).
+  var board = document.querySelector('.leaderboard');
+  if (board) {
+    board.addEventListener('click', function (e) {
+      var row = e.target && e.target.closest ? e.target.closest('.lb-row') : null;
+      if (row && row.classList.contains('has-bio')) row.classList.toggle('bio-open');
+    });
+  }
+
   // 2e. Live tally streaming on the public results page.
   (function () {
     var ol = document.querySelector('[data-results-poll]');
@@ -165,6 +175,11 @@
     }
     function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
     function render(data) {
+      // Preserve which bios are open across re-renders.
+      var open = {};
+      var cur = ol.querySelectorAll('.lb-row.bio-open');
+      for (var c = 0; c < cur.length; c++) open[cur[c].getAttribute('data-option-id')] = true;
+
       var rows = data.rows.slice().sort(function (a, b) { return b.votes - a.votes; });
       var total = rows.reduce(function (s, r) { return s + r.votes; }, 0);
       var maxv = rows.length ? rows[0].votes : 0;
@@ -173,12 +188,18 @@
         var pct = total ? Math.round((r.votes / total) * 100) : 0;
         var bar = maxv ? Math.round((r.votes / maxv) * 100) : 0;
         var leader = idx === 0 && r.votes > 0;
-        html += '<li class="lb-row' + (leader ? ' lb-leader' : '') + '" data-option-id="' + r.option_id + '">' +
+        var hasBio = !!(r.description && String(r.description).trim());
+        var cls = 'lb-row' + (leader ? ' lb-leader' : '') + (hasBio ? ' has-bio' : '') +
+          (open[r.option_id] ? ' bio-open' : '');
+        html += '<li class="' + cls + '" data-option-id="' + r.option_id + '">' +
           '<span class="lb-rank">' + (idx + 1) + '</span>' + (thumbs[r.option_id] || '') +
           '<div class="lb-main"><div class="lb-top">' +
-          '<span class="lb-name">' + esc(r.label) + (leader ? ' <span class="lb-badge">Leading</span>' : '') + '</span>' +
+          '<span class="lb-name">' + esc(r.label) + (leader ? ' <span class="lb-badge">Leading</span>' : '') +
+          (hasBio ? ' <span class="lb-caret" aria-hidden="true">▾</span>' : '') + '</span>' +
           '<span class="lb-votes">' + r.votes + '<span class="lb-pct">' + pct + '%</span></span>' +
-          '</div><div class="bar"><div class="bar-fill" style="width:' + bar + '%"></div></div></div></li>';
+          '</div><div class="bar"><div class="bar-fill" style="width:' + bar + '%"></div></div>' +
+          (hasBio ? '<div class="lb-bio">' + esc(r.description) + '</div>' : '') +
+          '</div></li>';
       });
       ol.innerHTML = html;
       if (countEl) countEl.textContent = data.totalBallots;

@@ -12,16 +12,17 @@ export async function tallyElection(electionId: number): Promise<Tally> {
   const { rows } = await pool.query<{
     option_id: number;
     label: string;
+    description: string;
     image_path: string | null;
     votes: string;
   }>(
-    `SELECT o.id AS option_id, o.label, o.image_path,
+    `SELECT o.id AS option_id, o.label, o.description, o.image_path,
             COUNT(bs.id) AS votes
        FROM options o
        LEFT JOIN ballot_selections bs ON bs.option_id = o.id
        LEFT JOIN ballots b ON b.id = bs.ballot_id AND b.election_id = $1
       WHERE o.election_id = $1
-      GROUP BY o.id, o.label, o.image_path, o.position
+      GROUP BY o.id, o.label, o.description, o.image_path, o.position
       ORDER BY o.position, o.id`,
     [electionId],
   );
@@ -31,6 +32,7 @@ export async function tallyElection(electionId: number): Promise<Tally> {
     rows: rows.map((r) => ({
       option_id: Number(r.option_id),
       label: r.label,
+      description: r.description,
       image_path: r.image_path,
       votes: Number(r.votes),
     })),
