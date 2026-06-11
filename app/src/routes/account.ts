@@ -18,6 +18,7 @@ import {
   getOptionById,
   listElectionsByOwner,
   ownsElection,
+  setElectionLogo,
   setStatus,
   updateElectionDraft,
   updateOptionContent,
@@ -25,7 +26,13 @@ import {
 } from '../services/elections';
 import { editDataFromElection, parseEditForm } from '../util/electionEdit';
 import { logger } from '../logger';
-import { initializePayment, paymentsEnabled, verifyPayment } from '../services/payments';
+import {
+  formatAmount,
+  getPaymentByReference,
+  initializePayment,
+  paymentsEnabled,
+  verifyPayment,
+} from '../services/payments';
 import { generateCodes, getCodeStats } from '../services/codes';
 import { tallyElection } from '../services/tally';
 import { logAction } from '../services/admins';
@@ -167,6 +174,20 @@ accountRouter.post('/elections', csrfProtection, async (req, res, next) => {
       createdBy: null,
       ownerId: req.session.customerId!,
     });
+    // Email the organiser their links (best-effort).
+    try {
+      const manage = `${config.PUBLIC_BASE_URL}/account/elections/${id}`;
+      await sendMail({
+        to: req.session.customerEmail!,
+        subject: `Your election "${parsed.data.title}" is set up`,
+        text:
+          `Your election "${parsed.data.title}" has been created on Torama Vote.\n\n` +
+          `Manage it (add candidates, generate codes, open voting): ${manage}\n\n` +
+          `Once you open it, share the voter link shown on that page.`,
+      });
+    } catch (mailErr) {
+      logger.error({ err: mailErr }, 'election-setup email failed');
+    }
     res.redirect(`/account/elections/${id}`);
   } catch (err) {
     next(err);
@@ -287,11 +308,33 @@ accountRouter.get('/pay/callback', async (req, res, next) => {
       res.redirect('/account');
       return;
     }
+    // Ownership check: the payment must belong to the signed-in customer.
+    const pay = await getPaymentByReference(reference);
+    if (!pay || Number(pay.customerId) !== Number(req.session.customerId)) {
+      res.redirect('/account');
+      return;
+    }
     const result = await verifyPayment(reference);
     if (result.ok && result.electionId) {
-      // Auto-open a draft on successful payment.
       const el = await getElectionById(result.electionId);
       if (el && el.status === 'draft') await setStatus(result.electionId, 'open');
+      // Email a receipt (best-effort).
+      try {
+        const amt = formatAmount(pay.amountSubunits, pay.currency);
+        await sendMail({
+          to: pay.email,
+          subject: 'Payment receipt — Torama Vote',
+          text:
+            `Thank you. Your payment has been received.\n\n` +
+            `Election: ${el ? el.title : '—'}\n` +
+            `Amount: ${amt}\n` +
+            `Reference: ${pay.reference}\n` +
+            `Date: ${new Date().toISOString().slice(0, 10)}\n\n` +
+            `Your election is now open. Manage it at ${config.PUBLIC_BASE_URL}/account/elections/${result.electionId}`,
+        });
+      } catch (mailErr) {
+        logger.error({ err: mailErr }, 'payment receipt email failed');
+      }
       res.redirect(`/account/elections/${result.electionId}?paid=1`);
     } else {
       res.redirect(result.electionId ? `/account/elections/${result.electionId}?paid=0` : '/account');
@@ -349,6 +392,47 @@ accountRouter.get('/elections/:id/contestants', async (req, res, next) => {
   try {
     const election = await loadOwned(req);
     res.render('admin/contestants', { title: `Contestants — ${election.title}`, election });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Election branding logo upload (owner)
+accountRouter.post('/elections/:id/logo', uploadContestantImage, csrfProtection, async (req, res, next) => {
+  try {
+    const election = await loadOwned(req);
+    if (req.body.removeLogo === '1') {
+      const old = await setElectionLogo(election.id, null);
+      if (old) fs.promises.unlink(uploadPath(old)).catch(() => undefined);
+    } else if (req.file) {
+      const old = await setElectionLogo(election.id, req.file.filename);
+      if (old) fs.promises.unlink(uploadPath(old)).catch(() => undefined);
+    }
+    res.redirect(`/account/elections/${election.id}`);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Results CSV export (owner)
+accountRouter.get('/elections/:id/results.csv', async (req, res, next) => {
+  try {
+    const election = await loadOwned(req);
+    const tally = await tallyElection(election.id);
+    const total = tally.rows.reduce((s, r) => s + r.votes, 0);
+    const esc = (v: unknown) => {
+      const s = v == null ? '' : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const header = 'candidate,votes,percentage\n';
+    const body = tally.rows
+      .slice()
+      .sort((a, b) => b.votes - a.votes)
+      .map((r) => [r.label, r.votes, total ? `${((r.votes / total) * 100).toFixed(1)}%` : '0%'].map(esc).join(','))
+      .join('\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="results-${election.public_id}.csv"`);
+    res.send(`${header}${body}\n`);
   } catch (err) {
     next(err);
   }

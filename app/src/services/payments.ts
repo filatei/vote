@@ -18,9 +18,71 @@ export function amountSubunits(): number {
 }
 
 export function priceLabel(): string {
-  const sym = config.PAYMENT_CURRENCY === 'NGN' ? '₦' : config.PAYMENT_CURRENCY === 'USD' ? '$' : '';
-  const amount = config.PAYMENT_AMOUNT.toLocaleString('en-US');
-  return sym ? `${sym}${amount}` : `${amount} ${config.PAYMENT_CURRENCY}`;
+  return formatAmount(amountSubunits(), config.PAYMENT_CURRENCY);
+}
+
+/** Format a subunit amount + currency for display (₦100,000 / $25.00). */
+export function formatAmount(subunits: number, currency: string): string {
+  const sym = currency === 'NGN' ? '₦' : currency === 'USD' ? '$' : '';
+  const major = subunits / 100;
+  const amount = major.toLocaleString('en-US', {
+    minimumFractionDigits: currency === 'NGN' ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
+  return sym ? `${sym}${amount}` : `${amount} ${currency}`;
+}
+
+export interface PaymentRow {
+  reference: string;
+  electionId: number;
+  customerId: number | null;
+  email: string;
+  amountSubunits: number;
+  currency: string;
+  status: string;
+}
+
+export async function getPaymentByReference(reference: string): Promise<PaymentRow | null> {
+  const { rows } = await pool.query(
+    `SELECT reference, election_id, customer_id, email, amount_subunits, currency, status
+       FROM paystack_payments WHERE reference = $1`,
+    [reference],
+  );
+  const r = rows[0];
+  if (!r) return null;
+  return {
+    reference: r.reference,
+    electionId: Number(r.election_id),
+    customerId: r.customer_id == null ? null : Number(r.customer_id),
+    email: r.email,
+    amountSubunits: Number(r.amount_subunits),
+    currency: r.currency,
+    status: r.status,
+  };
+}
+
+/** Admin reconciliation: recent payments with election title. */
+export async function listPayments(limit = 200): Promise<
+  Array<{
+    reference: string;
+    email: string;
+    amount_subunits: number;
+    currency: string;
+    status: string;
+    created_at: Date;
+    confirmed_at: Date | null;
+    election_title: string | null;
+  }>
+> {
+  const { rows } = await pool.query(
+    `SELECT p.reference, p.email, p.amount_subunits, p.currency, p.status,
+            p.created_at, p.confirmed_at, e.title AS election_title
+       FROM paystack_payments p
+       LEFT JOIN elections e ON e.id = p.election_id
+      ORDER BY p.created_at DESC LIMIT $1`,
+    [limit],
+  );
+  return rows.map((r) => ({ ...r, amount_subunits: Number(r.amount_subunits) }));
 }
 
 /**

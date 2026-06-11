@@ -1,0 +1,42 @@
+<%- include('../partials/head') %>
+<section class="page-head">
+  <h1>Analytics</h1>
+  <a class="button button-ghost" href="/admin">← Dashboard</a>
+</section>
+
+<section class="card">
+  <div class="stats-grid">
+    <div class="stat-tile"><span class="stat-num"><%= stats.customers %></span><span class="stat-label">Customers</span></div>
+    <div class="stat-tile"><span class="stat-num"><%= stats.elections %></span><span class="stat-label">Elections</span></div>
+    <div class="stat-tile"><span class="stat-num"><%= stats.ballots %></span><span class="stat-label">Votes cast</span></div>
+    <div class="stat-tile"><span class="stat-num"><%= stats.codesIssued %></span><span class="stat-label">Codes issued</span></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2 class="h3">Elections by status</h2>
+  <div class="stat-row">
+    <div class="stat"><span class="stat-num"><%= stats.draft %></span><span class="stat-label">draft</span></div>
+    <div class="stat"><span class="stat-num"><%= stats.open %></span><span class="stat-label">open</span></div>
+    <div class="stat"><span class="stat-num"><%= stats.closed %></span><span class="stat-label">closed</span></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2 class="h3">Revenue <span class="muted">(confirmed payments)</span></h2>
+  <p class="help"><%= stats.paymentsConfirmed %> confirmed payment(s).</p>
+  <% if (stats.revenue.length === 0) { %>
+    <p class="muted">No revenue yet.</p>
+  <% } else { %>
+    <div class="stat-row">
+      <% stats.revenue.forEach(function(r) { %>
+        <div class="stat">
+          <span class="stat-num"><%= (r.currency === 'NGN' ? '₦' : r.currency === 'USD' ? '$' : '') + (r.subunits/100).toLocaleString('en-US') %></span>
+          <span class="stat-label"><%= r.currency %></span>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+  <p class="links-row"><a href="/admin/payments">View all payments →</a></p>
+</section>
+<%- include('../partials/foot') %>

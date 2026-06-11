@@ -18,6 +18,7 @@ import {
   getElectionWithOptions,
   getOptionById,
   listElections,
+  setElectionLogo,
   setStatus,
   updateElectionDraft,
   updateOptionContent,
@@ -31,6 +32,8 @@ import fs from 'fs';
 import { generateCodes, getCodeStats } from '../services/codes';
 import { tallyElection } from '../services/tally';
 import { getDeviceVotes } from '../services/devices';
+import { listPayments, formatAmount } from '../services/payments';
+import { getPlatformStats } from '../services/stats';
 import { getAuditLog, logAction } from '../services/admins';
 
 export const adminRouter = Router();
@@ -44,6 +47,24 @@ adminRouter.get('/', async (_req, res, next) => {
   try {
     const elections = await listElections();
     res.render('admin/dashboard', { title: 'Dashboard', elections });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Platform analytics
+adminRouter.get('/stats', async (_req, res, next) => {
+  try {
+    res.render('admin/stats', { title: 'Analytics', stats: await getPlatformStats() });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Payments reconciliation
+adminRouter.get('/payments', async (_req, res, next) => {
+  try {
+    res.render('admin/payments', { title: 'Payments', payments: await listPayments(), formatAmount });
   } catch (err) {
     next(err);
   }
@@ -254,6 +275,50 @@ adminRouter.post('/elections/:id/schedule', csrfProtection, async (req, res, nex
       ip: req.ip,
     });
     res.redirect(`/admin/elections/${id}`);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Election branding logo upload
+adminRouter.post('/elections/:id/logo', uploadContestantImage, csrfProtection, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    const election = await getElectionById(id);
+    if (!election) throw new HttpError(404, 'Election not found.');
+    if (req.body.removeLogo === '1') {
+      const old = await setElectionLogo(id, null);
+      if (old) fs.promises.unlink(uploadPath(old)).catch(() => undefined);
+    } else if (req.file) {
+      const old = await setElectionLogo(id, req.file.filename);
+      if (old) fs.promises.unlink(uploadPath(old)).catch(() => undefined);
+    }
+    res.redirect(`/admin/elections/${id}`);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Results CSV export (organizer)
+adminRouter.get('/elections/:id/results.csv', async (req, res, next) => {
+  try {
+    const election = await getElectionById(Number(req.params.id));
+    if (!election) throw new HttpError(404, 'Election not found.');
+    const tally = await tallyElection(election.id);
+    const total = tally.rows.reduce((s, r) => s + r.votes, 0);
+    const esc = (v: unknown) => {
+      const s = v == null ? '' : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const header = 'candidate,votes,percentage\n';
+    const body = tally.rows
+      .slice()
+      .sort((a, b) => b.votes - a.votes)
+      .map((r) => [r.label, r.votes, total ? `${((r.votes / total) * 100).toFixed(1)}%` : '0%'].map(esc).join(','))
+      .join('\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="results-${election.public_id}.csv"`);
+    res.send(`${header}${body}\n`);
   } catch (err) {
     next(err);
   }

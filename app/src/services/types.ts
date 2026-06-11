@@ -26,6 +26,7 @@ export interface Election {
   closes_at: Date | null;
   owner_id: number | null;
   paid: boolean;
+  logo_path: string | null;
   created_at: Date;
   updated_at: Date;
 }

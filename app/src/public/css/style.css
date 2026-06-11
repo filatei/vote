@@ -223,6 +223,17 @@ button.receipt-code:hover { background: rgba(47, 109, 244, .08); }
 
 .error-status { font-size: 3rem; margin: 0 0 6px; color: var(--brand); }
 
+.footer-links { margin: 8px 0 0; font-size: .85rem; }
+.footer-links a { color: var(--muted); }
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.stat-tile { background: #f7f9fe; border: 1px solid var(--line); border-radius: 12px; padding: 18px; text-align: center; }
+.stat-tile .stat-num { display: block; font-size: 1.9rem; }
+.stat-tile .stat-label { color: var(--muted); font-size: .85rem; }
+@media (max-width: 640px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
+
+.election-logo { max-height: 64px; max-width: 220px; margin-bottom: 12px; display: block; }
+.brand-logo-preview { max-height: 84px; max-width: 240px; margin-bottom: 12px; border: 1px solid var(--line); border-radius: 8px; padding: 6px; background: #fff; }
+
 /* Auth / sign-in card */
 .auth-wrap { display: flex; justify-content: center; padding: 16px 0 28px; }
 .auth-card { width: 100%; max-width: 460px; text-align: center; padding: 34px 28px; }

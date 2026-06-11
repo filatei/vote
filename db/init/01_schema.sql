@@ -90,6 +90,9 @@ CREATE TABLE ballots (
     receipt_code TEXT NOT NULL,           -- random, shown to voter + published
     -- Coarse DATE only, deliberately no precise timestamp (anti-correlation).
     cast_date    DATE NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
+    -- Tamper-evident chain: chain_hash = SHA256(prev_hash|election|receipt|options|date).
+    prev_hash    TEXT,
+    chain_hash   TEXT,
     UNIQUE (election_id, receipt_code)
 );
 CREATE INDEX idx_ballots_election ON ballots(election_id);

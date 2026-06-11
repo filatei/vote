@@ -111,6 +111,22 @@
   </section>
 </div>
 
+<section class="card">
+  <h2 class="h3">Branding <span class="muted">(logo shown to voters)</span></h2>
+  <% if (election.logo_path) { %>
+    <img class="brand-logo-preview" src="/uploads/<%= election.logo_path %>" alt="Election logo" />
+  <% } %>
+  <form method="post" action="<%= basePath %>/elections/<%= election.id %>/logo" enctype="multipart/form-data" class="stack">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <label for="logo">Upload a logo <span class="muted">(JPG/PNG/WebP, ≤2&nbsp;MB)</span></label>
+    <input id="logo" name="image" type="file" accept="image/jpeg,image/png,image/webp" />
+    <% if (election.logo_path) { %>
+      <label class="checkbox-inline"><input type="checkbox" name="removeLogo" value="1" /> Remove current logo</label>
+    <% } %>
+    <div class="actions"><button class="button button-primary" type="submit">Save logo</button></div>
+  </form>
+</section>
+
 <% if (election.access_mode === 'open') { %>
 <section class="card">
   <h2 class="h3">Open-link voting</h2>
@@ -148,7 +164,10 @@
 <% } %>
 
 <section class="card">
-  <h2 class="h3">Live tally <span class="muted">(<%= tally.totalBallots %> ballots)</span></h2>
+  <div class="page-head" style="margin-bottom:10px;">
+    <h2 class="h3">Live tally <span class="muted">(<%= tally.totalBallots %> ballots)</span></h2>
+    <a class="button button-ghost button-sm" href="<%= basePath %>/elections/<%= election.id %>/results.csv">Download results CSV</a>
+  </div>
   <% var max = tally.rows.reduce(function(m, r){ return Math.max(m, r.votes); }, 0) || 1; %>
   <ul class="results">
     <% tally.rows.forEach(function(r) { %>

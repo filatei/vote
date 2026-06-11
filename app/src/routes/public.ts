@@ -11,9 +11,11 @@ import {
   votingState,
 } from '../services/elections';
 import { deviceHasVoted } from '../services/devices';
+import { verifyElectionChain } from '../services/integrity';
 import { formatWat } from '../util/datetime';
 import { castBallot } from '../services/ballots';
 import { bulletinBoard, findReceipt, tallyElection } from '../services/tally';
+import { healthCheck } from '../db';
 import { Election } from '../services/types';
 
 export const publicRouter = Router();
@@ -49,6 +51,18 @@ function setVotedCookie(res: Response, publicId: string): void {
 // Landing page: enter a voting code.
 publicRouter.get('/', csrfToken, (_req, res) => {
   res.render('public/home', { title: 'Torama Vote', error: null, electionId: null });
+});
+
+// Static content / trust pages.
+publicRouter.get('/terms', (_req, res) => res.render('public/terms', { title: 'Terms of Service' }));
+publicRouter.get('/privacy', (_req, res) => res.render('public/privacy', { title: 'Privacy Policy' }));
+publicRouter.get('/trust', (_req, res) => res.render('public/trust', { title: 'How we keep votes fair' }));
+publicRouter.get('/status', async (_req, res, next) => {
+  try {
+    res.render('public/status', { title: 'System status', dbOk: await healthCheck() });
+  } catch (err) {
+    next(err);
+  }
 });
 
 /**
@@ -256,6 +270,18 @@ publicRouter.get('/e/:publicId/results', async (req, res, next) => {
     const tally = await tallyElection(election.id);
     const board = await bulletinBoard(election.id);
     res.render('public/results', { title: `Results — ${election.title}`, election, tally, board });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Verify the tamper-evident ballot hash-chain (public, independently checkable).
+publicRouter.get('/e/:publicId/integrity', async (req, res, next) => {
+  try {
+    const election = await getElectionWithOptionsByPublicId(req.params.publicId);
+    if (!election) throw new HttpError(404, 'Election not found.');
+    const result = await verifyElectionChain(election.id, election.public_id);
+    res.render('public/integrity', { title: `Integrity — ${election.title}`, election, result });
   } catch (err) {
     next(err);
   }

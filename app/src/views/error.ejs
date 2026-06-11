@@ -2,6 +2,19 @@
 <section class="card narrow">
   <h1 class="error-status"><%= status %></h1>
   <p class="lead"><%= message %></p>
-  <p><a class="button" href="/">Return home</a></p>
+  <% if (status === 404) { %>
+    <p class="help">This page may have moved, or the election may no longer be available. Use a button below to get back on track.</p>
+  <% } %>
+  <div class="actions">
+    <% if (typeof adminUsername !== 'undefined' && adminUsername) { %>
+      <a class="button button-primary" href="/admin">Go to dashboard</a>
+      <a class="button button-ghost" href="/">Home</a>
+    <% } else if (typeof customerEmail !== 'undefined' && customerEmail) { %>
+      <a class="button button-primary" href="/account">My elections</a>
+      <a class="button button-ghost" href="/">Home</a>
+    <% } else { %>
+      <a class="button button-primary" href="/">Return home</a>
+    <% } %>
+  </div>
 </section>
 <%- include('partials/foot') %>

@@ -42,30 +42,34 @@ export async function tallyElection(electionId: number): Promise<Tally> {
 export interface BulletinEntry {
   receipt_code: string;
   cast_date: string;
+  chain_hash?: string | null;
   options: string[];
 }
 
-/** Public bulletin board: every anonymous ballot's receipt + choices. */
+/** Public bulletin board: every anonymous ballot's receipt + choices + chain hash. */
 export async function bulletinBoard(electionId: number): Promise<BulletinEntry[]> {
   const { rows } = await pool.query<{
     receipt_code: string;
     cast_date: string;
+    chain_hash: string | null;
     options: string[] | null;
   }>(
     `SELECT b.receipt_code,
             to_char(b.cast_date, 'YYYY-MM-DD') AS cast_date,
+            b.chain_hash,
             array_agg(o.label ORDER BY o.position) AS options
        FROM ballots b
        LEFT JOIN ballot_selections bs ON bs.ballot_id = b.id
        LEFT JOIN options o ON o.id = bs.option_id
       WHERE b.election_id = $1
-      GROUP BY b.id, b.receipt_code, b.cast_date
+      GROUP BY b.id, b.receipt_code, b.cast_date, b.chain_hash
       ORDER BY b.receipt_code`,
     [electionId],
   );
   return rows.map((r) => ({
     receipt_code: r.receipt_code,
     cast_date: r.cast_date,
+    chain_hash: r.chain_hash,
     options: (r.options ?? []).filter((x) => x !== null),
   }));
 }

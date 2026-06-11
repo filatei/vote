@@ -68,6 +68,13 @@ const STATEMENTS: string[] = [
   `ALTER TABLE device_votes ADD COLUMN IF NOT EXISTS ip TEXT`,
   `ALTER TABLE device_votes ADD COLUMN IF NOT EXISTS user_agent TEXT`,
   `ALTER TABLE device_votes ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ`,
+
+  // Tamper-evident ballot hash-chain.
+  `ALTER TABLE ballots ADD COLUMN IF NOT EXISTS prev_hash TEXT`,
+  `ALTER TABLE ballots ADD COLUMN IF NOT EXISTS chain_hash TEXT`,
+
+  // Per-customer / per-election branding logo.
+  `ALTER TABLE elections ADD COLUMN IF NOT EXISTS logo_path TEXT`,
 ];
 
 export async function runMigrations(): Promise<void> {

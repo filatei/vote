@@ -1,0 +1,22 @@
+<%- include('../partials/head') %>
+<section class="hero">
+  <h1>Integrity check</h1>
+  <p class="lead"><%= election.title %></p>
+</section>
+
+<section class="card narrow <%= result.ok ? 'success-card' : '' %>">
+  <% if (result.ok) { %>
+    <div class="success-badge" aria-hidden="true">✓</div>
+    <h2 class="h3">Chain intact</h2>
+    <p class="lead"><strong><%= result.verified %></strong> ballot<%= result.verified === 1 ? '' : 's' %> verified. The tamper-evident hash-chain is unbroken — no ballot has been altered, inserted, or removed.</p>
+  <% } else { %>
+    <div class="alert alert-error" role="alert">
+      <strong>Chain broken.</strong> Verified <%= result.verified %> of <%= result.total %> ballots; the chain fails at receipt <code><%= result.brokenReceipt %></code>. This indicates the ballot record was modified.
+    </div>
+  <% } %>
+  <p class="help">Each ballot's hash includes the previous ballot's hash, computed over the public bulletin-board data (receipt, choices, date) — so anyone can recompute this independently.</p>
+  <p class="links-row">
+    <a href="/e/<%= election.public_id %>/results">View results &amp; bulletin board</a>
+  </p>
+</section>
+<%- include('../partials/foot') %>

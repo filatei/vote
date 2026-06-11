@@ -1,4 +1,4 @@
-import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
+import { createHash, createHmac, randomBytes, timingSafeEqual } from 'crypto';
 import { config } from '../config';
 
 // Crockford base32-ish alphabet: no I, L, O, U, 1, 0 to avoid confusion when
@@ -73,6 +73,25 @@ export function deviceFingerprint(parts: {
 }): string {
   const raw = `device|${parts.ip ?? ''}|${parts.ua ?? ''}|${parts.lang ?? ''}`;
   return createHmac('sha256', config.CODE_PEPPER).update(raw).digest('hex');
+}
+
+/**
+ * Tamper-evident ballot chain hash. Each ballot's hash includes the previous
+ * ballot's hash, so altering or removing any ballot breaks the chain. Computed
+ * over public bulletin-board data only (no voter identity), so anyone can
+ * recompute and verify it. SHA-256 (not keyed) so it's independently checkable.
+ */
+export function ballotHash(
+  prevHash: string,
+  electionId: number,
+  receipt: string,
+  optionIds: number[],
+  castDate: string,
+): string {
+  const opts = [...optionIds].sort((a, b) => a - b).join(',');
+  return createHash('sha256')
+    .update(`${prevHash}|${electionId}|${receipt}|${opts}|${castDate}`)
+    .digest('hex');
 }
 
 /** Constant-time string comparison helper. */

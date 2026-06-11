@@ -1,5 +1,6 @@
 <%- include('../partials/head') %>
 <section class="hero">
+  <% if (election.logo_path) { %><img class="election-logo" src="/uploads/<%= election.logo_path %>" alt="" /><% } %>
   <h1><%= election.title %></h1>
   <% if (election.description) { %><p class="lead"><%= election.description %></p><% } %>
   <p class="status-pill status-<%= election.status %>"><%= election.status %></p>

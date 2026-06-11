@@ -1,0 +1,31 @@
+<%- include('../partials/head') %>
+<section class="hero">
+  <h1>How we keep votes fair</h1>
+  <p class="lead">Torama Vote is built so that every voter — and any observer — can trust the result.</p>
+</section>
+
+<section class="card">
+  <h2 class="h3">Secret ballot</h2>
+  <p>Your voting code (or device) is never linked to the choice you make. Ballots are stored anonymously in a separate table with no key back to the voter, so no one — not even an administrator — can tell how you voted.</p>
+</section>
+<section class="card">
+  <h2 class="h3">One vote each</h2>
+  <p>Pre-issued voting codes can each be redeemed exactly once, enforced inside a serializable database transaction so two votes can never share a code. Open-link elections are limited to one ballot per device. Hybrid elections combine both.</p>
+</section>
+<section class="card">
+  <h2 class="h3">Verifiable receipts</h2>
+  <p>After voting you receive a receipt code. A public bulletin board lists every anonymous ballot by its receipt, so you can confirm your vote is counted and anyone can recount the result.</p>
+</section>
+<section class="card">
+  <h2 class="h3">Tamper-evident hash-chain</h2>
+  <p>Each ballot's record includes a cryptographic hash of the previous ballot (SHA-256 over the public bulletin-board data). Altering, inserting, or removing any ballot breaks the chain — and anyone can recompute it to detect tampering. Each election's results page links to an independent <strong>integrity check</strong>.</p>
+</section>
+<section class="card">
+  <h2 class="h3">Transport &amp; access security</h2>
+  <p>All traffic is encrypted with HTTPS. Administrative access is restricted and protected; voting codes are stored only as salted hashes. We never display ads or sell data.</p>
+</section>
+<section class="card muted-card">
+  <h2 class="h3">Honest about limits</h2>
+  <p>Open-link voting trades a little strictness for convenience: a determined person could clear cookies and switch networks. For high-stakes elections, pre-issued codes give the strongest guarantee. Choose the access mode that fits your stakes.</p>
+</section>
+<%- include('../partials/foot') %>

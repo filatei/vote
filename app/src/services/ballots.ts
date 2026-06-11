@@ -1,7 +1,7 @@
 import { config } from '../config';
 import { withSerializableTx } from '../db';
 import { HttpError } from '../middleware/errors';
-import { generateReceiptCode, hashCode } from '../util/crypto';
+import { ballotHash, generateReceiptCode, hashCode } from '../util/crypto';
 import { votingState } from './elections';
 import { Election, Option } from './types';
 
@@ -132,16 +132,26 @@ export async function castBallot(params: {
       }
     }
 
+    // Read the tail of the tamper-evident chain (serializable isolation makes
+    // concurrent inserts conflict + retry, so the chain stays linear).
+    const tail = await client.query<{ chain_hash: string | null }>(
+      `SELECT chain_hash FROM ballots WHERE election_id = $1 ORDER BY id DESC LIMIT 1`,
+      [election.id],
+    );
+    const prevHash = tail.rows[0]?.chain_hash || `GENESIS:${election.public_id}`;
+    const castDate = new Date().toISOString().slice(0, 10);
+
     // Insert the anonymous ballot with a unique receipt (retry on rare clash).
     let receipt = '';
     for (let attempt = 0; attempt < 5; attempt++) {
       receipt = generateReceiptCode();
+      const chainHash = ballotHash(prevHash, election.id, receipt, selected, castDate);
       const ins = await client.query<{ id: number }>(
-        `INSERT INTO ballots (election_id, receipt_code)
-         VALUES ($1, $2)
+        `INSERT INTO ballots (election_id, receipt_code, cast_date, prev_hash, chain_hash)
+         VALUES ($1, $2, $3, $4, $5)
          ON CONFLICT (election_id, receipt_code) DO NOTHING
          RETURNING id`,
-        [election.id, receipt],
+        [election.id, receipt, castDate, prevHash, chainHash],
       );
       if (ins.rowCount === 1) {
         const ballotId = ins.rows[0].id;

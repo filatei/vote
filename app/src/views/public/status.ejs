@@ -1,0 +1,26 @@
+<%- include('../partials/head') %>
+<section class="hero">
+  <h1>System status</h1>
+  <p class="lead">Live health of Torama Vote.</p>
+</section>
+
+<section class="card narrow">
+  <table class="kv">
+    <tr>
+      <th>Application</th>
+      <td><span class="status-pill status-open">Operational</span></td>
+    </tr>
+    <tr>
+      <th>Database</th>
+      <td>
+        <% if (dbOk) { %>
+          <span class="status-pill status-open">Operational</span>
+        <% } else { %>
+          <span class="status-pill status-closed">Degraded</span>
+        <% } %>
+      </td>
+    </tr>
+  </table>
+  <p class="help">This page checks the app and database in real time. For incident history or support, email <a href="mailto:support@torama.money">support@torama.money</a>.</p>
+</section>
+<%- include('../partials/foot') %>

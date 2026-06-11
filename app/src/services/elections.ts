@@ -268,6 +268,20 @@ export async function updateElectionDraft(
   }
 }
 
+/** Set or clear the election's branding logo. Returns the previous path. */
+export async function setElectionLogo(
+  electionId: number,
+  path: string | null,
+): Promise<string | null> {
+  const before = await pool.query<{ logo_path: string | null }>(
+    `SELECT logo_path FROM elections WHERE id = $1`,
+    [electionId],
+  );
+  const old = before.rows[0]?.logo_path ?? null;
+  await pool.query(`UPDATE elections SET logo_path = $2 WHERE id = $1`, [electionId, path]);
+  return old;
+}
+
 /** Set or clear the scheduled WAT voting window (stored as UTC). */
 export async function updateSchedule(
   electionId: number,
