@@ -186,6 +186,29 @@ textarea { resize: vertical; }
 
 .code-dump { background: #0f1726; color: #d7e0f2; padding: 14px; border-radius: 8px; overflow-x: auto; font-size: 0.9rem; max-height: 320px; overflow-y: auto; }
 .share-url code { display: inline-block; background: #eef1f7; padding: 6px 10px; border-radius: 6px; word-break: break-all; }
+
+/* Copy-to-clipboard field */
+.copy-field { display: flex; gap: 8px; align-items: stretch; }
+.copy-input {
+  flex: 1 1 auto; min-width: 0; font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: .9rem; padding: 11px 12px; border: 1px solid #cbd2de; border-radius: 8px;
+  background: #f7f9fe; color: var(--ink);
+}
+.copy-btn { flex: 0 0 auto; }
+.share-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+/* Live indicator */
+.live-dot {
+  display: inline-flex; align-items: center; gap: 6px; font-size: .72rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .05em; color: var(--success);
+  background: var(--success-bg); padding: 2px 9px 2px 7px; border-radius: 999px; vertical-align: middle;
+}
+.live-dot::before {
+  content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--success);
+  animation: livePulse 1.4s ease-in-out infinite;
+}
+@keyframes livePulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(.7); } }
+.bar-fill { transition: width .5s ease; }
 .links-row { margin-top: 12px; color: var(--muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
 .tick-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }

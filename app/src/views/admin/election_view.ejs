@@ -97,16 +97,17 @@
 
   <section class="card">
     <h2 class="h3">Share link</h2>
-    <p class="help">Send voters here, with their code:</p>
-    <p class="share-url"><code><%= baseUrl %>/e/<%= election.public_id %></code></p>
-    <p class="links-row">
-      <a href="/e/<%= election.public_id %>" target="_blank" rel="noopener">Open voter page ↗</a>
-      <span aria-hidden="true">·</span>
-      <a href="/e/<%= election.public_id %>/results" target="_blank" rel="noopener">Results ↗</a>
-    </p>
-    <p class="links-row">
-      <a href="<%= basePath %>/elections/<%= election.id %>/contestants">Manage contestant photos &amp; bios →</a>
-    </p>
+    <p class="help">Send voters here<% if (election.access_mode !== 'open') { %>, along with their code<% } %>:</p>
+    <div class="copy-field">
+      <input class="copy-input" type="text" readonly aria-label="Voter link"
+             value="<%= baseUrl %>/e/<%= election.public_id %>" data-copy />
+      <button type="button" class="button button-primary copy-btn" data-copy-btn>Copy</button>
+    </div>
+    <div class="share-actions">
+      <a class="button button-ghost button-sm" href="/e/<%= election.public_id %>" target="_blank" rel="noopener">Open voter page ↗</a>
+      <a class="button button-ghost button-sm" href="/e/<%= election.public_id %>/results" target="_blank" rel="noopener">Results ↗</a>
+      <a class="button button-ghost button-sm" href="<%= basePath %>/elections/<%= election.id %>/contestants">Manage photos &amp; bios</a>
+    </div>
   </section>
 </div>
 

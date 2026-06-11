@@ -256,6 +256,26 @@ publicRouter.get('/e/:publicId/results', async (req, res, next) => {
   }
 });
 
+// Live tally as JSON (for streaming the results page). Only returns data when
+// results are public; otherwise reports hidden so the client stops polling.
+publicRouter.get('/e/:publicId/results.json', async (req, res, next) => {
+  try {
+    const election = await getElectionWithOptionsByPublicId(req.params.publicId);
+    if (!election) {
+      res.status(404).json({ error: 'not_found' });
+      return;
+    }
+    if (!resultsArePublic(election)) {
+      res.json({ hidden: true, status: election.status });
+      return;
+    }
+    const tally = await tallyElection(election.id);
+    res.json({ status: election.status, totalBallots: tally.totalBallots, rows: tally.rows });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Receipt verification.
 publicRouter.get('/e/:publicId/verify', csrfToken, async (req, res, next) => {
   try {

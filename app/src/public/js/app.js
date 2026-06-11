@@ -104,6 +104,95 @@
     });
   }
 
+  // 2d. Copy-to-clipboard buttons (share link, etc).
+  function copyText(text, btn) {
+    var done = function () {
+      var orig = btn.getAttribute('data-label') || btn.textContent;
+      btn.setAttribute('data-label', orig);
+      btn.textContent = 'Copied ✓';
+      setTimeout(function () { btn.textContent = orig; }, 1500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallback(); });
+    } else {
+      fallback();
+    }
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); done(); } catch (e) { /* ignore */ }
+      document.body.removeChild(ta);
+    }
+  }
+  var copyButtons = document.querySelectorAll('[data-copy-btn]');
+  for (var ci = 0; ci < copyButtons.length; ci++) {
+    copyButtons[ci].addEventListener('click', function () {
+      var field = this.closest('.copy-field') || document;
+      var input = field.querySelector('[data-copy]');
+      if (input) {
+        input.focus();
+        input.select();
+        copyText(input.value, this);
+      }
+    });
+  }
+
+  // 2e. Live tally streaming on the public results page.
+  (function () {
+    var ol = document.querySelector('[data-results-poll]');
+    if (!ol || !ol.hasAttribute('data-poll')) return;
+    var pid = ol.getAttribute('data-public-id');
+    var countEl = document.querySelector('[data-ballot-count]');
+    var thumbs = {};
+    var initial = ol.querySelectorAll('.lb-row');
+    for (var i = 0; i < initial.length; i++) {
+      var oid = initial[i].getAttribute('data-option-id');
+      var t = initial[i].querySelector('.lb-thumb');
+      if (oid && t) thumbs[oid] = t.outerHTML;
+    }
+    function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
+    function render(data) {
+      var rows = data.rows.slice().sort(function (a, b) { return b.votes - a.votes; });
+      var total = rows.reduce(function (s, r) { return s + r.votes; }, 0);
+      var maxv = rows.length ? rows[0].votes : 0;
+      var html = '';
+      rows.forEach(function (r, idx) {
+        var pct = total ? Math.round((r.votes / total) * 100) : 0;
+        var bar = maxv ? Math.round((r.votes / maxv) * 100) : 0;
+        var leader = idx === 0 && r.votes > 0;
+        html += '<li class="lb-row' + (leader ? ' lb-leader' : '') + '" data-option-id="' + r.option_id + '">' +
+          '<span class="lb-rank">' + (idx + 1) + '</span>' + (thumbs[r.option_id] || '') +
+          '<div class="lb-main"><div class="lb-top">' +
+          '<span class="lb-name">' + esc(r.label) + (leader ? ' <span class="lb-badge">Leading</span>' : '') + '</span>' +
+          '<span class="lb-votes">' + r.votes + '<span class="lb-pct">' + pct + '%</span></span>' +
+          '</div><div class="bar"><div class="bar-fill" style="width:' + bar + '%"></div></div></div></li>';
+      });
+      ol.innerHTML = html;
+      if (countEl) countEl.textContent = data.totalBallots;
+    }
+    var timer = null;
+    function poll() {
+      fetch('/e/' + encodeURIComponent(pid) + '/results.json', { headers: { Accept: 'application/json' } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) {
+          if (!data || data.hidden || !data.rows) return;
+          render(data);
+          if (data.status !== 'open' && timer) { clearInterval(timer); timer = null; }
+        })
+        .catch(function () { /* ignore transient errors */ });
+    }
+    function start() { if (!timer) timer = setInterval(poll, 4000); }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+    start();
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) stop(); else { start(); poll(); }
+    });
+  })();
+
   // 3. One-time codes view: copy-all button.
   var copyBtn = document.getElementById('copy-codes');
   var dump = document.getElementById('code-dump');
