@@ -43,6 +43,7 @@ export interface TallyRow {
   option_id: number;
   label: string;
   votes: number;
+  image_path: string | null;
 }
 
 export interface Tally {

@@ -460,7 +460,32 @@ input[type="text"], input[type="password"], input[type="number"], textarea, .opt
 .faq-body { padding: 0 18px 16px; color: var(--muted); }
 
 /* Initials-avatar default thumbnails */
-.option-thumb.avatar, .thumb-lg.avatar { border: 0; background: none; }
+.option-thumb.avatar, .thumb-lg.avatar, .lb-thumb.avatar { border: 0; background: none; }
+
+/* Results leaderboard */
+.leaderboard { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.lb-row {
+  display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+  border: 1.5px solid var(--line); border-radius: 14px; background: #fff;
+}
+.lb-row.lb-leader { border-color: var(--brand); background: #f5f8ff; box-shadow: 0 0 0 1px var(--brand) inset; }
+.lb-rank {
+  flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%; background: #eef1f7;
+  color: var(--muted); font-weight: 700; font-size: .9rem; display: grid; place-items: center;
+  font-variant-numeric: tabular-nums;
+}
+.lb-leader .lb-rank { background: var(--brand); color: #fff; }
+.lb-thumb { width: 44px; height: 44px; border-radius: 12px; flex: 0 0 auto; object-fit: cover; border: 1px solid var(--line); background: #eef1f7; }
+.lb-main { flex: 1 1 auto; min-width: 0; }
+.lb-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+.lb-name { font-weight: 700; color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-votes { flex: 0 0 auto; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.lb-pct { color: var(--muted); font-weight: 600; margin-left: 6px; }
+.lb-badge {
+  display: inline-block; font-size: .66rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .05em; background: var(--success-bg); color: var(--success);
+  padding: 2px 8px; border-radius: 999px; vertical-align: middle; margin-left: 2px;
+}
 
 /* ===========================================================================
    Candidate-card ballot options

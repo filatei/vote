@@ -6,21 +6,37 @@
 </section>
 
 <section class="card">
-  <h2 class="h3">Tally <span class="muted">(<%= tally.totalBallots %> ballot<%= tally.totalBallots === 1 ? '' : 's' %>)</span></h2>
-  <% var max = tally.rows.reduce(function(m, r){ return Math.max(m, r.votes); }, 0) || 1; %>
-  <ul class="results">
-    <% tally.rows.forEach(function(r) { %>
-      <li class="result-row">
-        <div class="result-head">
-          <span class="result-label"><%= r.label %></span>
-          <span class="result-count"><%= r.votes %></span>
+  <h2 class="h3">Leaderboard <span class="muted">(<%= tally.totalBallots %> ballot<%= tally.totalBallots === 1 ? '' : 's' %>)</span></h2>
+  <%
+    var sorted = tally.rows.slice().sort(function(a, b){ return b.votes - a.votes; });
+    var totalVotes = tally.rows.reduce(function(s, r){ return s + r.votes; }, 0);
+    var maxVotes = sorted.length ? sorted[0].votes : 0;
+  %>
+  <ol class="leaderboard">
+    <% sorted.forEach(function(r, i) {
+         var pct = totalVotes ? Math.round((r.votes / totalVotes) * 100) : 0;
+         var barPct = maxVotes ? Math.round((r.votes / maxVotes) * 100) : 0;
+         var leader = i === 0 && r.votes > 0;
+    %>
+      <li class="lb-row<%= leader ? ' lb-leader' : '' %>">
+        <span class="lb-rank"><%= i + 1 %></span>
+        <% if (r.image_path) { %>
+          <img class="lb-thumb" src="/uploads/<%= r.image_path %>" alt="" loading="lazy" />
+        <% } else { %>
+          <%- avatarSvg(r.label, r.option_id, 'lb-thumb') %>
+        <% } %>
+        <div class="lb-main">
+          <div class="lb-top">
+            <span class="lb-name"><%= r.label %><% if (leader) { %> <span class="lb-badge">Leading</span><% } %></span>
+            <span class="lb-votes"><%= r.votes %><span class="lb-pct"><%= pct %>%</span></span>
+          </div>
+          <div class="bar"><div class="bar-fill" style="width: <%= barPct %>%"></div></div>
         </div>
-        <div class="bar"><div class="bar-fill" style="width: <%= Math.round((r.votes / max) * 100) %>%"></div></div>
       </li>
     <% }) %>
-  </ul>
+  </ol>
   <% if (election.ballot_type === 'multiple') { %>
-    <p class="help">This is an approval ballot: voters could select up to <%= election.max_selections %> option(s), so totals may exceed the ballot count.</p>
+    <p class="help">Approval ballot: voters could select up to <%= election.max_selections %> option(s), so percentages are of total votes cast, not of voters.</p>
   <% } %>
 </section>
 
