@@ -7,7 +7,9 @@ import { generateUrlToken } from '../util/crypto';
 const PAYSTACK_API = 'https://api.paystack.co';
 
 export function paymentsEnabled(): boolean {
-  return Boolean(config.PAYSTACK_SECRET_KEY);
+  // Requires BOTH a configured secret key AND the master switch, so leaving the
+  // keys in place doesn't paywall elections until you explicitly turn it on.
+  return Boolean(config.PAYSTACK_SECRET_KEY) && config.PAYMENTS_ENABLED;
 }
 
 /** Paystack amounts are in the currency's subunit (kobo / cents). */

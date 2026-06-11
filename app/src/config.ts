@@ -50,6 +50,10 @@ const schema = z.object({
   PAYSTACK_PUBLIC_KEY: z.string().optional(),
   // Base URL Paystack returns to after checkout (defaults to PUBLIC_BASE_URL).
   PAYSTACK_CALLBACK_URL: z.string().optional(),
+  // Master switch for the launch-fee paywall. OFF by default so elections can
+  // be created and opened for free; set true (with Paystack keys) to require
+  // payment before an owner can open their election.
+  PAYMENTS_ENABLED: bool(false),
   // Flat fee to launch one election, in MAJOR units (naira / dollars).
   PAYMENT_CURRENCY: z.string().default('NGN'),
   PAYMENT_AMOUNT: z.coerce.number().positive().default(100000),
