@@ -141,6 +141,15 @@
     });
   }
 
+  // 2d-ii. Tap-to-copy elements (e.g. the receipt code).
+  var tapCopies = document.querySelectorAll('[data-copy-tap]');
+  for (var ti = 0; ti < tapCopies.length; ti++) {
+    tapCopies[ti].addEventListener('click', function () {
+      var text = (this.getAttribute('data-copy-value') || this.textContent || '').trim();
+      copyText(text, this);
+    });
+  }
+
   // 2e. Live tally streaming on the public results page.
   (function () {
     var ol = document.querySelector('[data-results-poll]');

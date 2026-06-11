@@ -6,7 +6,9 @@
 
   <div class="receipt-box">
     <p class="receipt-label">Your receipt code</p>
-    <p class="receipt-code"><%= receipt %></p>
+    <button type="button" class="receipt-code" data-copy-tap data-copy-value="<%= receipt %>"
+            aria-label="Copy receipt code"><%= receipt %></button>
+    <p class="receipt-hint">Tap the code to copy it</p>
   </div>
 
   <p>Keep this code. You can use it at any time to confirm your ballot was counted —
