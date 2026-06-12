@@ -67,8 +67,12 @@
     var max = parseInt(ballotForm.getAttribute('data-max'), 10) || 1;
     var hint = ballotForm.querySelector('[data-selection-hint]');
     var inputs = ballotForm.querySelectorAll('input[name="option"]');
+    // Progressive enhancement: keep "Cast my vote" inactive until a choice is
+    // made. JS-only — the server still validates, so no-JS users can submit.
+    var castBtn = ballotForm.querySelector('button[type="submit"]');
     var update = function () {
       var checked = ballotForm.querySelectorAll('input[name="option"]:checked').length;
+      if (castBtn) castBtn.disabled = checked === 0;
       for (var j = 0; j < inputs.length; j++) {
         var inp = inputs[j];
         var lab = inp.closest('.option');
