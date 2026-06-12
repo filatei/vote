@@ -261,6 +261,20 @@
     })(facades[f]);
   }
 
+  // 2g. Contestant editor: keep each Save button disabled until that form has an
+  //     actual change (photo chosen, bio edited, or "remove photo" toggled).
+  var contestantForms = document.querySelectorAll('[data-contestant-form]');
+  for (var cf = 0; cf < contestantForms.length; cf++) {
+    (function (form) {
+      var save = form.querySelector('[data-save]');
+      if (!save) return;
+      save.disabled = true;
+      var enable = function () { save.disabled = false; };
+      form.addEventListener('input', enable);   // textarea typing
+      form.addEventListener('change', enable);   // file pick + checkbox
+    })(contestantForms[cf]);
+  }
+
   // 3. One-time codes view: copy-all button.
   var copyBtn = document.getElementById('copy-codes');
   var dump = document.getElementById('code-dump');

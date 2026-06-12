@@ -313,9 +313,21 @@ input[type="datetime-local"] {
 .thumb-empty { display: grid; place-items: center; color: var(--muted); font-size: .8rem; border-style: dashed; }
 .checkbox-inline { display: inline-flex; gap: 6px; align-items: center; font-weight: 400; }
 input[type="file"] { font: inherit; }
+.contestant-name { margin: 0 0 4px; font-size: 1.15rem; }
+/* File picker + remove + Save all on one horizontal line */
+.contestant-controls {
+  display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-top: 14px;
+}
+.contestant-controls .file-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.contestant-controls .checkbox-inline { padding-bottom: 8px; }
+.contestant-save { margin-left: auto; }
+/* Disabled buttons (e.g. Save until a change is made) */
+.button[disabled], .button:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
 @media (max-width: 640px) {
   .contestant-row { flex-direction: column; align-items: stretch; }
   .thumb-lg { width: 100%; height: 180px; }
+  .contestant-controls { align-items: stretch; }
+  .contestant-save { margin-left: 0; width: 100%; }
 }
 
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); border: 0; }

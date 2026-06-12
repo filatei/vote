@@ -11,9 +11,8 @@
 
 <% election.options.forEach(function(opt) { %>
   <section class="card contestant-editor">
-    <h2 class="h3"><%= opt.label %></h2>
     <form method="post" action="<%= basePath %>/elections/<%= election.id %>/options/<%= opt.id %>"
-          enctype="multipart/form-data" class="contestant-form">
+          enctype="multipart/form-data" class="contestant-form" data-contestant-form>
       <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
 
       <div class="contestant-row">
@@ -24,22 +23,28 @@
             <%- avatarSvg(opt.label, opt.id, 'thumb-lg') %>
           <% } %>
         </div>
+
         <div class="contestant-fields">
+          <h2 class="contestant-name"><%= opt.label %></h2>
+
           <label for="bio-<%= opt.id %>">Bio / description</label>
           <textarea id="bio-<%= opt.id %>" name="description" rows="3" maxlength="5000"
-                    placeholder="A short bio shown to voters"><%= opt.description %></textarea>
+                    placeholder="A short bio shown to voters" data-dirty><%= opt.description %></textarea>
 
-          <label for="img-<%= opt.id %>">Photo <span class="muted">(optional)</span></label>
-          <input id="img-<%= opt.id %>" name="image" type="file" accept="image/jpeg,image/png,image/webp" />
+          <div class="contestant-controls">
+            <div class="file-field">
+              <label for="img-<%= opt.id %>">Photo <span class="muted">(optional)</span></label>
+              <input id="img-<%= opt.id %>" name="image" type="file"
+                     accept="image/jpeg,image/png,image/webp" data-dirty />
+            </div>
 
-          <% if (opt.image_path) { %>
-            <label class="checkbox-inline">
-              <input type="checkbox" name="removePhoto" value="1" /> Remove current photo
-            </label>
-          <% } %>
+            <% if (opt.image_path) { %>
+              <label class="checkbox-inline">
+                <input type="checkbox" name="removePhoto" value="1" data-dirty /> Remove current photo
+              </label>
+            <% } %>
 
-          <div class="actions">
-            <button class="button button-primary" type="submit">Save</button>
+            <button class="button button-primary contestant-save" type="submit" data-save disabled>Save</button>
           </div>
         </div>
       </div>
