@@ -27,6 +27,10 @@
         <div class="contestant-fields">
           <h2 class="contestant-name"><%= opt.label %></h2>
 
+          <label for="party-<%= opt.id %>">Party name <span class="muted">(optional)</span></label>
+          <input id="party-<%= opt.id %>" name="party" type="text" maxlength="120"
+                 placeholder="e.g. Labour Party" value="<%= opt.party %>" data-dirty />
+
           <label for="bio-<%= opt.id %>">Bio / description</label>
           <textarea id="bio-<%= opt.id %>" name="description" rows="3" maxlength="5000"
                     placeholder="A short bio shown to voters" data-dirty><%= opt.description %></textarea>

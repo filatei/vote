@@ -173,14 +173,18 @@
     if (!ol || !ol.hasAttribute('data-poll')) return;
     var pid = ol.getAttribute('data-public-id');
     var countEl = document.querySelector('[data-ballot-count]');
-    var thumbs = {};
+    // Capture the photo wrapper, party-logo tile, and accent colour from the
+    // server-rendered rows so they survive the live re-render below.
+    var thumbs = {}, parties = {}, accents = {};
     var initial = ol.querySelectorAll('.lb-row');
     for (var i = 0; i < initial.length; i++) {
       var oid = initial[i].getAttribute('data-option-id');
-      // Capture the whole photo wrapper (thumbnail + optional party flag) so it
-      // survives the live re-render below.
-      var t = initial[i].querySelector('.lb-photo') || initial[i].querySelector('.lb-thumb');
-      if (oid && t) thumbs[oid] = t.outerHTML;
+      if (!oid) continue;
+      var ph = initial[i].querySelector('.lb-photo');
+      if (ph) thumbs[oid] = ph.outerHTML;
+      var pt = initial[i].querySelector('.lb-party-tile');
+      if (pt) parties[oid] = pt.outerHTML;
+      accents[oid] = initial[i].style.getPropertyValue('--accent') || '';
     }
     function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
     function render(data) {
@@ -200,15 +204,22 @@
         var hasBio = !!(r.description && String(r.description).trim());
         var cls = 'lb-row' + (leader ? ' lb-leader' : '') + (hasBio ? ' has-bio' : '') +
           (open[r.option_id] ? ' bio-open' : '');
-        html += '<li class="' + cls + '" data-option-id="' + r.option_id + '">' +
-          '<span class="lb-rank">' + (idx + 1) + '</span>' + (thumbs[r.option_id] || '') +
-          '<div class="lb-main"><div class="lb-top">' +
-          '<span class="lb-name">' + esc(r.label) + (leader ? ' <span class="lb-badge">Leading</span>' : '') +
-          (hasBio ? ' <span class="lb-caret" aria-hidden="true">▾</span>' : '') + '</span>' +
-          '<span class="lb-votes">' + r.votes + '<span class="lb-pct">' + pct + '%</span></span>' +
-          '</div><div class="bar"><div class="bar-fill" style="width:' + bar + '%"></div></div>' +
-          (hasBio ? '<div class="lb-bio">' + esc(r.description) + '</div>' : '') +
-          '</div></li>';
+        var accent = accents[r.option_id] || '';
+        html += '<li class="' + cls + '" data-option-id="' + r.option_id + '"' +
+            (accent ? ' style="--accent:' + accent + '"' : '') + '>' +
+          (thumbs[r.option_id] || '') +
+          (parties[r.option_id] || '') +
+          '<div class="lb-main">' +
+            '<div class="lb-top"><span class="lb-name">' + esc(r.label) + '</span>' +
+            (leader ? '<span class="lb-badge">Leading</span>' : '') +
+            (hasBio ? '<span class="lb-caret" aria-hidden="true">▾</span>' : '') + '</div>' +
+            (r.party ? '<div class="lb-party-name">' + esc(r.party) + '</div>' : '') +
+            '<div class="bar"><div class="bar-fill" style="width:' + bar + '%"></div></div>' +
+            (hasBio ? '<div class="lb-bio">' + esc(r.description) + '</div>' : '') +
+          '</div>' +
+          '<div class="lb-score"><span class="lb-count">' + r.votes + '</span>' +
+            '<span class="lb-pct">' + pct + '%</span></div>' +
+          '</li>';
       });
       ol.innerHTML = html;
       if (countEl) countEl.textContent = data.totalBallots;

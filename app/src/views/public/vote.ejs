@@ -48,6 +48,7 @@
           </span>
           <span class="option-body">
             <span class="option-label"><%= opt.label %></span>
+            <% if (opt.party) { %><span class="option-party"><%= opt.party %></span><% } %>
             <% if (opt.description) { %><span class="option-sub"><%= opt.description %></span><% } %>
           </span>
           <span class="option-check" aria-hidden="true"></span>

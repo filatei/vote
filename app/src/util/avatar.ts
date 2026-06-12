@@ -20,11 +20,16 @@ function initials(label: string): string {
   return (words[0][0] + words[1][0]).toUpperCase();
 }
 
-/** Inline SVG avatar. `cls` is the CSS class (sizing) applied to the <svg>. */
-export function avatarSvg(label: string, seed: number | string, cls = 'option-thumb'): string {
+/** Deterministic accent colour for a seed (shared by avatar + bar tinting). */
+export function avatarColor(seed: number | string): string {
   let h = 0;
   for (const ch of String(seed)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-  const color = PALETTE[h % PALETTE.length];
+  return PALETTE[h % PALETTE.length];
+}
+
+/** Inline SVG avatar. `cls` is the CSS class (sizing) applied to the <svg>. */
+export function avatarSvg(label: string, seed: number | string, cls = 'option-thumb'): string {
+  const color = avatarColor(seed);
   const text = escapeXml(initials(label));
   return (
     `<svg class="${cls} avatar" viewBox="0 0 64 64" role="img" aria-label="${escapeXml(label)}">` +

@@ -25,23 +25,35 @@
          var barPct = maxVotes ? Math.round((r.votes / maxVotes) * 100) : 0;
          var leader = i === 0 && r.votes > 0;
     %>
-      <li class="lb-row<%= leader ? ' lb-leader' : '' %><%= r.description ? ' has-bio' : '' %>" data-option-id="<%= r.option_id %>">
-        <span class="lb-rank"><%= i + 1 %></span>
+      <li class="lb-row<%= leader ? ' lb-leader' : '' %><%= r.description ? ' has-bio' : '' %>"
+          data-option-id="<%= r.option_id %>" style="--accent: <%= avatarColor(r.option_id) %>">
         <span class="lb-photo">
           <% if (r.image_path) { %>
             <img class="lb-thumb" src="/uploads/<%= r.image_path %>" alt="" loading="lazy" />
           <% } else { %>
             <%- avatarSvg(r.label, r.option_id, 'lb-thumb') %>
           <% } %>
-          <% if (r.flag_path) { %><img class="lb-flag" src="/uploads/<%= r.flag_path %>" alt="" loading="lazy" /><% } %>
+          <span class="lb-check" aria-hidden="true"></span>
         </span>
+        <% if (r.flag_path) { %>
+          <span class="lb-party-tile">
+            <img class="lb-party-logo" src="/uploads/<%= r.flag_path %>" alt="" loading="lazy" />
+            <span class="lb-party-cap">Party</span>
+          </span>
+        <% } %>
         <div class="lb-main">
           <div class="lb-top">
-            <span class="lb-name"><%= r.label %><% if (leader) { %> <span class="lb-badge">Leading</span><% } %><% if (r.description) { %> <span class="lb-caret" aria-hidden="true">▾</span><% } %></span>
-            <span class="lb-votes"><%= r.votes %><span class="lb-pct"><%= pct %>%</span></span>
+            <span class="lb-name"><%= r.label %></span>
+            <% if (leader) { %><span class="lb-badge">Leading</span><% } %>
+            <% if (r.description) { %><span class="lb-caret" aria-hidden="true">▾</span><% } %>
           </div>
+          <% if (r.party) { %><div class="lb-party-name"><%= r.party %></div><% } %>
           <div class="bar"><div class="bar-fill" style="width: <%= barPct %>%"></div></div>
           <% if (r.description) { %><div class="lb-bio"><%= r.description %></div><% } %>
+        </div>
+        <div class="lb-score">
+          <span class="lb-count"><%= r.votes %></span>
+          <span class="lb-pct"><%= pct %>%</span>
         </div>
       </li>
     <% }) %>

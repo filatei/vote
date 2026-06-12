@@ -21,6 +21,7 @@ import {
   listElections,
   setElectionLogo,
   setOptionFlag,
+  setOptionParty,
   setStatus,
   updateElectionDraft,
   updateOptionContent,
@@ -401,12 +402,14 @@ adminRouter.post(
       if (!option || option.election_id !== id) throw new HttpError(404, 'Contestant not found.');
 
       const description = String(req.body.description || '').trim().slice(0, 5000);
+      const party = String(req.body.party || '').trim().slice(0, 120);
       const files = req.files as { [field: string]: Express.Multer.File[] } | undefined;
       const imageFile = files?.image?.[0];
       const flagFile = files?.flag?.[0];
       const rm = (p: string | null) => {
         if (p) fs.promises.unlink(uploadPath(p)).catch(() => undefined);
       };
+      await setOptionParty(optionId, party);
 
       if (req.body.removePhoto === '1') {
         rm(await clearOptionImage(optionId));

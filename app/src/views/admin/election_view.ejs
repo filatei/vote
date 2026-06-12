@@ -203,6 +203,7 @@
         </div>
         <div class="tally-main">
           <div class="result-head"><span class="result-label"><%= r.label %></span><span class="result-count"><%= r.votes %></span></div>
+          <% if (r.party) { %><p class="tally-party"><%= r.party %></p><% } %>
           <% if (r.description) { %><p class="tally-bio"><%= r.description %></p><% } %>
           <div class="bar"><div class="bar-fill" style="width: <%= Math.round((r.votes / max) * 100) %>%"></div></div>
         </div>

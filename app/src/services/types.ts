@@ -10,6 +10,7 @@ export interface Option {
   description: string;
   image_path: string | null;
   flag_path: string | null;
+  party: string;
   position: number;
 }
 
@@ -48,6 +49,7 @@ export interface TallyRow {
   votes: number;
   image_path: string | null;
   flag_path: string | null;
+  party: string;
 }
 
 export interface Tally {

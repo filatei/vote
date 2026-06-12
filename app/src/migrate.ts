@@ -10,8 +10,11 @@ const STATEMENTS: string[] = [
   // Contestant photo for each option (Phase 1: photos + bios).
   `ALTER TABLE options ADD COLUMN IF NOT EXISTS image_path TEXT`,
 
-  // Optional party / affiliation flag image per contestant, shown beside photo.
+  // Optional party / affiliation logo image per contestant, shown beside photo.
   `ALTER TABLE options ADD COLUMN IF NOT EXISTS flag_path TEXT`,
+
+  // Optional party / affiliation name per contestant (e.g. "Labour Party").
+  `ALTER TABLE options ADD COLUMN IF NOT EXISTS party TEXT NOT NULL DEFAULT ''`,
 
   // Access mode: 'code' = pre-issued voting codes (default), 'open' = anyone
   // with the link can vote, limited to one vote per device.

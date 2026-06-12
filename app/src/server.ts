@@ -8,7 +8,7 @@ import pinoHttp from 'pino-http';
 
 import { config } from './config';
 import { formatWat, toWatInput } from './util/datetime';
-import { avatarSvg } from './util/avatar';
+import { avatarSvg, avatarColor } from './util/avatar';
 import { parseVideoUrl } from './util/video';
 
 // Changes each process start → used to cache-bust /static assets after a deploy.
@@ -117,6 +117,7 @@ app.use((_req, res, next) => {
   res.locals.video = parseVideoUrl(config.LANDING_VIDEO_URL || 'https://youtu.be/Cafnwp8FElk');
   res.locals.assetVer = ASSET_VER;
   res.locals.avatarSvg = avatarSvg;
+  res.locals.avatarColor = avatarColor;
   next();
 });
 
