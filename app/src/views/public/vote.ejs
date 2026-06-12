@@ -36,11 +36,14 @@
         <label class="option candidate">
           <input class="option-native" type="<%= election.ballot_type === 'single' ? 'radio' : 'checkbox' %>"
                  name="option" value="<%= opt.id %>" />
-          <% if (opt.image_path) { %>
-            <img class="option-thumb" src="/uploads/<%= opt.image_path %>" alt="" loading="lazy" />
-          <% } else { %>
-            <%- avatarSvg(opt.label, opt.id) %>
-          <% } %>
+          <span class="option-photo">
+            <% if (opt.image_path) { %>
+              <img class="option-thumb" src="/uploads/<%= opt.image_path %>" alt="" loading="lazy" />
+            <% } else { %>
+              <%- avatarSvg(opt.label, opt.id) %>
+            <% } %>
+            <% if (opt.flag_path) { %><img class="option-flag" src="/uploads/<%= opt.flag_path %>" alt="" loading="lazy" /><% } %>
+          </span>
           <span class="option-body">
             <span class="option-label"><%= opt.label %></span>
             <% if (opt.description) { %><span class="option-sub"><%= opt.description %></span><% } %>

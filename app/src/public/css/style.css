@@ -281,6 +281,12 @@ input[type="datetime-local"] {
   flex: 0 0 auto; width: 52px; height: 52px; border-radius: 10px;
   object-fit: cover; background: #eef1f7; border: 1px solid var(--line);
 }
+.option-photo { position: relative; flex: 0 0 auto; line-height: 0; }
+.option-flag {
+  position: absolute; right: -6px; bottom: -6px; width: 28px; height: 19px;
+  object-fit: cover; border-radius: 3px; border: 1.5px solid #fff; background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,.25);
+}
 .option .option-body { flex: 1 1 auto; min-width: 0; }
 
 /* Bio: collapsed by default, revealed on hover (desktop) or tap (.bio-open) */
