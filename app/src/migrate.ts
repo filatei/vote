@@ -38,6 +38,13 @@ const STATEMENTS: string[] = [
      created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
      last_login_at TIMESTAMPTZ
    )`,
+  // Lemon Squeezy subscription state per customer.
+  `ALTER TABLE customers ADD COLUMN IF NOT EXISTS subscription_status TEXT`,
+  `ALTER TABLE customers ADD COLUMN IF NOT EXISTS ls_subscription_id TEXT`,
+  `ALTER TABLE customers ADD COLUMN IF NOT EXISTS ls_customer_id TEXT`,
+  `ALTER TABLE customers ADD COLUMN IF NOT EXISTS subscription_renews_at TIMESTAMPTZ`,
+  `ALTER TABLE customers ADD COLUMN IF NOT EXISTS subscription_ends_at TIMESTAMPTZ`,
+  `ALTER TABLE customers ADD COLUMN IF NOT EXISTS customer_portal_url TEXT`,
   `CREATE TABLE IF NOT EXISTS magic_tokens (
      id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
      email      TEXT NOT NULL,

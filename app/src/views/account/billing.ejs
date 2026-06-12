@@ -1,0 +1,51 @@
+<%- include('../partials/head') %>
+<section class="page-head">
+  <div>
+    <h1>Billing</h1>
+    <p class="page-sub muted">Your Torama Vote subscription.</p>
+  </div>
+  <a class="button button-ghost button-sm" href="/account">← Dashboard</a>
+</section>
+
+<% if (justSubscribed) { %>
+  <div class="alert alert-success" role="status">Thank you! Your subscription is being activated — it can take a few seconds to show as active here.</div>
+<% } %>
+<% if (needed) { %>
+  <div class="alert alert-error" role="alert">An active subscription is required to open an election for voting.</div>
+<% } %>
+<% if (checkoutError) { %>
+  <div class="alert alert-error" role="alert">We couldn't start the checkout just now. Please try again.</div>
+<% } %>
+
+<section class="card billing-card">
+  <% if (!enabled) { %>
+    <h2 class="h3">No subscription needed</h2>
+    <p class="muted">Opening elections is currently free on this server — there's nothing to pay for right now.</p>
+
+  <% } else if (active) { %>
+    <p><span class="status-pill status-open">Active</span></p>
+    <h2 class="h3"><%= priceLabel %></h2>
+    <% if (sub.status === 'cancelled' && sub.endsAt) { %>
+      <p class="muted">Cancelled — your access continues until <strong><%= new Date(sub.endsAt).toISOString().slice(0,10) %></strong>, then it won't renew.</p>
+    <% } else if (sub.renewsAt) { %>
+      <p class="muted">Renews on <strong><%= new Date(sub.renewsAt).toISOString().slice(0,10) %></strong>.</p>
+    <% } %>
+    <p>You can open and run elections. Update your card or cancel any time:</p>
+    <% if (sub.portalUrl) { %>
+      <a class="button button-primary" href="<%= sub.portalUrl %>" target="_blank" rel="noopener">Manage / cancel subscription</a>
+    <% } else { %>
+      <p class="help">A manage-and-cancel link will appear here shortly after your first payment is processed.</p>
+    <% } %>
+
+  <% } else { %>
+    <h2 class="h3">Subscribe to launch elections</h2>
+    <p class="lead"><%= priceLabel %> · cancel any time.</p>
+    <p class="muted">Creating elections and adding candidates is always free. An active subscription is required only to <strong>open</strong> an election for voting.</p>
+    <form method="post" action="/account/subscribe" class="stack">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <button class="button button-primary button-lg" type="submit">Subscribe — <%= priceLabel %></button>
+    </form>
+    <p class="help">Secure checkout by Lemon Squeezy. Charged in USD; cancel from the billing portal whenever you like.</p>
+  <% } %>
+</section>
+<%- include('../partials/foot') %>

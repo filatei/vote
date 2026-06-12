@@ -80,6 +80,7 @@
     <% } else if (typeof customerEmail !== 'undefined' && customerEmail) { %>
       <nav class="header-nav">
         <a href="/account">Dashboard</a>
+        <a href="/account/billing">Billing</a>
         <span class="muted nav-email"><%= customerEmail %></span>
         <form method="post" action="/account/logout" class="inline-form">
           <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>" />

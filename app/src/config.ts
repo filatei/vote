@@ -63,6 +63,16 @@ const schema = z.object({
   PAYMENT_CURRENCY: z.string().default('NGN'),
   PAYMENT_AMOUNT: z.coerce.number().positive().default(100000),
 
+  // ── Lemon Squeezy monthly subscription ($8/mo, cancel anytime) ────────
+  // When enabled, an active subscription is required to OPEN an election for
+  // voting (creating/editing stays free). OFF until the LS store is configured.
+  SUBSCRIPTIONS_ENABLED: bool(false),
+  LEMONSQUEEZY_API_KEY: z.string().optional(),
+  LEMONSQUEEZY_STORE_ID: z.string().optional(),
+  LEMONSQUEEZY_VARIANT_ID: z.string().optional(), // the $8/month subscription variant
+  LEMONSQUEEZY_WEBHOOK_SECRET: z.string().optional(),
+  SUBSCRIPTION_PRICE_LABEL: z.string().default('$8 / month'),
+
   // Optional landing-page explainer video (direct .mp4/.webm URL, ideally
   // self-hosted at /static/...). Empty shows an animated illustration instead.
   LANDING_VIDEO_URL: z.string().optional(),

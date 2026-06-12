@@ -13,6 +13,14 @@
   <div class="alert alert-error" role="alert">We couldn't confirm that payment. If you were charged, please contact support before retrying.</div>
 <% } %>
 
+<% if (area === 'account' && typeof subRequired !== 'undefined' && subRequired) { %>
+<section class="card highlight-card">
+  <h2 class="h3">Subscribe to open this election</h2>
+  <p>Creating and editing your election is free. To <strong>open it for voting</strong> you need an active subscription — <strong><%= subPriceLabel %></strong>, cancel any time.</p>
+  <a class="button button-primary" href="/account/billing">Go to billing</a>
+</section>
+<% } %>
+
 <% if (area === 'account' && paymentsEnabled && !election.paid) { %>
 <section class="card highlight-card">
   <h2 class="h3">Launch this election</h2>

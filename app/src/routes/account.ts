@@ -7,7 +7,19 @@ import { magicLinkLimiter } from '../middleware/rateLimit';
 import { HttpError } from '../middleware/errors';
 import { uploadContestantImage, uploadContestantMedia, uploadPath } from '../middleware/upload';
 import { sendMail } from '../mailer';
-import { createMagicToken, consumeMagicToken, findOrCreateCustomerByEmail } from '../services/customers';
+import {
+  createMagicToken,
+  consumeMagicToken,
+  findOrCreateCustomerByEmail,
+  getCustomerById,
+} from '../services/customers';
+import {
+  createCheckout,
+  getCustomerSubscription,
+  hasActiveSubscription,
+  subscriptionPriceLabel,
+  subscriptionsEnabled,
+} from '../services/subscriptions';
 import {
   accountRedirectUri,
   buildAuthUrl,
@@ -257,6 +269,8 @@ async function renderElectionView(req: Request, res: import('express').Response,
   const codeStats = await getCodeStats(election.id);
   const tally = await tallyElection(election.id);
   const paid = req.query.paid;
+  const subEnabled = subscriptionsEnabled();
+  const subActive = subEnabled ? hasActiveSubscription(await getCustomerSubscription(req.session.customerId!)) : true;
   res.render('admin/election_view', {
     title: election.title,
     election,
@@ -269,8 +283,48 @@ async function renderElectionView(req: Request, res: import('express').Response,
     allowDeleteAny: config.ALLOW_ELECTION_DELETE,
     paymentsEnabled: paymentsEnabled(),
     payFlash: paid === '1' ? 'ok' : paid === '0' ? 'fail' : null,
+    subRequired: subEnabled && !subActive,
+    subPriceLabel: subscriptionPriceLabel(),
   });
 }
+
+// Billing / subscription page.
+accountRouter.get('/billing', async (req, res, next) => {
+  try {
+    const sub = await getCustomerSubscription(req.session.customerId!);
+    res.render('account/billing', {
+      title: 'Billing',
+      sub,
+      active: hasActiveSubscription(sub),
+      enabled: subscriptionsEnabled(),
+      priceLabel: subscriptionPriceLabel(),
+      justSubscribed: req.query.sub === 'success',
+      needed: req.query.need === '1',
+      checkoutError: req.query.err === '1',
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Start a Lemon Squeezy checkout for the monthly subscription.
+accountRouter.post('/subscribe', csrfProtection, async (req, res, next) => {
+  try {
+    if (!subscriptionsEnabled()) {
+      res.redirect('/account/billing');
+      return;
+    }
+    const customer = await getCustomerById(req.session.customerId!);
+    if (!customer) {
+      res.redirect('/account/login');
+      return;
+    }
+    const url = await createCheckout(customer);
+    res.redirect(url || '/account/billing?err=1');
+  } catch (err) {
+    next(err);
+  }
+});
 
 accountRouter.get('/elections/:id', async (req, res, next) => {
   try {
@@ -327,7 +381,15 @@ accountRouter.post('/elections/:id/status', csrfProtection, async (req, res, nex
     const election = await loadOwned(req);
     const status = String(req.body.status);
     if (!['draft', 'open', 'closed'].includes(status)) throw new HttpError(400, 'Invalid status.');
-    // Opening requires the launch fee to be paid (when payments are enabled).
+    // Opening requires an active subscription (free to try, pay to launch).
+    if (status === 'open' && subscriptionsEnabled()) {
+      const sub = await getCustomerSubscription(req.session.customerId!);
+      if (!hasActiveSubscription(sub)) {
+        res.redirect('/account/billing?need=1');
+        return;
+      }
+    }
+    // Legacy per-election launch fee (only if the old Paystack flow is enabled).
     if (status === 'open' && paymentsEnabled() && !election.paid) {
       throw new HttpError(402, 'Please pay the launch fee before opening this election.');
     }
