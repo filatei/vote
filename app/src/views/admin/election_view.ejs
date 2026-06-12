@@ -187,7 +187,7 @@
     <h2 class="h3">Live tally <span class="muted">(<%= tally.totalBallots %> ballots)</span></h2>
     <a class="button button-ghost button-sm" href="<%= basePath %>/elections/<%= election.id %>/results.csv">Download results CSV</a>
   </div>
-  <% var max = tally.rows.reduce(function(m, r){ return Math.max(m, r.votes); }, 0) || 1; %>
+  <% var totalVotes = tally.rows.reduce(function(s, r){ return s + r.votes; }, 0) || 1; %>
   <ul class="results">
     <% tally.rows.forEach(function(r) { %>
       <li class="result-row tally-row">
@@ -205,7 +205,7 @@
           <div class="result-head"><span class="result-label"><%= r.label %></span><span class="result-count"><%= r.votes %></span></div>
           <% if (r.party) { %><p class="tally-party"><%= r.party %></p><% } %>
           <% if (r.description) { %><p class="tally-bio"><%= r.description %></p><% } %>
-          <div class="bar"><div class="bar-fill" style="width: <%= Math.round((r.votes / max) * 100) %>%"></div></div>
+          <div class="bar"><div class="bar-fill" style="width: <%= Math.round((r.votes / totalVotes) * 100) %>%"></div></div>
         </div>
       </li>
     <% }) %>

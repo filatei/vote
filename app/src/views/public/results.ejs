@@ -22,7 +22,7 @@
       <%= election.status === 'open' && election.results_visibility === 'live' ? 'data-poll' : '' %>>
     <% sorted.forEach(function(r, i) {
          var pct = totalVotes ? Math.round((r.votes / totalVotes) * 100) : 0;
-         var barPct = maxVotes ? Math.round((r.votes / maxVotes) * 100) : 0;
+         var barPct = pct; // bar reflects the actual vote share, not relative to the leader
          var leader = i === 0 && r.votes > 0;
     %>
       <li class="lb-row<%= leader ? ' lb-leader' : '' %><%= r.description ? ' has-bio' : '' %>"

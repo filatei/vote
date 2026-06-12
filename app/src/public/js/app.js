@@ -201,7 +201,7 @@
       var html = '';
       rows.forEach(function (r, idx) {
         var pct = total ? Math.round((r.votes / total) * 100) : 0;
-        var bar = maxv ? Math.round((r.votes / maxv) * 100) : 0;
+        var bar = pct; // bar width = share of total votes (matches the % shown)
         var leader = idx === 0 && r.votes > 0;
         var hasBio = !!(r.description && String(r.description).trim());
         var cls = 'lb-row' + (leader ? ' lb-leader' : '') + (hasBio ? ' has-bio' : '') +
