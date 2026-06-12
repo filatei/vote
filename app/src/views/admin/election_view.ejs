@@ -190,9 +190,22 @@
   <% var max = tally.rows.reduce(function(m, r){ return Math.max(m, r.votes); }, 0) || 1; %>
   <ul class="results">
     <% tally.rows.forEach(function(r) { %>
-      <li class="result-row">
-        <div class="result-head"><span class="result-label"><%= r.label %></span><span class="result-count"><%= r.votes %></span></div>
-        <div class="bar"><div class="bar-fill" style="width: <%= Math.round((r.votes / max) * 100) %>%"></div></div>
+      <li class="result-row tally-row">
+        <div class="tally-photo">
+          <% if (r.image_path) { %>
+            <img class="tally-thumb" src="/uploads/<%= r.image_path %>" alt="" loading="lazy" />
+          <% } else { %>
+            <%- avatarSvg(r.label, r.option_id, 'tally-thumb') %>
+          <% } %>
+          <% if (r.flag_path) { %>
+            <img class="tally-flag" src="/uploads/<%= r.flag_path %>" alt="Party flag" loading="lazy" />
+          <% } %>
+        </div>
+        <div class="tally-main">
+          <div class="result-head"><span class="result-label"><%= r.label %></span><span class="result-count"><%= r.votes %></span></div>
+          <% if (r.description) { %><p class="tally-bio"><%= r.description %></p><% } %>
+          <div class="bar"><div class="bar-fill" style="width: <%= Math.round((r.votes / max) * 100) %>%"></div></div>
+        </div>
       </li>
     <% }) %>
   </ul>

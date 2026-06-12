@@ -321,6 +321,23 @@ input[type="file"] { font: inherit; }
 .contestant-controls .file-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .contestant-controls .checkbox-inline { padding-bottom: 8px; }
 .contestant-save { margin-left: auto; }
+.flag-field-row { display: flex; align-items: center; gap: 8px; }
+.flag-preview { height: 30px; width: auto; max-width: 60px; border-radius: 4px; border: 1px solid var(--line); object-fit: cover; }
+
+/* Owner "Live tally" rows: photo + party flag + bio */
+.tally-row { display: flex; gap: 14px; align-items: flex-start; }
+.tally-photo { position: relative; flex: 0 0 auto; line-height: 0; }
+.tally-thumb { width: 56px; height: 56px; border-radius: 10px; object-fit: cover;
+  background: #eef1f7; border: 1px solid var(--line); display: block; }
+.tally-flag, .lb-flag { position: absolute; right: -6px; bottom: -6px; width: 26px; height: 18px;
+  object-fit: cover; border-radius: 3px; border: 1.5px solid #fff; background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+.tally-main { flex: 1 1 auto; min-width: 0; }
+.tally-bio { margin: 2px 0 8px; color: var(--muted); font-size: .9rem; }
+
+/* Party flag badge over the leaderboard thumbnail */
+.lb-photo { position: relative; flex: 0 0 auto; display: inline-block; line-height: 0; }
+.lb-flag { width: 24px; height: 16px; right: -5px; bottom: -5px; }
 /* Disabled buttons (e.g. Save until a change is made) */
 .button[disabled], .button:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
 @media (max-width: 640px) {

@@ -9,6 +9,7 @@ export interface Option {
   label: string;
   description: string;
   image_path: string | null;
+  flag_path: string | null;
   position: number;
 }
 
@@ -46,6 +47,7 @@ export interface TallyRow {
   description: string;
   votes: number;
   image_path: string | null;
+  flag_path: string | null;
 }
 
 export interface Tally {

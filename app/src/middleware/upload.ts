@@ -23,14 +23,26 @@ const storage = multer.diskStorage({
   },
 });
 
+const imageFilter: multer.Options['fileFilter'] = (_req, file, cb) => {
+  if (ALLOWED[file.mimetype]) cb(null, true);
+  else cb(null, false); // silently drop; route treats "no file" as no change
+};
+
 export const uploadContestantImage = multer({
   storage,
   limits: { fileSize: 2 * 1024 * 1024, files: 1 }, // 2 MB
-  fileFilter: (_req, file, cb) => {
-    if (ALLOWED[file.mimetype]) cb(null, true);
-    else cb(null, false); // silently drop; route treats "no file" as no change
-  },
+  fileFilter: imageFilter,
 }).single('image');
+
+/** Accepts a contestant photo ("image") plus an optional party flag ("flag"). */
+export const uploadContestantMedia = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024, files: 2 }, // 2 MB each
+  fileFilter: imageFilter,
+}).fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'flag', maxCount: 1 },
+]);
 
 /** Absolute path to a stored upload, given its public basename. */
 export function uploadPath(filename: string): string {

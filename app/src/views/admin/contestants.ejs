@@ -7,7 +7,7 @@
   <a class="button button-ghost" href="<%= basePath %>/elections/<%= election.id %>">← Back to election</a>
 </section>
 
-<p class="help">Add a photo and a short bio for each contestant. Voters see the photo as a thumbnail and the bio when they hover or tap the option. JPG, PNG or WebP up to 2&nbsp;MB.</p>
+<p class="help">Add a photo, a short bio, and an optional party flag for each contestant. Voters see the photo and flag as thumbnails on the ballot and results, and the bio when they hover or tap. JPG, PNG or WebP up to 2&nbsp;MB each.</p>
 
 <% election.options.forEach(function(opt) { %>
   <section class="card contestant-editor">
@@ -36,13 +36,28 @@
               <label for="img-<%= opt.id %>">Photo <span class="muted">(optional)</span></label>
               <input id="img-<%= opt.id %>" name="image" type="file"
                      accept="image/jpeg,image/png,image/webp" data-dirty />
+              <% if (opt.image_path) { %>
+                <label class="checkbox-inline">
+                  <input type="checkbox" name="removePhoto" value="1" data-dirty /> Remove photo
+                </label>
+              <% } %>
             </div>
 
-            <% if (opt.image_path) { %>
-              <label class="checkbox-inline">
-                <input type="checkbox" name="removePhoto" value="1" data-dirty /> Remove current photo
-              </label>
-            <% } %>
+            <div class="file-field">
+              <label for="flag-<%= opt.id %>">Party flag <span class="muted">(optional)</span></label>
+              <div class="flag-field-row">
+                <% if (opt.flag_path) { %>
+                  <img class="flag-preview" src="/uploads/<%= opt.flag_path %>" alt="<%= opt.label %> party flag" />
+                <% } %>
+                <input id="flag-<%= opt.id %>" name="flag" type="file"
+                       accept="image/jpeg,image/png,image/webp" data-dirty />
+              </div>
+              <% if (opt.flag_path) { %>
+                <label class="checkbox-inline">
+                  <input type="checkbox" name="removeFlag" value="1" data-dirty /> Remove flag
+                </label>
+              <% } %>
+            </div>
 
             <button class="button button-primary contestant-save" type="submit" data-save disabled>Save</button>
           </div>

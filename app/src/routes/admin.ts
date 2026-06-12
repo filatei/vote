@@ -11,6 +11,7 @@ import {
 } from '../util/validate';
 import {
   canDeleteElection,
+  clearOptionFlag,
   clearOptionImage,
   createElection,
   deleteElection,
@@ -19,13 +20,14 @@ import {
   getOptionById,
   listElections,
   setElectionLogo,
+  setOptionFlag,
   setStatus,
   updateElectionDraft,
   updateOptionContent,
   updateSchedule,
 } from '../services/elections';
 import { watInputToUtc } from '../util/datetime';
-import { uploadContestantImage, uploadPath } from '../middleware/upload';
+import { uploadContestantImage, uploadContestantMedia, uploadPath } from '../middleware/upload';
 import { mailStatus, sendMail, verifyMailer } from '../mailer';
 import { editDataFromElection, parseEditForm } from '../util/electionEdit';
 import fs from 'fs';
@@ -389,7 +391,7 @@ adminRouter.get('/elections/:id/contestants', csrfToken, async (req, res, next) 
 // so req.body (incl. the CSRF token) is populated before csrfProtection.
 adminRouter.post(
   '/elections/:id/options/:optionId',
-  uploadContestantImage,
+  uploadContestantMedia,
   csrfProtection,
   async (req, res, next) => {
     try {
@@ -399,24 +401,37 @@ adminRouter.post(
       if (!option || option.election_id !== id) throw new HttpError(404, 'Contestant not found.');
 
       const description = String(req.body.description || '').trim().slice(0, 5000);
+      const files = req.files as { [field: string]: Express.Multer.File[] } | undefined;
+      const imageFile = files?.image?.[0];
+      const flagFile = files?.flag?.[0];
+      const rm = (p: string | null) => {
+        if (p) fs.promises.unlink(uploadPath(p)).catch(() => undefined);
+      };
 
       if (req.body.removePhoto === '1') {
-        const old = await clearOptionImage(optionId);
+        rm(await clearOptionImage(optionId));
         await updateOptionContent(optionId, description);
-        if (old) fs.promises.unlink(uploadPath(old)).catch(() => undefined);
-      } else if (req.file) {
+      } else if (imageFile) {
         const oldPath = option.image_path;
-        await updateOptionContent(optionId, description, req.file.filename);
-        if (oldPath) fs.promises.unlink(uploadPath(oldPath)).catch(() => undefined);
+        await updateOptionContent(optionId, description, imageFile.filename);
+        rm(oldPath);
       } else {
         await updateOptionContent(optionId, description);
+      }
+
+      if (req.body.removeFlag === '1') {
+        rm(await clearOptionFlag(optionId));
+      } else if (flagFile) {
+        const oldFlag = option.flag_path;
+        await setOptionFlag(optionId, flagFile.filename);
+        rm(oldFlag);
       }
 
       await logAction({
         adminId: req.session.adminId!,
         action: 'update_contestant',
         electionId: id,
-        detail: { optionId, hasPhoto: Boolean(req.file) },
+        detail: { optionId, hasPhoto: Boolean(imageFile), hasFlag: Boolean(flagFile) },
         ip: req.ip,
       });
       res.redirect(`/admin/elections/${id}/contestants`);

@@ -5,7 +5,7 @@ import { csrfProtection, csrfToken } from '../middleware/csrf';
 import { requireCustomer, customerLocals } from '../middleware/auth';
 import { magicLinkLimiter } from '../middleware/rateLimit';
 import { HttpError } from '../middleware/errors';
-import { uploadContestantImage, uploadPath } from '../middleware/upload';
+import { uploadContestantImage, uploadContestantMedia, uploadPath } from '../middleware/upload';
 import { sendMail } from '../mailer';
 import { createMagicToken, consumeMagicToken, findOrCreateCustomerByEmail } from '../services/customers';
 import {
@@ -17,6 +17,7 @@ import {
 import { generateUrlToken } from '../util/crypto';
 import {
   canDeleteElection,
+  clearOptionFlag,
   clearOptionImage,
   createElection,
   deleteElection,
@@ -26,6 +27,7 @@ import {
   listElectionsByOwner,
   ownsElection,
   setElectionLogo,
+  setOptionFlag,
   setStatus,
   updateElectionDraft,
   updateOptionContent,
@@ -493,24 +495,41 @@ accountRouter.get('/elections/:id/results.csv', async (req, res, next) => {
   }
 });
 
-accountRouter.post('/elections/:id/options/:optionId', uploadContestantImage, csrfProtection, async (req, res, next) => {
+accountRouter.post('/elections/:id/options/:optionId', uploadContestantMedia, csrfProtection, async (req, res, next) => {
   try {
     const election = await loadOwned(req);
     const optionId = Number(req.params.optionId);
     const option = await getOptionById(optionId);
     if (!option || option.election_id !== election.id) throw new HttpError(404, 'Contestant not found.');
     const description = String(req.body.description || '').trim().slice(0, 5000);
+    const files = req.files as { [field: string]: Express.Multer.File[] } | undefined;
+    const imageFile = files?.image?.[0];
+    const flagFile = files?.flag?.[0];
+    const rm = (p: string | null) => {
+      if (p) fs.promises.unlink(uploadPath(p)).catch(() => undefined);
+    };
+
+    // Photo (and bio).
     if (req.body.removePhoto === '1') {
-      const old = await clearOptionImage(optionId);
+      rm(await clearOptionImage(optionId));
       await updateOptionContent(optionId, description);
-      if (old) fs.promises.unlink(uploadPath(old)).catch(() => undefined);
-    } else if (req.file) {
-      const oldPath = option.image_path;
-      await updateOptionContent(optionId, description, req.file.filename);
-      if (oldPath) fs.promises.unlink(uploadPath(oldPath)).catch(() => undefined);
+    } else if (imageFile) {
+      const old = option.image_path;
+      await updateOptionContent(optionId, description, imageFile.filename);
+      rm(old);
     } else {
       await updateOptionContent(optionId, description);
     }
+
+    // Party flag (independent of the photo).
+    if (req.body.removeFlag === '1') {
+      rm(await clearOptionFlag(optionId));
+    } else if (flagFile) {
+      const oldFlag = option.flag_path;
+      await setOptionFlag(optionId, flagFile.filename);
+      rm(oldFlag);
+    }
+
     res.redirect(`/account/elections/${election.id}/contestants`);
   } catch (err) {
     next(err);

@@ -27,11 +27,14 @@
     %>
       <li class="lb-row<%= leader ? ' lb-leader' : '' %><%= r.description ? ' has-bio' : '' %>" data-option-id="<%= r.option_id %>">
         <span class="lb-rank"><%= i + 1 %></span>
-        <% if (r.image_path) { %>
-          <img class="lb-thumb" src="/uploads/<%= r.image_path %>" alt="" loading="lazy" />
-        <% } else { %>
-          <%- avatarSvg(r.label, r.option_id, 'lb-thumb') %>
-        <% } %>
+        <span class="lb-photo">
+          <% if (r.image_path) { %>
+            <img class="lb-thumb" src="/uploads/<%= r.image_path %>" alt="" loading="lazy" />
+          <% } else { %>
+            <%- avatarSvg(r.label, r.option_id, 'lb-thumb') %>
+          <% } %>
+          <% if (r.flag_path) { %><img class="lb-flag" src="/uploads/<%= r.flag_path %>" alt="" loading="lazy" /><% } %>
+        </span>
         <div class="lb-main">
           <div class="lb-top">
             <span class="lb-name"><%= r.label %><% if (leader) { %> <span class="lb-badge">Leading</span><% } %><% if (r.description) { %> <span class="lb-caret" aria-hidden="true">▾</span><% } %></span>

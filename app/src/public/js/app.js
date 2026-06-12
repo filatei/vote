@@ -177,7 +177,9 @@
     var initial = ol.querySelectorAll('.lb-row');
     for (var i = 0; i < initial.length; i++) {
       var oid = initial[i].getAttribute('data-option-id');
-      var t = initial[i].querySelector('.lb-thumb');
+      // Capture the whole photo wrapper (thumbnail + optional party flag) so it
+      // survives the live re-render below.
+      var t = initial[i].querySelector('.lb-photo') || initial[i].querySelector('.lb-thumb');
       if (oid && t) thumbs[oid] = t.outerHTML;
     }
     function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }

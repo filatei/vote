@@ -95,6 +95,22 @@ export async function clearOptionImage(optionId: number): Promise<string | null>
   return old;
 }
 
+/** Set a contestant's party-flag image path. */
+export async function setOptionFlag(optionId: number, flagPath: string): Promise<void> {
+  await pool.query(`UPDATE options SET flag_path = $2 WHERE id = $1`, [optionId, flagPath]);
+}
+
+/** Clear a contestant's party flag. Returns the previous path so it can be deleted. */
+export async function clearOptionFlag(optionId: number): Promise<string | null> {
+  const before = await pool.query<{ flag_path: string | null }>(
+    `SELECT flag_path FROM options WHERE id = $1`,
+    [optionId],
+  );
+  const old = before.rows[0]?.flag_path ?? null;
+  await pool.query(`UPDATE options SET flag_path = NULL WHERE id = $1`, [optionId]);
+  return old;
+}
+
 export async function getElectionWithOptions(
   id: number,
 ): Promise<ElectionWithOptions | null> {
