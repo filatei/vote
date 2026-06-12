@@ -1,0 +1,27 @@
+<svg viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Torama Vote">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#eef3ff"/>
+    </linearGradient>
+    <linearGradient id="logo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#1f50c0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1200" height="12" fill="#2f6df4"/>
+
+  <!-- Brand check logo -->
+  <g transform="translate(110,150)">
+    <rect x="0" y="0" width="150" height="150" rx="40" fill="url(#logo)"/>
+    <path d="M40 78 l28 28 l46 -56" fill="none" stroke="#ffffff" stroke-width="16"
+          stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <text x="110" y="400" font-family="Arial,Helvetica,sans-serif" font-size="92" font-weight="800" fill="#0d1b2a">Torama Vote</text>
+  <text x="112" y="462" font-family="Arial,Helvetica,sans-serif" font-size="34" font-weight="600" fill="#3c5468">Free &amp; fair online elections</text>
+  <text x="112" y="512" font-family="Arial,Helvetica,sans-serif" font-size="28" fill="#5a6b7e">Secret ballot · verifiable receipts · live results</text>
+
+  <text x="1090" y="585" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="22" fill="#90a0b0">vote.torama.money</text>
+</svg>

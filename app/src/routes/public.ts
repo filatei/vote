@@ -50,7 +50,14 @@ function setVotedCookie(res: Response, publicId: string): void {
 
 // Landing page: enter a voting code.
 publicRouter.get('/', csrfToken, (_req, res) => {
-  res.render('public/home', { title: 'Torama Vote', error: null, electionId: null });
+  res.render('public/home', {
+    title: 'Torama Vote — free & fair online elections',
+    error: null,
+    electionId: null,
+    publicPage: true,
+    ogDescription:
+      'Run a secret-ballot election online in minutes, with verifiable receipts so every voter can confirm their vote was counted.',
+  });
 });
 
 // Static content / trust pages.
@@ -106,7 +113,7 @@ publicRouter.post('/vote', codeAttemptLimiter, csrfProtection, csrfToken, async 
       });
       return;
     }
-    res.render('public/vote', { title: election.title, election, code, codeMode: 'hidden', error: null });
+    res.render('public/vote', { title: election.title, election, code, codeMode: 'hidden', error: null, publicPage: true });
   } catch (err) {
     next(err);
   }
@@ -229,6 +236,7 @@ publicRouter.get('/e/:publicId', csrfToken, async (req, res, next) => {
           opensWat: formatWat(election.opens_at),
           closesWat: formatWat(election.closes_at),
           error: null,
+          publicPage: true,
         });
         return;
       }
@@ -238,6 +246,7 @@ publicRouter.get('/e/:publicId', csrfToken, async (req, res, next) => {
         code: '',
         codeMode: ballotCodeMode(am),
         error: null,
+        publicPage: true,
       });
       return;
     }
@@ -252,6 +261,7 @@ publicRouter.get('/e/:publicId', csrfToken, async (req, res, next) => {
       opensWat: formatWat(election.opens_at),
       closesWat: formatWat(election.closes_at),
       error: null,
+      publicPage: true,
     });
   } catch (err) {
     next(err);
@@ -264,12 +274,20 @@ publicRouter.get('/e/:publicId/results', async (req, res, next) => {
     const election = await getElectionWithOptionsByPublicId(req.params.publicId);
     if (!election) throw new HttpError(404, 'Election not found.');
     if (!resultsArePublic(election)) {
-      res.render('public/results_hidden', { title: election.title, election });
+      res.render('public/results_hidden', { title: election.title, election, publicPage: true });
       return;
     }
     const tally = await tallyElection(election.id);
     const board = await bulletinBoard(election.id);
-    res.render('public/results', { title: `Results — ${election.title}`, election, tally, board });
+    res.render('public/results', {
+      title: `Results — ${election.title}`,
+      election,
+      tally,
+      board,
+      publicPage: true,
+      ogTitle: `${election.title} — live results`,
+      ogDescription: 'See the live tally and verify every ballot. Cast your vote and watch the results update in real time.',
+    });
   } catch (err) {
     next(err);
   }

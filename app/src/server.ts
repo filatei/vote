@@ -105,8 +105,10 @@ app.use(
 );
 
 // Expose base url + year + WAT formatters to all templates
-app.use((_req, res, next) => {
+app.use((req, res, next) => {
   res.locals.baseUrl = config.PUBLIC_BASE_URL;
+  // Canonical absolute URL of the current page (no query) for og:url / canonical.
+  res.locals.currentUrl = config.PUBLIC_BASE_URL + req.path;
   res.locals.year = new Date().getFullYear();
   res.locals.formatWat = formatWat;
   res.locals.toWatInput = toWatInput;

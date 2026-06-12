@@ -4,8 +4,42 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light" />
-  <meta name="robots" content="noindex" />
+  <%
+    // Public, shareable pages (landing, ballot, results) opt in to indexing and
+    // rich link previews; everything else (admin/account) stays private.
+    var _pub = (typeof publicPage !== 'undefined' && publicPage);
+  %>
+  <% if (_pub) { %>
+    <meta name="robots" content="index,follow" />
+  <% } else { %>
+    <meta name="robots" content="noindex" />
+  <% } %>
   <title><%= typeof title !== 'undefined' ? title : 'Torama Vote' %></title>
+  <% if (_pub) {
+       var _base = (typeof baseUrl !== 'undefined' ? baseUrl : '');
+       var _img = (typeof ogImage !== 'undefined' && ogImage) ? ogImage
+                : (typeof election !== 'undefined' && election && election.logo_path) ? ('/uploads/' + election.logo_path)
+                : '/static/og-default.png';
+       if (_img.charAt(0) === '/') _img = _base + _img;
+       var _desc = (typeof ogDescription !== 'undefined' && ogDescription) ? ogDescription
+                 : (typeof election !== 'undefined' && election && election.description) ? election.description
+                 : 'Run a free & fair online election in minutes — secret ballot with verifiable receipts.';
+       var _url = (typeof currentUrl !== 'undefined') ? currentUrl : _base;
+       var _title = (typeof ogTitle !== 'undefined' && ogTitle) ? ogTitle : (typeof title !== 'undefined' ? title : 'Torama Vote');
+  %>
+    <meta name="description" content="<%= _desc %>" />
+    <link rel="canonical" href="<%= _url %>" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Torama Vote" />
+    <meta property="og:title" content="<%= _title %>" />
+    <meta property="og:description" content="<%= _desc %>" />
+    <meta property="og:image" content="<%= _img %>" />
+    <meta property="og:url" content="<%= _url %>" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="<%= _title %>" />
+    <meta name="twitter:description" content="<%= _desc %>" />
+    <meta name="twitter:image" content="<%= _img %>" />
+  <% } %>
   <link rel="stylesheet" href="/static/css/style.css?v=<%= typeof assetVer !== 'undefined' ? assetVer : '1' %>" />
   <link rel="icon" href="/static/favicon.svg?v=<%= typeof assetVer !== 'undefined' ? assetVer : '1' %>" type="image/svg+xml" />
   <link rel="alternate icon" href="/static/favicon.ico" sizes="any" />
