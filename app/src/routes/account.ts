@@ -7,7 +7,14 @@ import { magicLinkLimiter } from '../middleware/rateLimit';
 import { HttpError } from '../middleware/errors';
 import { uploadContestantImage, uploadPath } from '../middleware/upload';
 import { sendMail } from '../mailer';
-import { createMagicToken, consumeMagicToken } from '../services/customers';
+import { createMagicToken, consumeMagicToken, findOrCreateCustomerByEmail } from '../services/customers';
+import {
+  accountRedirectUri,
+  buildAuthUrl,
+  exchangeCode,
+  googleEnabled,
+} from '../services/googleAuth';
+import { generateUrlToken } from '../util/crypto';
 import {
   canDeleteElection,
   clearOptionImage,
@@ -43,9 +50,57 @@ import { watInputToUtc } from '../util/datetime';
 // ── Auth (unauthenticated) ──────────────────────────────────────────────────
 export const accountAuthRouter = Router();
 
+// Expose whether Google sign-in is available to every auth view.
+accountAuthRouter.use((_req, res, next) => {
+  res.locals.googleEnabled = googleEnabled();
+  next();
+});
+
 accountAuthRouter.get('/login', csrfToken, (req, res) => {
   if (req.session.customerId) return res.redirect('/account');
   res.render('account/login', { title: 'Sign in', error: null });
+});
+
+// ── Google Sign-In for election creators (no allowlist — open self-service) ──
+accountAuthRouter.get('/auth/google', (req, res, next) => {
+  if (!googleEnabled()) return next(new HttpError(404, 'Not found.'));
+  if (req.session.customerId) return res.redirect('/account');
+  const state = generateUrlToken(16);
+  req.session.oauthState = state;
+  res.redirect(buildAuthUrl(state, accountRedirectUri()));
+});
+
+accountAuthRouter.get('/auth/google/callback', csrfToken, async (req, res, next) => {
+  try {
+    if (!googleEnabled()) return next(new HttpError(404, 'Not found.'));
+
+    const renderError = (msg: string) =>
+      res.status(403).render('account/login', { title: 'Sign in', error: msg });
+
+    if (req.query.error) return renderError('Google sign-in was cancelled.');
+
+    const state = String(req.query.state || '');
+    if (!state || state !== req.session.oauthState) {
+      return renderError('Sign-in session expired or was invalid. Please try again.');
+    }
+    delete req.session.oauthState;
+
+    const code = String(req.query.code || '');
+    const identity = code ? await exchangeCode(code, accountRedirectUri()) : null;
+    if (!identity || !identity.emailVerified) {
+      return renderError('Could not verify your Google account. Please try again.');
+    }
+
+    const customer = await findOrCreateCustomerByEmail(identity.email);
+    req.session.regenerate((err) => {
+      if (err) return next(err);
+      req.session.customerId = customer.id;
+      req.session.customerEmail = customer.email;
+      res.redirect('/account');
+    });
+  } catch (err) {
+    next(err);
+  }
 });
 
 accountAuthRouter.post('/login', magicLinkLimiter, csrfProtection, csrfToken, async (req, res, next) => {

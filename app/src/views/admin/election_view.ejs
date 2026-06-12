@@ -106,8 +106,27 @@
     <div class="share-actions">
       <a class="button button-ghost button-sm" href="/e/<%= election.public_id %>" target="_blank" rel="noopener">Open voter page ↗</a>
       <a class="button button-ghost button-sm" href="/e/<%= election.public_id %>/results" target="_blank" rel="noopener">Results ↗</a>
-      <a class="button button-ghost button-sm" href="<%= basePath %>/elections/<%= election.id %>/contestants">Manage photos &amp; bios</a>
     </div>
+  </section>
+
+  <section class="card candidates-card">
+    <h2 class="h3">Candidates</h2>
+    <p class="help">Add a photo and a short bio for each contestant — voters see them on the ballot.</p>
+    <a class="button button-primary btn-icon candidates-btn"
+       href="<%= basePath %>/elections/<%= election.id %>/contestants">
+      <span class="candidates-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="9" height="16" rx="2"/>
+          <circle cx="7.5" cy="9.2" r="1.9"/>
+          <path d="M4.7 16.2c.5-1.8 5.1-1.8 5.6 0"/>
+          <line x1="15" y1="8" x2="21" y2="8"/>
+          <line x1="15" y1="12" x2="21" y2="12"/>
+          <line x1="15" y1="16" x2="19" y2="16"/>
+        </svg>
+      </span>
+      Manage photos &amp; bios
+    </a>
   </section>
 </div>
 

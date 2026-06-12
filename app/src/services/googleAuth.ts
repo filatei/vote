@@ -7,8 +7,14 @@ export function googleEnabled(): boolean {
   return Boolean(config.GOOGLE_CLIENT_ID && config.GOOGLE_CLIENT_SECRET);
 }
 
-export function redirectUri(): string {
+/** Callback for the /admin Google sign-in flow. */
+export function adminRedirectUri(): string {
   return config.GOOGLE_REDIRECT_URI || `${config.PUBLIC_BASE_URL}/admin/auth/google/callback`;
+}
+
+/** Callback for the customer (election creator) Google sign-in flow. */
+export function accountRedirectUri(): string {
+  return `${config.PUBLIC_BASE_URL}/account/auth/google/callback`;
 }
 
 /** The list of emails allowed into /admin (lower-cased). */
@@ -18,11 +24,11 @@ export function allowedAdminEmails(): string[] {
     .filter(Boolean);
 }
 
-/** Build the Google consent URL to redirect the admin to. */
-export function buildAuthUrl(state: string): string {
+/** Build the Google consent URL to redirect to (redirectUri must match the flow). */
+export function buildAuthUrl(state: string, redirectUri: string): string {
   const params = new URLSearchParams({
     client_id: config.GOOGLE_CLIENT_ID ?? '',
-    redirect_uri: redirectUri(),
+    redirect_uri: redirectUri,
     response_type: 'code',
     scope: 'openid email profile',
     state,
@@ -44,7 +50,7 @@ export interface GoogleIdentity {
  * client secret, so it's trusted without a separate signature check (standard
  * authorization-code flow).
  */
-export async function exchangeCode(code: string): Promise<GoogleIdentity | null> {
+export async function exchangeCode(code: string, redirectUri: string): Promise<GoogleIdentity | null> {
   const resp = await fetch(TOKEN_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -52,7 +58,7 @@ export async function exchangeCode(code: string): Promise<GoogleIdentity | null>
       code,
       client_id: config.GOOGLE_CLIENT_ID ?? '',
       client_secret: config.GOOGLE_CLIENT_SECRET ?? '',
-      redirect_uri: redirectUri(),
+      redirect_uri: redirectUri,
       grant_type: 'authorization_code',
     }),
   });

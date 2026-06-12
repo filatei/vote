@@ -10,6 +10,7 @@ import {
   upsertGoogleAdmin,
 } from '../services/admins';
 import {
+  adminRedirectUri,
   allowedAdminEmails,
   buildAuthUrl,
   exchangeCode,
@@ -33,7 +34,7 @@ authRouter.get('/auth/google', (req, res, next) => {
   if (!googleEnabled()) return next(new HttpError(404, 'Not found.'));
   const state = generateUrlToken(16);
   req.session.oauthState = state;
-  res.redirect(buildAuthUrl(state));
+  res.redirect(buildAuthUrl(state, adminRedirectUri()));
 });
 
 authRouter.get('/auth/google/callback', async (req, res, next) => {
@@ -52,7 +53,7 @@ authRouter.get('/auth/google/callback', async (req, res, next) => {
     delete req.session.oauthState;
 
     const code = String(req.query.code || '');
-    const identity = code ? await exchangeCode(code) : null;
+    const identity = code ? await exchangeCode(code, adminRedirectUri()) : null;
     if (!identity || !identity.emailVerified) {
       return renderError('Could not verify your Google account. Please try again.');
     }

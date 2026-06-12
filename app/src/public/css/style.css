@@ -264,7 +264,12 @@ input[type="datetime-local"] {
 .button-danger:hover { background: #a82d31; }
 
 /* Google sign-in button */
-.google-btn { display: inline-flex; align-items: center; gap: 10px; }
+.google-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+.auth-or { display: flex; align-items: center; gap: 12px; margin: 16px 0; color: var(--muted); font-size: .85rem; }
+.auth-or::before, .auth-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.btn-icon { display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+.candidates-ico { display: inline-grid; place-items: center; }
+.candidates-ico svg { display: block; }
 .google-g {
   display: inline-grid; place-items: center; width: 22px; height: 22px;
   background: #fff; color: #4285f4; border-radius: 4px; font-weight: 800;

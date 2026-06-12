@@ -12,6 +12,21 @@ export async function getCustomerById(id: number): Promise<Customer | null> {
   return r ? { id: Number(r.id), email: r.email } : null;
 }
 
+/**
+ * Find or create a customer by a (verified) email — used by Google sign-in,
+ * which establishes the email out-of-band, so no magic token is involved.
+ */
+export async function findOrCreateCustomerByEmail(email: string): Promise<Customer> {
+  const { rows } = await pool.query<Customer>(
+    `INSERT INTO customers (email) VALUES ($1)
+     ON CONFLICT (email) DO UPDATE SET last_login_at = now()
+     RETURNING id, email`,
+    [normalizeEmail(email)],
+  );
+  const r = rows[0];
+  return { id: Number(r.id), email: r.email };
+}
+
 /** Issue a magic-link token for an email. Returns the raw token (emailed). */
 export async function createMagicToken(email: string): Promise<string> {
   const raw = generateUrlToken();
