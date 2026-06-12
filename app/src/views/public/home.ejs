@@ -14,12 +14,23 @@
 
   <div class="landing-visual">
     <% if (video && video.type === 'youtube') { %>
-      <div class="video-wrap">
-        <iframe src="<%= video.src %>" title="Torama Vote — explainer"
-                loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
-                allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen></iframe>
+      <%# Lightweight click-to-play facade: only a tiny thumbnail loads up front,
+          so the page is instant. The real player iframe is injected on click. %>
+      <div class="video-wrap yt-facade" data-yt-embed="<%= video.src %>"
+           role="button" tabindex="0" aria-label="Play the Torama Vote explainer video">
+        <img class="yt-thumb" src="https://i.ytimg.com/vi/<%= video.id %>/hqdefault.jpg"
+             alt="" width="480" height="270" loading="eager" decoding="async"
+             onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/<%= video.id %>/0.jpg'" />
+        <span class="yt-play" aria-hidden="true"></span>
       </div>
+      <noscript>
+        <div class="video-wrap">
+          <iframe src="<%= video.src %>" title="Torama Vote — explainer"
+                  loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+                  allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
+                  allowfullscreen></iframe>
+        </div>
+      </noscript>
     <% } else if (video && video.type === 'file') { %>
       <video class="landing-video" controls preload="metadata" playsinline>
         <source src="<%= video.src %>" />

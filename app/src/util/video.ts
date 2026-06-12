@@ -2,6 +2,7 @@
 export interface VideoEmbed {
   type: 'youtube' | 'file' | 'none';
   src: string;
+  id?: string;
 }
 
 /**

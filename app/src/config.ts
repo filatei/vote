@@ -77,6 +77,12 @@ const schema = z.object({
   SMTP_USER: z.string().optional(), // omit for IP-authorised relay
   SMTP_PASS: z.string().optional(),
   MAIL_FROM: z.string().default('Torama Vote <no-reply@torama.money>'),
+
+  // ── Rate limiting (per client IP) ────────────────────────────────────
+  // Defaults are sized for normal use. Raise temporarily for a load test
+  // from a single source IP (e.g. RATE_LIMIT_GENERAL=100000), then revert.
+  RATE_LIMIT_GENERAL: z.coerce.number().int().positive().default(120), // per minute
+  RATE_LIMIT_CODE: z.coerce.number().int().positive().default(20), // per 10 minutes
 });
 
 const parsed = schema.safeParse(process.env);

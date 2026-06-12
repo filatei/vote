@@ -448,6 +448,27 @@ input[type="text"], input[type="password"], input[type="number"], textarea, .opt
 .video-wrap { position: relative; width: 100%; max-width: 480px; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); background: #000; }
 .video-wrap::before { content: ""; display: block; padding-top: 56.25%; }
 .video-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+/* Click-to-play YouTube facade — instant thumbnail, real player only on demand */
+.yt-facade { cursor: pointer; }
+.yt-facade .yt-thumb { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.yt-facade .yt-play {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 68px; height: 48px; border-radius: 12px; background: rgba(20, 20, 20, .72);
+  transition: background .15s ease, transform .15s ease; z-index: 1;
+}
+.yt-facade .yt-play::after {
+  content: ""; position: absolute; left: 50%; top: 50%; transform: translate(-38%, -50%);
+  border-style: solid; border-width: 11px 0 11px 19px;
+  border-color: transparent transparent transparent #fff;
+}
+.yt-facade:hover .yt-play, .yt-facade:focus-visible .yt-play { background: #cc0000; transform: translate(-50%, -50%) scale(1.06); }
+.yt-facade:focus-visible { outline: 3px solid var(--brand); outline-offset: 3px; }
+.yt-facade::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(0,0,0,.04), rgba(0,0,0,.22));
+}
+.yt-facade.is-playing { cursor: default; }
+.yt-facade.is-playing::after, .yt-facade.is-playing .yt-play { display: none; }
 .explainer {
   width: 100%; max-width: 380px; padding: 22px; border-radius: 16px; text-align: center;
   background: rgba(255,255,255,.6); border: 1px solid var(--line); box-shadow: var(--shadow);

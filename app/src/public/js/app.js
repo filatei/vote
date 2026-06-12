@@ -230,6 +230,37 @@
     });
   })();
 
+  // 2f. YouTube facade → swap in the real player only when the user asks for it.
+  //     Keeps the landing page instant (just a thumbnail) until play is clicked.
+  var facades = document.querySelectorAll('.yt-facade');
+  function playFacade(el) {
+    if (el.classList.contains('is-playing')) return;
+    var src = el.getAttribute('data-yt-embed');
+    if (!src) return;
+    var iframe = document.createElement('iframe');
+    iframe.src = src + (src.indexOf('?') > -1 ? '&' : '?') + 'autoplay=1';
+    iframe.title = 'Torama Vote — explainer';
+    iframe.setAttribute('allow', 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture');
+    iframe.setAttribute('allowfullscreen', '');
+    iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+    el.innerHTML = '';
+    el.appendChild(iframe);
+    el.classList.add('is-playing');
+    el.removeAttribute('role');
+    el.removeAttribute('tabindex');
+  }
+  for (var f = 0; f < facades.length; f++) {
+    (function (el) {
+      el.addEventListener('click', function () { playFacade(el); });
+      el.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+          e.preventDefault();
+          playFacade(el);
+        }
+      });
+    })(facades[f]);
+  }
+
   // 3. One-time codes view: copy-all button.
   var copyBtn = document.getElementById('copy-codes');
   var dump = document.getElementById('code-dump');

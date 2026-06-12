@@ -1,6 +1,7 @@
 import rateLimit from 'express-rate-limit';
 import { RedisStore } from 'rate-limit-redis';
 import { redis } from '../redis';
+import { config } from '../config';
 
 function store(prefix: string) {
   return new RedisStore({
@@ -14,7 +15,7 @@ function store(prefix: string) {
 /** Throttle voting-code attempts to defeat brute-forcing of codes. */
 export const codeAttemptLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutes
-  limit: 20, // 20 code attempts per IP per window
+  limit: config.RATE_LIMIT_CODE, // code attempts per IP per window
   standardHeaders: true,
   legacyHeaders: false,
   store: store('rl:code:'),
@@ -44,7 +45,7 @@ export const magicLinkLimiter = rateLimit({
 /** General protection for the rest of the site. */
 export const generalLimiter = rateLimit({
   windowMs: 60 * 1000,
-  limit: 120,
+  limit: config.RATE_LIMIT_GENERAL,
   standardHeaders: true,
   legacyHeaders: false,
   store: store('rl:gen:'),

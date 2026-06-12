@@ -45,7 +45,7 @@ app.use(
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", 'data:'],
+        imgSrc: ["'self'", 'data:', 'https://i.ytimg.com', 'https://i9.ytimg.com'],
         mediaSrc: ["'self'", 'https:'],
         frameSrc: ["'self'", 'https://www.youtube.com', 'https://www.youtube-nocookie.com'],
         objectSrc: ["'none'"],
