@@ -16,6 +16,12 @@
 <% if (checkoutError) { %>
   <div class="alert alert-error" role="alert">We couldn't start the checkout just now. Please try again.</div>
 <% } %>
+<% if (justCancelled) { %>
+  <div class="alert alert-success" role="status">Your subscription is cancelled. You keep access until the end of the current period, then it won't renew.</div>
+<% } %>
+<% if (justResumed) { %>
+  <div class="alert alert-success" role="status">Your subscription has been resumed — it will keep renewing.</div>
+<% } %>
 
 <section class="card billing-card">
   <% if (!enabled) { %>
@@ -30,12 +36,25 @@
     <% } else if (sub.renewsAt) { %>
       <p class="muted">Renews on <strong><%= new Date(sub.renewsAt).toISOString().slice(0,10) %></strong>.</p>
     <% } %>
-    <p>You can open and run elections. Update your card or cancel any time:</p>
-    <% if (sub.portalUrl) { %>
-      <a class="button button-primary" href="<%= sub.portalUrl %>" target="_blank" rel="noopener">Manage / cancel subscription</a>
-    <% } else { %>
-      <p class="help">A manage-and-cancel link will appear here shortly after your first payment is processed.</p>
-    <% } %>
+    <p>You can open and run elections.</p>
+
+    <div class="button-row">
+      <% if (sub.status === 'cancelled') { %>
+        <form method="post" action="/account/resume-subscription" class="inline-form">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+          <button class="button button-primary" type="submit">Resume subscription</button>
+        </form>
+      <% } else { %>
+        <form method="post" action="/account/cancel-subscription" class="inline-form"
+              data-confirm="Cancel your subscription? You'll keep access until the end of the current billing period.">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+          <button class="button button-danger" type="submit">Cancel subscription</button>
+        </form>
+      <% } %>
+      <% if (sub.portalUrl) { %>
+        <a class="button button-ghost" href="<%= sub.portalUrl %>" target="_blank" rel="noopener">Update card / invoices</a>
+      <% } %>
+    </div>
 
   <% } else { %>
     <h2 class="h3">Subscribe to launch elections</h2>

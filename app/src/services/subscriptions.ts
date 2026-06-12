@@ -60,6 +60,70 @@ export function hasActiveSubscription(sub: CustomerSubscription): boolean {
   return false;
 }
 
+/** Cancel a subscription in Lemon Squeezy (cancels at period end; access stays
+ *  until then). Optimistically updates our row; the webhook reconciles too. */
+export async function cancelSubscription(customerId: number, subscriptionId: string): Promise<boolean> {
+  if (!config.LEMONSQUEEZY_API_KEY) return false;
+  try {
+    const resp = await fetch(`${LS_API}/subscriptions/${subscriptionId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${config.LEMONSQUEEZY_API_KEY}`,
+        Accept: 'application/vnd.api+json',
+      },
+    });
+    if (!resp.ok) {
+      logger.error({ status: resp.status }, 'Lemon Squeezy cancel failed');
+      return false;
+    }
+    const json = (await resp.json().catch(() => null)) as
+      | { data?: { attributes?: { status?: string; ends_at?: string | null; renews_at?: string | null } } }
+      | null;
+    const attrs = json?.data?.attributes;
+    await pool.query(
+      `UPDATE customers SET subscription_status = $2, subscription_ends_at = $3, subscription_renews_at = $4 WHERE id = $1`,
+      [customerId, attrs?.status ?? 'cancelled', attrs?.ends_at ?? null, attrs?.renews_at ?? null],
+    );
+    return true;
+  } catch (err) {
+    logger.error({ err }, 'Lemon Squeezy cancel request error');
+    return false;
+  }
+}
+
+/** Resume (un-cancel) a subscription before it expires. */
+export async function resumeSubscription(customerId: number, subscriptionId: string): Promise<boolean> {
+  if (!config.LEMONSQUEEZY_API_KEY) return false;
+  const body = { data: { type: 'subscriptions', id: subscriptionId, attributes: { cancelled: false } } };
+  try {
+    const resp = await fetch(`${LS_API}/subscriptions/${subscriptionId}`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${config.LEMONSQUEEZY_API_KEY}`,
+        Accept: 'application/vnd.api+json',
+        'Content-Type': 'application/vnd.api+json',
+      },
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) {
+      logger.error({ status: resp.status }, 'Lemon Squeezy resume failed');
+      return false;
+    }
+    const json = (await resp.json().catch(() => null)) as
+      | { data?: { attributes?: { status?: string; ends_at?: string | null; renews_at?: string | null } } }
+      | null;
+    const attrs = json?.data?.attributes;
+    await pool.query(
+      `UPDATE customers SET subscription_status = $2, subscription_ends_at = $3, subscription_renews_at = $4 WHERE id = $1`,
+      [customerId, attrs?.status ?? 'active', attrs?.ends_at ?? null, attrs?.renews_at ?? null],
+    );
+    return true;
+  } catch (err) {
+    logger.error({ err }, 'Lemon Squeezy resume request error');
+    return false;
+  }
+}
+
 /** Create a Lemon Squeezy hosted checkout for this customer; returns the URL to redirect to. */
 export async function createCheckout(customer: { id: number; email: string }): Promise<string | null> {
   if (!subscriptionsEnabled()) return null;

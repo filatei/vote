@@ -14,9 +14,11 @@ import {
   getCustomerById,
 } from '../services/customers';
 import {
+  cancelSubscription,
   createCheckout,
   getCustomerSubscription,
   hasActiveSubscription,
+  resumeSubscription,
   subscriptionPriceLabel,
   subscriptionsEnabled,
 } from '../services/subscriptions';
@@ -301,6 +303,8 @@ accountRouter.get('/billing', async (req, res, next) => {
       justSubscribed: req.query.sub === 'success',
       needed: req.query.need === '1',
       checkoutError: req.query.err === '1',
+      justCancelled: req.query.cancelled === '1',
+      justResumed: req.query.resumed === '1',
     });
   } catch (err) {
     next(err);
@@ -321,6 +325,28 @@ accountRouter.post('/subscribe', csrfProtection, async (req, res, next) => {
     }
     const url = await createCheckout(customer);
     res.redirect(url || '/account/billing?err=1');
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Cancel the subscription (stays active until the period ends).
+accountRouter.post('/cancel-subscription', csrfProtection, async (req, res, next) => {
+  try {
+    const sub = await getCustomerSubscription(req.session.customerId!);
+    if (sub.subscriptionId) await cancelSubscription(req.session.customerId!, sub.subscriptionId);
+    res.redirect('/account/billing?cancelled=1');
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Resume a cancelled-but-not-yet-expired subscription.
+accountRouter.post('/resume-subscription', csrfProtection, async (req, res, next) => {
+  try {
+    const sub = await getCustomerSubscription(req.session.customerId!);
+    if (sub.subscriptionId) await resumeSubscription(req.session.customerId!, sub.subscriptionId);
+    res.redirect('/account/billing?resumed=1');
   } catch (err) {
     next(err);
   }
