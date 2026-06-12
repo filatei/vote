@@ -77,6 +77,9 @@ const schema = z.object({
   SMTP_USER: z.string().optional(), // omit for IP-authorised relay
   SMTP_PASS: z.string().optional(),
   MAIL_FROM: z.string().default('Torama Vote <no-reply@torama.money>'),
+  // Hostname used in the SMTP EHLO/HELO greeting. Must be a real FQDN or the
+  // relay may refuse it (Google: "421-4.7.0 Try again later (EHLO)").
+  SMTP_EHLO_NAME: z.string().default('vote.torama.money'),
 
   // ── Rate limiting (per client IP) ────────────────────────────────────
   // Defaults are sized for normal use. Raise temporarily for a load test

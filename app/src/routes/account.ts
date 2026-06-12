@@ -48,7 +48,7 @@ accountAuthRouter.get('/login', csrfToken, (req, res) => {
   res.render('account/login', { title: 'Sign in', error: null });
 });
 
-accountAuthRouter.post('/login', magicLinkLimiter, csrfProtection, async (req, res, next) => {
+accountAuthRouter.post('/login', magicLinkLimiter, csrfProtection, csrfToken, async (req, res, next) => {
   try {
     const email = String(req.body.email || '').trim().toLowerCase();
     // Reasonable email check: local@domain.tld, sane lengths.
@@ -83,7 +83,7 @@ accountAuthRouter.post('/login', magicLinkLimiter, csrfProtection, async (req, r
   }
 });
 
-accountAuthRouter.get('/verify', async (req, res, next) => {
+accountAuthRouter.get('/verify', csrfToken, async (req, res, next) => {
   try {
     const token = String(req.query.token || '');
     const customer = token ? await consumeMagicToken(token) : null;

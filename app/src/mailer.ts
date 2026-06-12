@@ -13,6 +13,15 @@ if (config.SMTP_HOST) {
     port: config.SMTP_PORT,
     secure: config.SMTP_SECURE, // true for 465; false uses STARTTLS on 587
     requireTLS: !config.SMTP_SECURE, // force STARTTLS on 587 (Google relay needs TLS)
+    // EHLO/HELO hostname presented to the relay. Without this, nodemailer greets
+    // as the container hostname (e.g. "76dca7848163"), which Google's relay
+    // rejects/throttles with "421-4.7.0 Try again later (EHLO)". Use a real FQDN.
+    name: config.SMTP_EHLO_NAME,
+    // Reuse a single connection instead of opening a new one per email — rapid
+    // new connections are what trip the relay's rate limiting.
+    pool: true,
+    maxConnections: 2,
+    maxMessages: 50,
     auth:
       config.SMTP_USER && config.SMTP_PASS
         ? { user: config.SMTP_USER, pass: config.SMTP_PASS }

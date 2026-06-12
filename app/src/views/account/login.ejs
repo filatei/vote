@@ -8,7 +8,7 @@
     <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
 
     <form method="post" action="/account/login" class="stack auth-form">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>" />
       <label for="email">Email address</label>
       <input id="email" name="email" type="email" inputmode="email" autocomplete="email"
              placeholder="you@example.com" required autofocus
