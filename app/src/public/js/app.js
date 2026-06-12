@@ -290,6 +290,12 @@
     })(contestantForms[cf]);
   }
 
+  // 2h. Print / Save as PDF button (certificate page).
+  var printBtn = document.querySelector('[data-print]');
+  if (printBtn) {
+    printBtn.addEventListener('click', function () { window.print(); });
+  }
+
   // 3. One-time codes view: copy-all button.
   var copyBtn = document.getElementById('copy-codes');
   var dump = document.getElementById('code-dump');

@@ -6,6 +6,28 @@
   <p class="status-pill status-<%= election.status %>"><%= election.status %></p>
 </section>
 
+<% if (election.status === 'closed') { %>
+  <section class="winner-card">
+    <% if (win.winner) { %>
+      <span class="winner-trophy" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+      </span>
+      <p class="winner-eyebrow">Result declared</p>
+      <h2 class="winner-name"><%= win.winner.label %></h2>
+      <% if (win.winner.party) { %><p class="winner-party"><%= win.winner.party %></p><% } %>
+      <p class="winner-stat"><strong><%= win.winner.votes %></strong> votes · <%= win.pct %>% of <%= win.totalVotes %> cast<% if (closedWat) { %> · closed <%= closedWat %> WAT<% } %></p>
+      <a class="button button-primary" href="/e/<%= election.public_id %>/certificate">Certificate of Return</a>
+    <% } else if (win.isTie) { %>
+      <p class="winner-eyebrow">Result</p>
+      <h2 class="winner-name">It's a tie</h2>
+      <p class="winner-stat">The leading candidates are level on votes — no single winner.</p>
+    <% } else { %>
+      <p class="winner-eyebrow">Result</p>
+      <h2 class="winner-name">No votes were cast</h2>
+    <% } %>
+  </section>
+<% } %>
+
 <section class="card">
   <h2 class="h3">Leaderboard
     <span class="muted">(<span data-ballot-count><%= tally.totalBallots %></span> ballots)</span>

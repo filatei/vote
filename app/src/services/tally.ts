@@ -43,6 +43,27 @@ export async function tallyElection(electionId: number): Promise<Tally> {
   };
 }
 
+export interface WinnerInfo {
+  winner: Tally['rows'][number] | null; // null = tie or no votes
+  runnerUp: Tally['rows'][number] | null;
+  isTie: boolean;
+  totalVotes: number;
+  pct: number;
+}
+
+/** Determine the plurality winner of a tally (highest votes; ties yield no winner). */
+export function determineWinner(tally: Tally): WinnerInfo {
+  const rows = tally.rows.slice().sort((a, b) => b.votes - a.votes);
+  const totalVotes = rows.reduce((s, r) => s + r.votes, 0);
+  const top = rows[0] || null;
+  if (!top || top.votes === 0) {
+    return { winner: null, runnerUp: null, isTie: false, totalVotes, pct: 0 };
+  }
+  const isTie = rows.length > 1 && rows[1].votes === top.votes;
+  const pct = totalVotes ? Math.round((top.votes / totalVotes) * 100) : 0;
+  return { winner: isTie ? null : top, runnerUp: rows[1] || null, isTie, totalVotes, pct };
+}
+
 export interface BulletinEntry {
   receipt_code: string;
   cast_date: string;

@@ -14,7 +14,7 @@ import { deviceHasVoted } from '../services/devices';
 import { verifyElectionChain } from '../services/integrity';
 import { formatWat } from '../util/datetime';
 import { castBallot } from '../services/ballots';
-import { bulletinBoard, findReceipt, tallyElection } from '../services/tally';
+import { bulletinBoard, determineWinner, findReceipt, tallyElection } from '../services/tally';
 import { healthCheck } from '../db';
 import { Election } from '../services/types';
 
@@ -284,9 +284,38 @@ publicRouter.get('/e/:publicId/results', async (req, res, next) => {
       election,
       tally,
       board,
+      win: determineWinner(tally),
+      closedWat: election.closes_at ? formatWat(election.closes_at) : null,
       publicPage: true,
       ogTitle: `${election.title} — live results`,
       ogDescription: 'See the live tally and verify every ballot. Cast your vote and watch the results update in real time.',
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Certificate of Return for the winner — available once voting has closed.
+publicRouter.get('/e/:publicId/certificate', async (req, res, next) => {
+  try {
+    const election = await getElectionWithOptionsByPublicId(req.params.publicId);
+    if (!election) throw new HttpError(404, 'Election not found.');
+    if (election.status !== 'closed') {
+      res.redirect(`/e/${election.public_id}/results`);
+      return;
+    }
+    const tally = await tallyElection(election.id);
+    const win = determineWinner(tally);
+    if (!win.winner) {
+      // No clear winner (a tie or no votes) — nothing to certify.
+      res.redirect(`/e/${election.public_id}/results`);
+      return;
+    }
+    res.render('public/certificate', {
+      title: `Certificate of Return — ${election.title}`,
+      election,
+      win,
+      closedWat: election.closes_at ? formatWat(election.closes_at) : null,
     });
   } catch (err) {
     next(err);
