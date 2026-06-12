@@ -1,30 +1,14 @@
 <%- include('../partials/head') %>
 <section class="page-head">
-  <h1>My elections</h1>
-  <a class="button button-primary" href="/account/elections/new">+ New election</a>
+  <div>
+    <h1>My elections</h1>
+    <p class="page-sub muted">Create, manage and track your polls.</p>
+  </div>
+  <a class="button button-primary btn-icon" href="/account/elections/new">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    New election
+  </a>
 </section>
 
-<section class="card">
-  <div class="table-scroll">
-    <table class="data-table">
-      <thead>
-        <tr><th>Title</th><th>Type</th><th>Access</th><th>Status</th><th></th></tr>
-      </thead>
-      <tbody>
-        <% if (elections.length === 0) { %>
-          <tr><td colspan="5" class="muted">No elections yet. Create your first one.</td></tr>
-        <% } %>
-        <% elections.forEach(function(e) { %>
-          <tr>
-            <td><a href="/account/elections/<%= e.id %>"><%= e.title %></a></td>
-            <td><%= e.ballot_type === 'single' ? 'Single choice' : 'Multiple (max ' + e.max_selections + ')' %></td>
-            <td><%= e.access_mode === 'open' ? 'Open link' : e.access_mode === 'hybrid' ? 'Link + codes' : 'Codes' %></td>
-            <td><span class="status-pill status-<%= e.status %>"><%= e.status %></span></td>
-            <td><a href="/account/elections/<%= e.id %>">Manage</a></td>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table>
-  </div>
-</section>
+<%- include('../partials/election_list', { elections: elections, basePath: '/account', showResults: false }) %>
 <%- include('../partials/foot') %>
