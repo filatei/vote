@@ -17,6 +17,7 @@ import { logger } from './logger';
 import { redis } from './redis';
 import { healthCheck } from './db';
 import { runMigrations } from './migrate';
+import { loadSettings } from './services/settings';
 import { generalLimiter } from './middleware/rateLimit';
 import { errorHandler, notFound } from './middleware/errors';
 import { publicRouter } from './routes/public';
@@ -160,11 +161,13 @@ app.use('/', publicRouter);
 app.use(notFound);
 app.use(errorHandler);
 
-// Apply idempotent migrations, then start listening.
-runMigrations().catch((err) => {
-  logger.error({ err }, 'Migration failed at startup');
-  process.exit(1);
-});
+// Apply idempotent migrations, load runtime settings, then start listening.
+runMigrations()
+  .then(loadSettings)
+  .catch((err) => {
+    logger.error({ err }, 'Startup (migrations/settings) failed');
+    process.exit(1);
+  });
 
 const server = app.listen(config.APP_PORT, () => {
   logger.info(`Torama Vote listening on :${config.APP_PORT} (${config.NODE_ENV})`);

@@ -167,6 +167,12 @@ button.receipt-code:hover { background: rgba(47, 109, 244, .08); }
 /* Page subtitle under a page-head heading */
 .page-sub { margin: 4px 0 0; font-size: .95rem; }
 
+/* Admin settings card (e.g. subscription toggle) */
+.setting-card { margin-bottom: 16px; }
+.setting-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.setting-action { display: flex; align-items: center; gap: 12px; flex: 0 0 auto; }
+@media (max-width: 560px) { .setting-action { width: 100%; justify-content: space-between; } }
+
 /* Election list — card rows with icons (account + admin dashboards) */
 .election-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .election-list > li { margin: 0; }

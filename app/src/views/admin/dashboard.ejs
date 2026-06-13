@@ -15,5 +15,29 @@
   </div>
 </section>
 
+<section class="card setting-card">
+  <div class="setting-row">
+    <div>
+      <h2 class="h3">Paid subscriptions</h2>
+      <p class="muted" style="margin:4px 0 0;">
+        When on, election creators need an active subscription to <strong>open</strong> an election (creating stays free).
+      </p>
+      <% if (subsToggledOn && !lsConfigured) { %>
+        <p class="alert alert-warn" style="margin-top:8px;">Toggle is on, but Lemon Squeezy isn't configured — gating is inactive until the LS keys are set in <code>.env</code>.</p>
+      <% } %>
+    </div>
+    <div class="setting-action">
+      <span class="status-pill status-<%= subsActive ? 'open' : 'draft' %>"><%= subsActive ? 'On' : 'Off' %></span>
+      <form method="post" action="/admin/settings/subscriptions" class="inline-form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <input type="hidden" name="enabled" value="<%= subsToggledOn ? '0' : '1' %>" />
+        <button class="button <%= subsToggledOn ? 'button-danger' : 'button-primary' %>" type="submit">
+          <%= subsToggledOn ? 'Disable' : 'Enable' %> subscriptions
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+
 <%- include('../partials/election_list', { elections: elections, basePath: '/admin', showResults: true }) %>
 <%- include('../partials/foot') %>

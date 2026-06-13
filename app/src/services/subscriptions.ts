@@ -3,17 +3,25 @@ import { pool } from '../db';
 import { config } from '../config';
 import { logger } from '../logger';
 import { sendMail } from '../mailer';
+import { getBoolSetting } from './settings';
 
 const LS_API = 'https://api.lemonsqueezy.com/v1';
 
-/** True when subscriptions are switched on AND the LS store is configured. */
-export function subscriptionsEnabled(): boolean {
+/** Whether the Lemon Squeezy store is configured (keys present). */
+export function lsConfigured(): boolean {
   return Boolean(
-    config.SUBSCRIPTIONS_ENABLED &&
-      config.LEMONSQUEEZY_API_KEY &&
-      config.LEMONSQUEEZY_STORE_ID &&
-      config.LEMONSQUEEZY_VARIANT_ID,
+    config.LEMONSQUEEZY_API_KEY && config.LEMONSQUEEZY_STORE_ID && config.LEMONSQUEEZY_VARIANT_ID,
   );
+}
+
+/** The admin's runtime on/off toggle (defaults to the .env value). */
+export function subscriptionsToggledOn(): boolean {
+  return getBoolSetting('subscriptions_enabled', config.SUBSCRIPTIONS_ENABLED);
+}
+
+/** True only when the toggle is ON *and* the LS store is configured. */
+export function subscriptionsEnabled(): boolean {
+  return subscriptionsToggledOn() && lsConfigured();
 }
 
 export function subscriptionPriceLabel(): string {

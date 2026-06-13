@@ -38,6 +38,13 @@ const STATEMENTS: string[] = [
      created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
      last_login_at TIMESTAMPTZ
    )`,
+  // Platform-wide runtime settings (admin-toggleable flags), e.g. subscriptions.
+  `CREATE TABLE IF NOT EXISTS app_settings (
+     key        TEXT PRIMARY KEY,
+     value      TEXT NOT NULL,
+     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+   )`,
+
   // Lemon Squeezy subscription state per customer.
   `ALTER TABLE customers ADD COLUMN IF NOT EXISTS subscription_status TEXT`,
   `ALTER TABLE customers ADD COLUMN IF NOT EXISTS ls_subscription_id TEXT`,
