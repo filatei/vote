@@ -22,14 +22,24 @@
 </section>
 <% } %>
 
-<% if (area === 'account' && paymentsEnabled && !election.paid) { %>
+<% if (area === 'account' && paymentsEnabled && !election.paid && quote && !quote.free) { %>
 <section class="card highlight-card">
   <h2 class="h3">Launch this election</h2>
-  <p>Pay the one-time fee of <strong><%= priceLabel %></strong> to open <strong><%= election.title %></strong> for voting. Payment is handled securely by Paystack.</p>
+  <p>
+    <strong><%= quote.voters.toLocaleString('en-US') %></strong> registered voters
+    × <strong><%= formatAmount(Math.round(quote.perVoterMajor * 100), quote.currency) %></strong> / voter
+    <span class="muted">(<%= quote.bracketLabel %>)</span>
+  </p>
+  <p>Pay <strong><%= priceLabel %></strong> to open <strong><%= election.title %></strong> for voting. Payment is processed securely.<% if (quote.custom) { %> For very large elections, <a href="mailto:hello@torama.money">contact us</a> for volume pricing.<% } %></p>
   <form method="post" action="<%= basePath %>/elections/<%= election.id %>/pay">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
     <button class="button button-primary" type="submit">Pay <%= priceLabel %> &amp; launch</button>
   </form>
+  <p class="help">Set the wrong number? Edit the registered-voter count on the <a href="<%= basePath %>/elections/<%= election.id %>/edit">edit page</a> while this election is a draft.</p>
+</section>
+<% } else if (area === 'account' && paymentsEnabled && !election.paid && quote && quote.free) { %>
+<section class="card">
+  <p><span class="status-pill status-open">Free tier</span> &nbsp;Up to 50 registered voters — no payment needed. Just open it below.</p>
 </section>
 <% } else if (area === 'account' && election.paid) { %>
 <section class="card">

@@ -106,6 +106,20 @@ const STATEMENTS: string[] = [
   `ALTER TABLE ballot_selections DROP CONSTRAINT IF EXISTS ballot_selections_option_id_fkey`,
   `ALTER TABLE ballot_selections ADD CONSTRAINT ballot_selections_option_id_fkey
      FOREIGN KEY (option_id) REFERENCES options(id) ON DELETE CASCADE`,
+
+  // ── Per-voter pricing (Verita billable model) ────────────────────────
+  // Organiser-declared registered/enrolled voter count; drives the metered
+  // launch price (see services/pricing.ts). 0 until the organiser sets it.
+  `ALTER TABLE elections ADD COLUMN IF NOT EXISTS enrolled_voters INTEGER NOT NULL DEFAULT 0`,
+
+  // ── Multi-provider payments ───────────────────────────────────────────
+  // The paystack_payments table is now provider-agnostic (Monnify primary,
+  // Paystack fallback). Add the provider, the gateway's own reference (Monnify
+  // returns a transactionReference distinct from our paymentReference), and the
+  // billed voter count for reconciliation. Existing rows are Paystack.
+  `ALTER TABLE paystack_payments ADD COLUMN IF NOT EXISTS provider TEXT NOT NULL DEFAULT 'paystack'`,
+  `ALTER TABLE paystack_payments ADD COLUMN IF NOT EXISTS provider_reference TEXT`,
+  `ALTER TABLE paystack_payments ADD COLUMN IF NOT EXISTS voters INTEGER`,
 ];
 
 export async function runMigrations(): Promise<void> {

@@ -101,6 +101,14 @@
       <p class="help">Leave blank to control opening/closing manually. When set, votes are only accepted between these West Africa Time (UTC+1) times while the election is open.</p>
     </fieldset>
 
+    <fieldset class="inline-fieldset">
+      <legend>Registered voters <span class="muted">(for pricing)</span></legend>
+      <label for="enrolledVoters">How many voters will be eligible?</label>
+      <input id="enrolledVoters" name="enrolledVoters" type="number" inputmode="numeric" min="0" step="1"
+             value="<%= form && form.enrolledVoters ? form.enrolledVoters : 0 %>" />
+      <p class="help">This is the billable count. Pricing is per registered voter, with the rate set by the total (the first 50 voters are free). You can adjust it before you launch.</p>
+    </fieldset>
+
     <label>Options <span class="muted">(at least two)</span></label>
     <div id="options-list" class="options-editor">
       <% var opts = (form && form.options && form.options.length) ? form.options : ['', '']; %>

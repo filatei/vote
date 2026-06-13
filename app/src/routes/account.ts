@@ -56,6 +56,9 @@ import {
   getPaymentByReference,
   initializePayment,
   paymentsEnabled,
+  priceLabelForElection,
+  quoteElection,
+  reconcilePendingPayment,
   verifyPayment,
 } from '../services/payments';
 import { generateCodes, getCodeStats } from '../services/codes';
@@ -138,9 +141,9 @@ accountAuthRouter.post('/login', magicLinkLimiter, csrfProtection, csrfToken, as
       const link = `${config.PUBLIC_BASE_URL}/account/verify?token=${encodeURIComponent(token)}`;
       await sendMail({
         to: email,
-        subject: 'Your Torama Vote sign-in link',
-        text: `Click to sign in to Torama Vote:\n\n${link}\n\nThis link expires in 20 minutes. If you didn't request it, ignore this email.`,
-        html: `<p>Click to sign in to Torama Vote:</p><p><a href="${link}">Sign in</a></p><p>This link expires in 20 minutes. If you didn't request it, ignore this email.</p>`,
+        subject: `Your ${config.APP_NAME} sign-in link`,
+        text: `Click to sign in to ${config.APP_NAME}:\n\n${link}\n\nThis link expires in 20 minutes. If you didn't request it, ignore this email.`,
+        html: `<p>Click to sign in to ${config.APP_NAME}:</p><p><a href="${link}">Sign in</a></p><p>This link expires in 20 minutes. If you didn't request it, ignore this email.</p>`,
       });
     } catch (mailErr) {
       logger.error({ err: mailErr }, 'magic-link send failed');
@@ -218,6 +221,7 @@ accountRouter.post('/elections', csrfProtection, async (req, res, next) => {
       accessMode: req.body.accessMode,
       resultsVisibility: req.body.resultsVisibility,
       electionType: req.body.electionType,
+      enrolledVoters: req.body.enrolledVoters,
       options: toArray(req.body.option).map((s) => s.trim()).filter((s) => s.length > 0),
       opensAt: req.body.opensAt,
       closesAt: req.body.closesAt,
@@ -255,7 +259,7 @@ accountRouter.post('/elections', csrfProtection, async (req, res, next) => {
         to: req.session.customerEmail!,
         subject: `Your election "${parsed.data.title}" is set up`,
         text:
-          `Your election "${parsed.data.title}" has been created on Torama Vote.\n\n` +
+          `Your election "${parsed.data.title}" has been created on ${config.APP_NAME}.\n\n` +
           `Manage it (add candidates, generate codes, open voting): ${manage}\n\n` +
           `Once you open it, share the voter link shown on that page.`,
       });
@@ -269,12 +273,28 @@ accountRouter.post('/elections', csrfProtection, async (req, res, next) => {
 });
 
 async function renderElectionView(req: Request, res: import('express').Response, generatedCodes: string[] | null) {
-  const election = await loadOwned(req);
+  let election = await loadOwned(req);
+  // Verify-on-view safety net: the Monnify/Paystack webhook lives on another
+  // app (one webhook per account), so re-check a pending payment on reload in
+  // case the payer never returned to the callback. Best-effort — a provider
+  // outage must not break the page.
+  if (paymentsEnabled() && !election.paid) {
+    try {
+      const becamePaid = await reconcilePendingPayment(election.id);
+      if (becamePaid) {
+        if (election.status === 'draft') await setStatus(election.id, 'open');
+        election = await loadOwned(req); // refresh paid/status
+      }
+    } catch (err) {
+      logger.error({ err, electionId: election.id }, 'verify-on-view reconcile failed');
+    }
+  }
   const codeStats = await getCodeStats(election.id);
   const tally = await tallyElection(election.id);
   const paid = req.query.paid;
   const subEnabled = subscriptionsEnabled();
   const subActive = subEnabled ? hasActiveSubscription(await getCustomerSubscription(req.session.customerId!)) : true;
+  const quote = quoteElection(election);
   res.render('admin/election_view', {
     title: election.title,
     election,
@@ -286,6 +306,9 @@ async function renderElectionView(req: Request, res: import('express').Response,
     canDelete: canDeleteElection(election, allowElectionDelete()),
     allowDeleteAny: allowElectionDelete(),
     paymentsEnabled: paymentsEnabled(),
+    quote,
+    priceLabel: priceLabelForElection(election),
+    formatAmount,
     payFlash: paid === '1' ? 'ok' : paid === '0' ? 'fail' : null,
     subRequired: subEnabled && !subActive,
     subPriceLabel: subscriptionPriceLabel(),
@@ -417,8 +440,9 @@ accountRouter.post('/elections/:id/status', csrfProtection, async (req, res, nex
         return;
       }
     }
-    // Legacy per-election launch fee (only if the old Paystack flow is enabled).
-    if (status === 'open' && paymentsEnabled() && !election.paid) {
+    // Pay-before-launch: opening requires payment unless the election is in the
+    // free voter tier (price = 0) or already paid.
+    if (status === 'open' && paymentsEnabled() && !election.paid && !quoteElection(election).free) {
       throw new HttpError(402, 'Please pay the launch fee before opening this election.');
     }
     await setStatus(election.id, status as 'draft' | 'open' | 'closed');
@@ -437,10 +461,20 @@ accountRouter.post('/elections/:id/pay', csrfProtection, async (req, res, next) 
       res.redirect(`/account/elections/${election.id}`);
       return;
     }
+    const quote = quoteElection(election);
+    if (quote.free) {
+      // Free tier — nothing to pay; just open it.
+      if (election.status === 'draft') await setStatus(election.id, 'open');
+      res.redirect(`/account/elections/${election.id}`);
+      return;
+    }
     const url = await initializePayment({
       electionId: election.id,
       customerId: req.session.customerId!,
       email: req.session.customerEmail!,
+      customerName: req.session.customerEmail!,
+      amountSubunits: quote.subunits,
+      voters: quote.voters,
     });
     res.redirect(url);
   } catch (err) {
@@ -471,7 +505,7 @@ accountRouter.get('/pay/callback', async (req, res, next) => {
         const amt = formatAmount(pay.amountSubunits, pay.currency);
         await sendMail({
           to: pay.email,
-          subject: 'Payment receipt — Torama Vote',
+          subject: `Payment receipt — ${config.APP_NAME}`,
           text:
             `Thank you. Your payment has been received.\n\n` +
             `Election: ${el ? el.title : '—'}\n` +

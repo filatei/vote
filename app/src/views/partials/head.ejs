@@ -14,7 +14,8 @@
   <% } else { %>
     <meta name="robots" content="noindex" />
   <% } %>
-  <title><%= typeof title !== 'undefined' ? title : 'Torama Vote' %></title>
+  <% var _brand = (typeof appName !== 'undefined' && appName) ? appName : 'Verita'; %>
+  <title><%= typeof title !== 'undefined' ? title : _brand %></title>
   <% if (_pub) {
        var _base = (typeof baseUrl !== 'undefined' ? baseUrl : '');
        var _img = (typeof ogImage !== 'undefined' && ogImage) ? ogImage
@@ -25,12 +26,12 @@
                  : (typeof election !== 'undefined' && election && election.description) ? election.description
                  : 'Run a free & fair online election in minutes — secret ballot with verifiable receipts.';
        var _url = (typeof currentUrl !== 'undefined') ? currentUrl : _base;
-       var _title = (typeof ogTitle !== 'undefined' && ogTitle) ? ogTitle : (typeof title !== 'undefined' ? title : 'Torama Vote');
+       var _title = (typeof ogTitle !== 'undefined' && ogTitle) ? ogTitle : (typeof title !== 'undefined' ? title : _brand);
   %>
     <meta name="description" content="<%= _desc %>" />
     <link rel="canonical" href="<%= _url %>" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Torama Vote" />
+    <meta property="og:site_name" content="<%= _brand %>" />
     <meta property="og:title" content="<%= _title %>" />
     <meta property="og:description" content="<%= _desc %>" />
     <meta property="og:image" content="<%= _img %>" />
@@ -49,7 +50,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="Torama Vote" />
+  <meta name="apple-mobile-web-app-title" content="<%= _brand %>" />
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -67,7 +68,7 @@
         <path d="M11.5 20.5l5.5 5.5L29 13" fill="none" stroke="#fff" stroke-width="4.2"
               stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <span class="brand-name">Torama&nbsp;Vote</span>
+      <span class="brand-name"><%= _brand %></span>
     </a>
     <% if (typeof adminUsername !== 'undefined' && adminUsername) { %>
       <nav class="header-nav">

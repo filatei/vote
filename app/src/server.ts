@@ -25,7 +25,7 @@ import { authRouter } from './routes/auth';
 import { adminRouter } from './routes/admin';
 import { accountAuthRouter, accountRouter } from './routes/account';
 import { webhookRouter } from './routes/webhooks';
-import { paymentsEnabled, priceLabel } from './services/payments';
+import { paymentsEnabled } from './services/payments';
 import { electionTypeConfig, electionTypeList } from './services/elections';
 
 const app = express();
@@ -116,10 +116,13 @@ app.use((req, res, next) => {
   res.locals.year = new Date().getFullYear();
   res.locals.formatWat = formatWat;
   res.locals.toWatInput = toWatInput;
-  res.locals.priceLabel = priceLabel();
+  // Branding — single source of truth for the product name across all views.
+  res.locals.appName = config.APP_NAME;
+  res.locals.appLegalName = config.APP_LEGAL_NAME;
+  res.locals.appTagline = config.APP_TAGLINE;
   res.locals.paymentsEnabled = paymentsEnabled();
   // Landing explainer video (YouTube embed or direct file). Defaults to the
-  // configured Torama Vote YouTube clip.
+  // configured product explainer YouTube clip.
   res.locals.video = parseVideoUrl(config.LANDING_VIDEO_URL || 'https://youtu.be/Cafnwp8FElk');
   res.locals.assetVer = ASSET_VER;
   res.locals.avatarSvg = avatarSvg;
@@ -175,7 +178,7 @@ runMigrations()
   });
 
 const server = app.listen(config.APP_PORT, () => {
-  logger.info(`Torama Vote listening on :${config.APP_PORT} (${config.NODE_ENV})`);
+  logger.info(`${config.APP_NAME} listening on :${config.APP_PORT} (${config.NODE_ENV})`);
 });
 
 // Graceful shutdown

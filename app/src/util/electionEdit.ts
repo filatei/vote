@@ -13,6 +13,7 @@ export interface EditData {
   maxSelections: number;
   accessMode: 'code' | 'open' | 'hybrid';
   resultsVisibility: 'live' | 'after_close';
+  enrolledVoters: number;
   options: EditOptionData[];
 }
 
@@ -25,6 +26,7 @@ export function editDataFromElection(election: ElectionWithOptions): EditData {
     maxSelections: election.max_selections,
     accessMode: election.access_mode,
     resultsVisibility: election.results_visibility,
+    enrolledVoters: election.enrolled_voters,
     options: election.options.map((o) => ({ id: o.id, label: o.label })),
   };
 }
@@ -52,6 +54,7 @@ export function parseEditForm(
     maxSelections: Number(req.body.maxSelections) || 1,
     accessMode: req.body.accessMode,
     resultsVisibility: req.body.resultsVisibility,
+    enrolledVoters: Math.max(0, Math.floor(Number(req.body.enrolledVoters) || 0)),
     options,
   };
 
@@ -72,6 +75,7 @@ export function parseEditForm(
       maxSelections: parsed.data.maxSelections,
       accessMode: parsed.data.accessMode,
       resultsVisibility: parsed.data.resultsVisibility,
+      enrolledVoters: parsed.data.enrolledVoters,
     },
   };
 }

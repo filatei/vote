@@ -78,6 +78,7 @@ function coerceElection(r: Election): Election {
     id: Number(r.id),
     owner_id: r.owner_id == null ? null : Number(r.owner_id),
     max_selections: Number(r.max_selections),
+    enrolled_voters: Number(r.enrolled_voters ?? 0),
   };
 }
 
@@ -211,6 +212,7 @@ interface CreateElectionInput {
   accessMode: 'code' | 'open' | 'hybrid';
   resultsVisibility: 'live' | 'after_close';
   electionType: ElectionType;
+  enrolledVoters?: number;
   options: string[];
   opensAt: Date | null;
   closesAt: Date | null;
@@ -226,8 +228,8 @@ export async function createElection(input: CreateElectionInput): Promise<number
     const { rows } = await client.query<{ id: number }>(
       `INSERT INTO elections
          (title, description, ballot_type, max_selections, access_mode,
-          results_visibility, election_type, opens_at, closes_at, created_by, owner_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          results_visibility, election_type, enrolled_voters, opens_at, closes_at, created_by, owner_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING id`,
       [
         input.title,
@@ -237,6 +239,7 @@ export async function createElection(input: CreateElectionInput): Promise<number
         input.accessMode,
         input.resultsVisibility,
         input.electionType,
+        Math.max(0, Math.floor(input.enrolledVoters ?? 0)),
         input.opensAt,
         input.closesAt,
         input.createdBy,
@@ -293,6 +296,7 @@ export async function updateElectionDraft(
     maxSelections: number;
     accessMode: 'code' | 'open' | 'hybrid';
     resultsVisibility: 'live' | 'after_close';
+    enrolledVoters?: number;
     options: EditOption[];
   },
 ): Promise<string[]> {
@@ -304,7 +308,8 @@ export async function updateElectionDraft(
     await client.query(
       `UPDATE elections
           SET title = $2, description = $3, ballot_type = $4, max_selections = $5,
-              access_mode = $6, results_visibility = $7
+              access_mode = $6, results_visibility = $7,
+              enrolled_voters = COALESCE($8, enrolled_voters)
         WHERE id = $1`,
       [
         electionId,
@@ -314,6 +319,7 @@ export async function updateElectionDraft(
         maxSel,
         input.accessMode,
         input.resultsVisibility,
+        input.enrolledVoters == null ? null : Math.max(0, Math.floor(input.enrolledVoters)),
       ],
     );
 

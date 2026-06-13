@@ -51,7 +51,7 @@ function setVotedCookie(res: Response, publicId: string): void {
 // Landing page: enter a voting code.
 publicRouter.get('/', csrfToken, (_req, res) => {
   res.render('public/home', {
-    title: 'Torama Vote — free & fair online elections',
+    title: `${config.APP_NAME} — free & fair online elections`,
     error: null,
     electionId: null,
     publicPage: true,
@@ -83,7 +83,7 @@ publicRouter.post('/vote', codeAttemptLimiter, csrfProtection, csrfToken, async 
     const code = normalizeCode(String(req.body.code || ''));
     if (!publicId || !code) {
       res.status(400).render('public/home', {
-        title: 'Torama Vote',
+        title: config.APP_NAME,
         error: 'Please enter the election link/ID and your voting code.',
         electionId: publicId || null,
       });
@@ -92,7 +92,7 @@ publicRouter.post('/vote', codeAttemptLimiter, csrfProtection, csrfToken, async 
     const election = await getElectionWithOptionsByPublicId(publicId);
     if (!election) {
       res.status(404).render('public/home', {
-        title: 'Torama Vote',
+        title: config.APP_NAME,
         error: 'No election found for that ID.',
         electionId: publicId,
       });
@@ -107,7 +107,7 @@ publicRouter.post('/vote', codeAttemptLimiter, csrfProtection, csrfToken, async 
             ? 'Voting has closed for that election.'
             : 'That election is not open for voting right now.';
       res.status(409).render('public/home', {
-        title: 'Torama Vote',
+        title: config.APP_NAME,
         error: msg,
         electionId: publicId,
       });

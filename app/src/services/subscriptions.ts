@@ -267,18 +267,18 @@ async function sendSubscriptionWelcome(customerId: number, emailFromEvent?: stri
   const billing = `${config.PUBLIC_BASE_URL}/account/billing`;
   await sendMail({
     to,
-    subject: 'Your Torama Vote subscription is active',
+    subject: `Your ${config.APP_NAME} subscription is active`,
     text:
-      `Thank you for subscribing to Torama Vote.\n\n` +
+      `Thank you for subscribing to ${config.APP_NAME}.\n\n` +
       `Your subscription is now active — you can open your elections for voting.\n\n` +
       `Go to your dashboard: ${dash}\n` +
       `Manage or cancel any time from Billing: ${billing}\n\n` +
-      `— Torama Vote`,
+      `— ${config.APP_NAME}`,
     html:
-      `<p>Thank you for subscribing to <strong>Torama Vote</strong>.</p>` +
+      `<p>Thank you for subscribing to <strong>${config.APP_NAME}</strong>.</p>` +
       `<p>Your subscription is now active — you can open your elections for voting.</p>` +
       `<p><a href="${dash}">Go to your dashboard</a> &middot; ` +
       `<a href="${billing}">Manage or cancel any time</a></p>` +
-      `<p>— Torama Vote</p>`,
+      `<p>— ${config.APP_NAME}</p>`,
   });
 }

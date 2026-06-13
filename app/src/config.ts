@@ -13,6 +13,16 @@ const schema = z.object({
   PUBLIC_BASE_URL: z.string().url().default('http://localhost:8090'),
   TRUST_PROXY: bool(false),
 
+  // ── Branding ─────────────────────────────────────────────────────────
+  // Single source of truth for the product name shown across the UI, emails,
+  // certificates and meta tags. Defaults to "Verita"; per-tenant white-label
+  // can override it later without touching templates.
+  APP_NAME: z.string().default('Verita'),
+  // Legal entity shown in the footer / certificates.
+  APP_LEGAL_NAME: z.string().default('TORAMA Global Services Limited'),
+  // One-line product tagline used in the footer and link previews.
+  APP_TAGLINE: z.string().default('secret ballot with verifiable receipts'),
+
   POSTGRES_DB: z.string().default('votedb'),
   POSTGRES_USER: z.string().default('voteuser'),
   POSTGRES_PASSWORD: z.string().min(1),
@@ -49,19 +59,37 @@ const schema = z.object({
   // unlinked from the ballot). OFF by default for privacy. See admin/devices.
   DEVICE_AUDIT_ENABLED: bool(false),
 
-  // ── Paystack (same keys/var names as the other torama.money apps) ─────
-  // Leave the secret blank to disable payments (customers can't launch).
+  // ── Payments ──────────────────────────────────────────────────────────
+  // Master switch for the pay-before-launch paywall. OFF by default so
+  // elections can be created and opened for free; set true (with a configured
+  // provider) to require payment before an owner can open their election.
+  PAYMENTS_ENABLED: bool(false),
+  // Currency the metered price is charged in (Monnify supports NGN).
+  PAYMENT_CURRENCY: z.string().default('NGN'),
+  // Preferred rail. "monnify" is primary; Paystack is kept as a fallback that
+  // is used automatically when the preferred provider isn't configured.
+  PAYMENT_PROVIDER: z.enum(['monnify', 'paystack']).default('monnify'),
+
+  // ── Monnify (primary NGN rail — instant virtual-account + card) ────────
+  // Reuses the same sandbox integration proven on otuburu. Leave the secret
+  // blank to disable the Monnify rail (falls back to Paystack if configured).
+  MONNIFY_API_KEY: z.string().optional(),
+  MONNIFY_SECRET_KEY: z.string().optional(),
+  MONNIFY_CONTRACT_CODE: z.string().optional(),
+  MONNIFY_WALLET_ACCOUNT: z.string().optional(), // disbursement source (future)
+  MONNIFY_BASE_URL: z.string().default('https://sandbox.monnify.com'),
+  // Base URL Monnify/Paystack return to after checkout (defaults PUBLIC_BASE_URL).
+  PAYMENT_CALLBACK_URL: z.string().optional(),
+
+  // ── Paystack (fallback rail; same keys/var names as other torama apps) ─
   PAYSTACK_SECRET_KEY: z.string().optional(),
   PAYSTACK_PUBLIC_KEY: z.string().optional(),
-  // Base URL Paystack returns to after checkout (defaults to PUBLIC_BASE_URL).
   PAYSTACK_CALLBACK_URL: z.string().optional(),
-  // Master switch for the launch-fee paywall. OFF by default so elections can
-  // be created and opened for free; set true (with Paystack keys) to require
-  // payment before an owner can open their election.
-  PAYMENTS_ENABLED: bool(false),
-  // Flat fee to launch one election, in MAJOR units (naira / dollars).
-  PAYMENT_CURRENCY: z.string().default('NGN'),
-  PAYMENT_AMOUNT: z.coerce.number().positive().default(100000),
+
+  // ── Per-voter pricing ──────────────────────────────────────────────────
+  // Optional JSON override of the rate card (see services/pricing.ts for the
+  // built-in default brackets). Shape: { "NGN": [[max,rate],...], "USD": [...] }.
+  PRICING_TABLE: z.string().optional(),
 
   // ── Lemon Squeezy monthly subscription ($8/mo, cancel anytime) ────────
   // When enabled, an active subscription is required to OPEN an election for
@@ -86,7 +114,7 @@ const schema = z.object({
   SMTP_SECURE: bool(false), // true only for port 465
   SMTP_USER: z.string().optional(), // omit for IP-authorised relay
   SMTP_PASS: z.string().optional(),
-  MAIL_FROM: z.string().default('Torama Vote <no-reply@torama.money>'),
+  MAIL_FROM: z.string().default('Verita <no-reply@torama.money>'),
   // Hostname used in the SMTP EHLO/HELO greeting. Must be a real FQDN or the
   // relay may refuse it (Google: "421-4.7.0 Try again later (EHLO)").
   SMTP_EHLO_NAME: z.string().default('vote.torama.money'),

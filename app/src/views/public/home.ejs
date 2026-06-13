@@ -4,7 +4,7 @@
   <div class="landing-hero-text">
     <p class="eyebrow">Free &amp; fair online elections</p>
     <h1 class="landing-title">Run an election<br />anyone can trust</h1>
-    <p class="landing-sub">Torama Vote lets any group hold a secret-ballot election online in minutes — with verifiable receipts, so every voter can confirm their vote was counted.</p>
+    <p class="landing-sub"><%= appName %> lets any group hold a secret-ballot election online in minutes — with verifiable receipts, so every voter can confirm their vote was counted.</p>
     <div class="landing-cta">
       <a class="button button-primary button-lg" href="/account/login">Create an election</a>
       <a class="button button-ghost button-lg" href="#vote">I have a voting code</a>
@@ -17,7 +17,7 @@
       <%# Lightweight click-to-play facade: only a tiny thumbnail loads up front,
           so the page is instant. The real player iframe is injected on click. %>
       <div class="video-wrap yt-facade" data-yt-embed="<%= video.src %>"
-           role="button" tabindex="0" aria-label="Play the Torama Vote explainer video">
+           role="button" tabindex="0" aria-label="Play the <%= appName %> explainer video">
         <img class="yt-thumb" src="https://i.ytimg.com/vi/<%= video.id %>/hqdefault.jpg"
              alt="" width="480" height="270" loading="eager" decoding="async"
              onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/<%= video.id %>/0.jpg'" />
@@ -25,7 +25,7 @@
       </div>
       <noscript>
         <div class="video-wrap">
-          <iframe src="<%= video.src %>" title="Torama Vote — explainer"
+          <iframe src="<%= video.src %>" title="<%= appName %> — explainer"
                   loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
                   allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
                   allowfullscreen></iframe>

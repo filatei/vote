@@ -2,8 +2,8 @@
 <footer class="site-footer">
   <div class="container">
     <p>
-      Torama Vote — secret ballot with verifiable receipts.
-      <span class="muted">&copy; <%= year %> TORAMA TECHNOLOGIES</span>
+      <%= (typeof appName !== 'undefined' && appName) ? appName : 'Verita' %> — <%= (typeof appTagline !== 'undefined' && appTagline) ? appTagline : 'secret ballot with verifiable receipts' %>.
+      <span class="muted">&copy; <%= year %> <%= (typeof appLegalName !== 'undefined' && appLegalName) ? appLegalName : 'TORAMA Global Services Limited' %></span>
     </p>
     <p class="footer-links">
       <a href="/trust">How we keep votes fair</a> ·

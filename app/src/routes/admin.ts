@@ -154,8 +154,8 @@ adminRouter.post('/email/test', csrfProtection, csrfToken, async (req, res, next
     }
     const r = await sendMail({
       to,
-      subject: 'Torama Vote — test email',
-      text: 'This is a test email from Torama Vote. If you received it, email sending works.',
+      subject: `${config.APP_NAME} — test email`,
+      text: `This is a test email from ${config.APP_NAME}. If you received it, email sending works.`,
     });
     await logAction({ adminId: req.session.adminId!, action: 'send_test_email', detail: { to, mode: r.mode }, ip: req.ip });
     res.render('admin/email', {
@@ -189,6 +189,7 @@ adminRouter.post('/elections', csrfProtection, async (req, res, next) => {
       accessMode: req.body.accessMode,
       resultsVisibility: req.body.resultsVisibility,
       electionType: req.body.electionType,
+      enrolledVoters: req.body.enrolledVoters,
       options: toArray(req.body.option).map((s) => s.trim()).filter((s) => s.length > 0),
       opensAt: req.body.opensAt,
       closesAt: req.body.closesAt,

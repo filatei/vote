@@ -21,6 +21,9 @@ export const createElectionSchema = z.object({
   accessMode: z.enum(['code', 'open', 'hybrid']).default('code'),
   resultsVisibility: z.enum(['live', 'after_close']),
   electionType: z.enum(['candidates', 'association', 'committee', 'poll']).default('candidates'),
+  // Organiser-declared registered/enrolled voter count — the billable unit for
+  // per-voter pricing. Optional (defaults 0 = free tier / not yet set).
+  enrolledVoters: z.coerce.number().int().min(0).max(100_000_000).default(0),
   // Options arrive as repeated form fields; normalise to a clean array.
   options: z
     .array(z.string().trim().min(1).max(200))

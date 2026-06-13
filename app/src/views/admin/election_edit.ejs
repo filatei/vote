@@ -49,6 +49,13 @@
       <label class="radio-inline"><input type="radio" name="resultsVisibility" value="live" <%= data.resultsVisibility === 'live' ? 'checked' : '' %> /> Live</label>
     </fieldset>
 
+    <fieldset class="inline-fieldset">
+      <legend>Registered voters <span class="muted">(for pricing)</span></legend>
+      <label for="enrolledVoters">How many voters will be eligible?</label>
+      <input id="enrolledVoters" name="enrolledVoters" type="number" inputmode="numeric" min="0" step="1" value="<%= data.enrolledVoters %>" />
+      <p class="help">Billable count — pricing is per registered voter (first 50 free). Set this before you launch.</p>
+    </fieldset>
+
     <label>Candidates / options <span class="muted">(at least two)</span></label>
     <div id="options-list" class="options-editor">
       <% data.options.forEach(function(o) { %>

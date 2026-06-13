@@ -27,6 +27,39 @@ webhookRouter.post('/lemonsqueezy', express.raw({ type: '*/*' }), async (req, re
 });
 
 /**
+ * Monnify webhook. Signed with HMAC-SHA512 of the raw request body using the
+ * merchant secret key, in the `monnify-signature` header. The authoritative
+ * confirmation is still a server-side status query (verifyPayment). We match on
+ * our own paymentReference, which Monnify echoes back as eventData.paymentReference.
+ */
+webhookRouter.post('/monnify', express.raw({ type: '*/*' }), async (req, res) => {
+  const secret = config.MONNIFY_SECRET_KEY;
+  if (!secret) {
+    res.sendStatus(200);
+    return;
+  }
+  const raw = Buffer.isBuffer(req.body) ? req.body : Buffer.from('');
+  const expected = createHmac('sha512', secret).update(raw).digest('hex');
+  const provided = String(req.headers['monnify-signature'] || '');
+  const a = Buffer.from(expected);
+  const b = Buffer.from(provided);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) {
+    res.sendStatus(401);
+    return;
+  }
+  try {
+    const evt = JSON.parse(raw.toString('utf8')) as {
+      eventData?: { paymentReference?: string };
+    };
+    const reference = evt?.eventData?.paymentReference;
+    if (reference) await verifyPayment(reference);
+  } catch (err) {
+    logger.error({ err }, 'Monnify webhook handling failed');
+  }
+  res.sendStatus(200);
+});
+
+/**
  * Paystack webhook. A Paystack account has ONE webhook URL (likely already
  * pointed at another torama.money app), so this is a belt-and-braces path — the
  * authoritative confirmation is the callback `verify`. Signature is HMAC-SHA512
