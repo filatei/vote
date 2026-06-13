@@ -249,8 +249,14 @@
       <button class="button button-danger" type="submit">Delete this election</button>
     </form>
   <% } else { %>
-    <p class="help">Deletion is currently disabled<% if (typeof allowDeleteAny !== 'undefined' && !allowDeleteAny) { %> by the platform admin<% } %>. To end an election, use <strong>Close</strong> in the Status panel.</p>
-    <button class="button button-danger" type="button" disabled>Delete this election</button>
+    <div class="info-callout">
+      <span class="info-ico" aria-hidden="true">i</span>
+      <div>
+        <strong>This election can't be deleted.</strong>
+        <p>Only <strong>draft</strong> (unopened) elections can be removed. Since this one has been opened, its record is kept for integrity — use <strong>Close</strong> in the Status panel to end voting.</p>
+      </div>
+    </div>
+    <button class="button button-danger" type="button" disabled style="margin-top:12px;">Delete this election</button>
   <% } %>
 </section>
 <%- include('../partials/foot') %>

@@ -92,14 +92,96 @@
     update();
   }
 
-  // 2b. Confirm destructive actions (delete election).
-  var confirmForms = document.querySelectorAll('[data-confirm]');
-  for (var c = 0; c < confirmForms.length; c++) {
-    confirmForms[c].addEventListener('submit', function (e) {
-      if (!window.confirm(this.getAttribute('data-confirm'))) {
+  // 2a-i. App-wide designed alert system: a styled confirm modal (replaces
+  //       window.confirm), toasts, and animated/dismissible flash alerts.
+  var App = window.ToramaUI = window.ToramaUI || {};
+
+  App.confirm = function (message, onConfirm, opts) {
+    opts = opts || {};
+    var overlay = document.createElement('div');
+    overlay.className = 'app-modal-overlay';
+    overlay.innerHTML =
+      '<div class="app-modal" role="dialog" aria-modal="true" aria-labelledby="app-modal-msg">' +
+      '<div class="app-modal-icon" aria-hidden="true"></div>' +
+      '<p class="app-modal-msg" id="app-modal-msg"></p>' +
+      '<div class="app-modal-actions">' +
+      '<button type="button" class="button button-ghost" data-modal-cancel>' + (opts.cancel || 'Cancel') + '</button>' +
+      '<button type="button" class="button ' + (opts.variant === 'danger' ? 'button-danger' : 'button-primary') + '" data-modal-ok>' + (opts.ok || 'Confirm') + '</button>' +
+      '</div></div>';
+    overlay.querySelector('.app-modal-msg').textContent = message;
+    document.body.appendChild(overlay);
+    var ok = overlay.querySelector('[data-modal-ok]');
+    requestAnimationFrame(function () { overlay.classList.add('is-open'); ok.focus(); });
+    function close() {
+      overlay.classList.remove('is-open');
+      setTimeout(function () { overlay.remove(); }, 200);
+      document.removeEventListener('keydown', onKey);
+    }
+    function onKey(e) { if (e.key === 'Escape') close(); }
+    document.addEventListener('keydown', onKey);
+    overlay.querySelector('[data-modal-cancel]').addEventListener('click', close);
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+    ok.addEventListener('click', function () { close(); if (onConfirm) onConfirm(); });
+  };
+
+  App.toast = function (message, type) {
+    var root = document.getElementById('toast-root');
+    if (!root) {
+      root = document.createElement('div');
+      root.id = 'toast-root';
+      root.className = 'toast-root';
+      root.setAttribute('aria-live', 'polite');
+      document.body.appendChild(root);
+    }
+    var t = document.createElement('div');
+    t.className = 'toast toast-' + (type || 'info');
+    t.textContent = message;
+    root.appendChild(t);
+    requestAnimationFrame(function () { t.classList.add('is-in'); });
+    setTimeout(function () {
+      t.classList.remove('is-in');
+      setTimeout(function () { t.remove(); }, 300);
+    }, 4200);
+  };
+
+  // 2b. Confirm destructive actions via the styled modal (progressive: if the
+  //     element is a link, navigate on confirm; if a form, submit on confirm).
+  var confirmEls = document.querySelectorAll('[data-confirm]');
+  for (var c = 0; c < confirmEls.length; c++) {
+    (function (el) {
+      var isForm = el.tagName === 'FORM';
+      var evt = isForm ? 'submit' : 'click';
+      el.addEventListener(evt, function (e) {
+        if (el.dataset.confirmed) return; // second pass: allow through
         e.preventDefault();
-      }
-    });
+        App.confirm(el.getAttribute('data-confirm'), function () {
+          el.dataset.confirmed = '1';
+          if (isForm) el.submit();
+          else if (el.href) window.location.href = el.href;
+        }, { variant: el.getAttribute('data-confirm-variant') || 'danger' });
+      });
+    })(confirmEls[c]);
+  }
+
+  // 2b-ii. Animate + make dismissible any server-rendered flash alerts.
+  var flashAlerts = document.querySelectorAll('#main .alert');
+  for (var fa = 0; fa < flashAlerts.length; fa++) {
+    var al = flashAlerts[fa];
+    al.classList.add('alert-animated');
+    if (!al.querySelector('.alert-close')) {
+      var x = document.createElement('button');
+      x.type = 'button';
+      x.className = 'alert-close';
+      x.setAttribute('aria-label', 'Dismiss');
+      x.innerHTML = '&times;';
+      (function (alert, btn) {
+        btn.addEventListener('click', function () {
+          alert.classList.add('alert-leaving');
+          setTimeout(function () { alert.remove(); }, 250);
+        });
+      })(al, x);
+      al.appendChild(x);
+    }
   }
 
   // 2c. Contestant bio toggle (tap/click) — hover is handled by CSS.

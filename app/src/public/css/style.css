@@ -173,6 +173,54 @@ button.receipt-code:hover { background: rgba(47, 109, 244, .08); }
 .setting-action { display: flex; align-items: center; gap: 12px; flex: 0 0 auto; }
 @media (max-width: 560px) { .setting-action { width: 100%; justify-content: space-between; } }
 
+/* ===========================================================================
+   App-wide alert system: animated flash alerts, confirm modal, toasts
+   =========================================================================== */
+.alert { position: relative; }
+.alert-animated { animation: alertIn .35s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes alertIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+.alert-leaving { animation: alertOut .25s ease forwards; }
+@keyframes alertOut { to { opacity: 0; transform: translateY(-8px); } }
+.alert-close { position: absolute; top: 6px; right: 10px; background: none; border: 0; font-size: 1.3rem;
+  line-height: 1; color: inherit; opacity: .55; cursor: pointer; padding: 2px 6px; }
+.alert-close:hover { opacity: 1; }
+
+.app-modal-overlay { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center;
+  background: rgba(14, 22, 40, .45); padding: 20px; opacity: 0; transition: opacity .2s ease; }
+.app-modal-overlay.is-open { opacity: 1; }
+.app-modal { width: 100%; max-width: 420px; background: #fff; border-radius: 16px; padding: 26px 24px;
+  text-align: center; box-shadow: 0 20px 60px rgba(10, 20, 40, .3);
+  transform: scale(.94) translateY(8px); transition: transform .2s cubic-bezier(.2, .8, .2, 1); }
+.app-modal-overlay.is-open .app-modal { transform: none; }
+.app-modal-icon { width: 46px; height: 46px; margin: 0 auto 12px; border-radius: 50%; background: #fdecec; position: relative; }
+.app-modal-icon::after { content: "!"; position: absolute; inset: 0; display: grid; place-items: center;
+  font-weight: 800; font-size: 1.4rem; color: var(--error); }
+.app-modal-msg { margin: 0 0 20px; color: var(--ink); font-size: 1.02rem; line-height: 1.5; }
+.app-modal-actions { display: flex; gap: 10px; justify-content: center; }
+.app-modal-actions .button { min-width: 112px; }
+
+.toast-root { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 1100;
+  display: flex; flex-direction: column; gap: 10px; align-items: center; pointer-events: none; }
+.toast { pointer-events: auto; min-width: 220px; max-width: 90vw; padding: 12px 18px; border-radius: 12px;
+  color: #fff; font-weight: 600; box-shadow: 0 10px 30px rgba(10, 20, 40, .25);
+  opacity: 0; transform: translateY(14px); transition: opacity .25s ease, transform .25s ease; }
+.toast.is-in { opacity: 1; transform: none; }
+.toast-info { background: #2f3b52; }
+.toast-success { background: #15a05a; }
+.toast-error { background: #c0392b; }
+
+/* Friendly inline info callout (e.g. "only draft elections can be deleted") */
+.info-callout { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 12px;
+  background: #eef3ff; border: 1px solid #d7e2fb; animation: alertIn .4s cubic-bezier(.2, .8, .2, 1) both; }
+.info-callout .info-ico { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; background: var(--brand);
+  color: #fff; display: grid; place-items: center; font-weight: 800; }
+.info-callout p { margin: 4px 0 0; color: #3c4a63; font-size: .92rem; line-height: 1.5; }
+
+@media (max-width: 480px) {
+  .app-modal-actions { flex-direction: column-reverse; }
+  .app-modal-actions .button { width: 100%; }
+}
+
 /* Election list — card rows with icons (account + admin dashboards) */
 .election-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .election-list > li { margin: 0; }
