@@ -1,4 +1,5 @@
 <%- include('../partials/head') %>
+<% var etype = electionTypeConfig(election.election_type); %>
 <section class="page-head">
   <div>
     <h1><%= election.title %></h1>
@@ -70,7 +71,7 @@
     </div>
     <% if (election.status === 'draft') { %>
       <p class="links-row" style="margin-top:12px;">
-        <a class="button button-ghost" href="<%= basePath %>/elections/<%= election.id %>/edit">Edit details &amp; candidates</a>
+        <a class="button button-ghost" href="<%= basePath %>/elections/<%= election.id %>/edit">Edit details &amp; <%= etype.itemNoun === 'option' ? 'options' : 'candidates' %></a>
       </p>
     <% } %>
   </section>
@@ -117,9 +118,10 @@
     </div>
   </section>
 
+  <% if (etype.showProfiles) { %>
   <section class="card candidates-card">
-    <h2 class="h3">Candidates</h2>
-    <p class="help">Add a photo and a short bio for each contestant — voters see them on the ballot.</p>
+    <h2 class="h3"><%= etype.manageNoun %></h2>
+    <p class="help">Add a photo<% if (etype.showBio) { %> and a short bio<% } %> for each <%= etype.itemNoun %> — voters see them on the ballot and results.</p>
     <a class="button button-primary btn-icon candidates-btn"
        href="<%= basePath %>/elections/<%= election.id %>/contestants">
       <span class="candidates-ico" aria-hidden="true">
@@ -133,9 +135,10 @@
           <line x1="15" y1="16" x2="19" y2="16"/>
         </svg>
       </span>
-      Manage photos &amp; bios
+      <%= etype.manageVerb %>
     </a>
   </section>
+  <% } %>
 </div>
 
 <section class="card">
@@ -199,20 +202,22 @@
   <ul class="results">
     <% tally.rows.forEach(function(r) { %>
       <li class="result-row tally-row">
+        <% if (etype.showProfiles) { %>
         <div class="tally-photo">
           <% if (r.image_path) { %>
             <img class="tally-thumb" src="/uploads/<%= r.image_path %>" alt="" loading="lazy" />
           <% } else { %>
             <%- avatarSvg(r.label, r.option_id, 'tally-thumb') %>
           <% } %>
-          <% if (r.flag_path) { %>
-            <img class="tally-flag" src="/uploads/<%= r.flag_path %>" alt="Party flag" loading="lazy" />
+          <% if (etype.showLogo && r.flag_path) { %>
+            <img class="tally-flag" src="/uploads/<%= r.flag_path %>" alt="" loading="lazy" />
           <% } %>
         </div>
+        <% } %>
         <div class="tally-main">
           <div class="result-head"><span class="result-label"><%= r.label %></span><span class="result-count"><%= r.votes %></span></div>
-          <% if (r.party) { %><p class="tally-party"><%= r.party %></p><% } %>
-          <% if (r.description) { %><p class="tally-bio"><%= r.description %></p><% } %>
+          <% if (etype.showAffiliation && r.party) { %><p class="tally-party"><%= r.party %></p><% } %>
+          <% if (etype.showBio && r.description) { %><p class="tally-bio"><%= r.description %></p><% } %>
           <div class="bar"><div class="bar-fill" style="width: <%= Math.round((r.votes / totalVotes) * 100) %>%"></div></div>
         </div>
       </li>

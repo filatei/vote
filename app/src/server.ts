@@ -26,6 +26,7 @@ import { adminRouter } from './routes/admin';
 import { accountAuthRouter, accountRouter } from './routes/account';
 import { webhookRouter } from './routes/webhooks';
 import { paymentsEnabled, priceLabel } from './services/payments';
+import { electionTypeConfig, electionTypeList } from './services/elections';
 
 const app = express();
 
@@ -123,6 +124,8 @@ app.use((req, res, next) => {
   res.locals.assetVer = ASSET_VER;
   res.locals.avatarSvg = avatarSvg;
   res.locals.avatarColor = avatarColor;
+  res.locals.electionTypeConfig = electionTypeConfig;
+  res.locals.electionTypeList = electionTypeList;
   next();
 });
 

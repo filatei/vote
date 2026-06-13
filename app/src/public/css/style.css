@@ -418,6 +418,17 @@ button.receipt-code:hover { background: rgba(47, 109, 244, .08); }
   a[href]::after { content: none; }
 }
 
+/* Election type chooser (create form) */
+.type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 560px) { .type-grid { grid-template-columns: 1fr; } }
+.type-card { position: relative; display: block; border: 1.5px solid var(--line); border-radius: 12px;
+  padding: 12px 14px; cursor: pointer; transition: border-color .15s ease, background-color .15s ease; }
+.type-card input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.type-card:hover { border-color: #b9c6ea; }
+.type-card:has(input:checked) { border-color: var(--brand); background: #f1f6ff; box-shadow: 0 0 0 1px var(--brand) inset; }
+.type-card-name { display: block; font-weight: 700; color: var(--ink); }
+.type-card-hint { display: block; font-size: .84rem; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+
 .schedule-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 @media (max-width: 540px) { .schedule-grid { grid-template-columns: 1fr; } }
 .schedule-grid label { display: block; font-weight: 600; margin-bottom: 4px; }
@@ -842,6 +853,9 @@ input[type="text"], input[type="password"], input[type="number"], textarea, .opt
 .option .option-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .option .option-label { font-weight: 800; font-size: 1.2rem; color: var(--ink); }
 .option-party { font-weight: 700; color: #15a05a; font-size: .95rem; }
+/* Simple poll options (no photo) — let the label breathe */
+.option-plain { padding: 18px; }
+.option-plain .option-label { font-size: 1.15rem; }
 .option-sub {
   color: var(--muted); font-size: .9rem; line-height: 1.35;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;

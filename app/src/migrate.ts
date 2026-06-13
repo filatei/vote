@@ -96,6 +96,10 @@ const STATEMENTS: string[] = [
   // Per-customer / per-election branding logo.
   `ALTER TABLE elections ADD COLUMN IF NOT EXISTS logo_path TEXT`,
 
+  // Election template/type: drives which contestant fields & labels are shown
+  // (candidates / association / committee / poll).
+  `ALTER TABLE elections ADD COLUMN IF NOT EXISTS election_type TEXT NOT NULL DEFAULT 'candidates'`,
+
   // Let deleting an election cascade through its votes: ballot_selections.option_id
   // originally had no ON DELETE rule, which blocked the cascade from options and
   // made election deletion fail once any vote existed.

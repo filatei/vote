@@ -3,6 +3,68 @@ import { config } from '../config';
 import { getBoolSetting } from './settings';
 import { Election, ElectionWithOptions, Option } from './types';
 
+// ── Election templates ──────────────────────────────────────────────────────
+export type ElectionType = 'candidates' | 'association' | 'committee' | 'poll';
+
+export interface ElectionTypeConfig {
+  key: ElectionType;
+  name: string; // shown in the chooser
+  hint: string;
+  itemNoun: string; // singular, lower-case (candidate / option)
+  manageNoun: string; // editor page heading (Candidates / Options)
+  manageVerb: string; // button label (Manage candidates / Manage options)
+  showProfiles: boolean; // photos + bios + the management page at all
+  showBio: boolean;
+  showAffiliation: boolean;
+  affiliationLabel: string;
+  affiliationPlaceholder: string;
+  showLogo: boolean;
+  logoLabel: string;
+}
+
+const ELECTION_TYPES: Record<ElectionType, ElectionTypeConfig> = {
+  candidates: {
+    key: 'candidates', name: 'Candidates / people',
+    hint: 'People running for office — photos, bios, optional party/affiliation and logo.',
+    itemNoun: 'candidate', manageNoun: 'Candidates', manageVerb: 'Manage candidates',
+    showProfiles: true, showBio: true,
+    showAffiliation: true, affiliationLabel: 'Party / affiliation', affiliationPlaceholder: 'e.g. Labour Party',
+    showLogo: true, logoLabel: 'Party logo / emblem',
+  },
+  association: {
+    key: 'association', name: 'Professional body / association',
+    hint: 'Candidates contesting a position — photos and bios, no party.',
+    itemNoun: 'candidate', manageNoun: 'Candidates', manageVerb: 'Manage candidates',
+    showProfiles: true, showBio: true,
+    showAffiliation: true, affiliationLabel: 'Position / affiliation', affiliationPlaceholder: 'e.g. Lagos Branch',
+    showLogo: false, logoLabel: '',
+  },
+  committee: {
+    key: 'committee', name: 'Club / society committee',
+    hint: 'Members standing for committee roles — photos and bios.',
+    itemNoun: 'candidate', manageNoun: 'Candidates', manageVerb: 'Manage candidates',
+    showProfiles: true, showBio: true,
+    showAffiliation: false, affiliationLabel: '', affiliationPlaceholder: '',
+    showLogo: false, logoLabel: '',
+  },
+  poll: {
+    key: 'poll', name: 'Simple poll / decision',
+    hint: 'Just options to choose between (venues, dates, yes/no) — no photos or bios.',
+    itemNoun: 'option', manageNoun: 'Options', manageVerb: 'Edit options',
+    showProfiles: false, showBio: false,
+    showAffiliation: false, affiliationLabel: '', affiliationPlaceholder: '',
+    showLogo: false, logoLabel: '',
+  },
+};
+
+export function electionTypeConfig(type: string | null | undefined): ElectionTypeConfig {
+  return ELECTION_TYPES[(type as ElectionType)] ?? ELECTION_TYPES.candidates;
+}
+
+export function electionTypeList(): ElectionTypeConfig[] {
+  return [ELECTION_TYPES.candidates, ELECTION_TYPES.association, ELECTION_TYPES.committee, ELECTION_TYPES.poll];
+}
+
 /** Runtime master switch for election deletion (admin-toggleable; .env default). */
 export function allowElectionDelete(): boolean {
   return getBoolSetting('allow_election_delete', config.ALLOW_ELECTION_DELETE);
@@ -148,6 +210,7 @@ interface CreateElectionInput {
   maxSelections: number;
   accessMode: 'code' | 'open' | 'hybrid';
   resultsVisibility: 'live' | 'after_close';
+  electionType: ElectionType;
   options: string[];
   opensAt: Date | null;
   closesAt: Date | null;
@@ -163,8 +226,8 @@ export async function createElection(input: CreateElectionInput): Promise<number
     const { rows } = await client.query<{ id: number }>(
       `INSERT INTO elections
          (title, description, ballot_type, max_selections, access_mode,
-          results_visibility, opens_at, closes_at, created_by, owner_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          results_visibility, election_type, opens_at, closes_at, created_by, owner_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING id`,
       [
         input.title,
@@ -173,6 +236,7 @@ export async function createElection(input: CreateElectionInput): Promise<number
         maxSel,
         input.accessMode,
         input.resultsVisibility,
+        input.electionType,
         input.opensAt,
         input.closesAt,
         input.createdBy,

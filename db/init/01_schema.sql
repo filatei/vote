@@ -45,6 +45,7 @@ CREATE TABLE elections (
                          CHECK (status IN ('draft', 'open', 'closed')),
     results_visibility TEXT NOT NULL DEFAULT 'after_close'
                          CHECK (results_visibility IN ('live', 'after_close')),
+    election_type      TEXT NOT NULL DEFAULT 'candidates',
     opens_at           TIMESTAMPTZ,
     closes_at          TIMESTAMPTZ,
     created_by         BIGINT REFERENCES admins(id),

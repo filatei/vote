@@ -261,6 +261,8 @@
     var countEl = document.querySelector('[data-ballot-count]');
     // Capture the media block (photo + party tile) and accent colour from the
     // server-rendered rows so they survive the live re-render below.
+    var showAffil = ol.getAttribute('data-show-affil') === '1';
+    var showBio = ol.getAttribute('data-show-bio') === '1';
     var media = {}, accents = {};
     var initial = ol.querySelectorAll('.lb-row');
     for (var i = 0; i < initial.length; i++) {
@@ -285,7 +287,8 @@
         var pct = total ? Math.round((r.votes / total) * 100) : 0;
         var bar = pct; // bar width = share of total votes (matches the % shown)
         var leader = idx === 0 && r.votes > 0;
-        var hasBio = !!(r.description && String(r.description).trim());
+        var hasBio = showBio && !!(r.description && String(r.description).trim());
+        var hasParty = showAffil && !!(r.party && String(r.party).trim());
         var cls = 'lb-row' + (leader ? ' lb-leader' : '') + (hasBio ? ' has-bio' : '') +
           (open[r.option_id] ? ' bio-open' : '');
         var accent = accents[r.option_id] || '';
@@ -296,7 +299,7 @@
             '<div class="lb-id"><div class="lb-top"><span class="lb-name">' + esc(r.label) + '</span>' +
               (leader ? '<span class="lb-badge">Leading</span>' : '') +
               (hasBio ? '<span class="lb-caret" aria-hidden="true">▾</span>' : '') + '</div>' +
-              (r.party ? '<div class="lb-party-name">' + esc(r.party) + '</div>' : '') +
+              (hasParty ? '<div class="lb-party-name">' + esc(r.party) + '</div>' : '') +
             '</div>' +
             '<div class="lb-score"><span class="lb-count">' + r.votes + '</span>' +
               '<span class="lb-pct">' + pct + '%</span></div>' +

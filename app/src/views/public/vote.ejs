@@ -32,24 +32,27 @@
 
     <fieldset class="options">
       <legend class="sr-only">Ballot options</legend>
+      <% var etype = electionTypeConfig(election.election_type); %>
       <% election.options.forEach(function(opt) { %>
-        <label class="option candidate">
+        <label class="option candidate<%= etype.showProfiles ? '' : ' option-plain' %>">
           <input class="option-native" type="<%= election.ballot_type === 'single' ? 'radio' : 'checkbox' %>"
                  name="option" value="<%= opt.id %>" />
-          <span class="option-media">
-            <% if (opt.image_path) { %>
-              <img class="option-thumb" src="/uploads/<%= opt.image_path %>" alt="<%= opt.label %>" loading="lazy" />
-            <% } else { %>
-              <%- avatarSvg(opt.label, opt.id) %>
-            <% } %>
-            <% if (opt.flag_path) { %>
-              <img class="option-logo" src="/uploads/<%= opt.flag_path %>" alt="Party logo" loading="lazy" />
-            <% } %>
-          </span>
+          <% if (etype.showProfiles) { %>
+            <span class="option-media">
+              <% if (opt.image_path) { %>
+                <img class="option-thumb" src="/uploads/<%= opt.image_path %>" alt="<%= opt.label %>" loading="lazy" />
+              <% } else { %>
+                <%- avatarSvg(opt.label, opt.id) %>
+              <% } %>
+              <% if (etype.showLogo && opt.flag_path) { %>
+                <img class="option-logo" src="/uploads/<%= opt.flag_path %>" alt="" loading="lazy" />
+              <% } %>
+            </span>
+          <% } %>
           <span class="option-body">
             <span class="option-label"><%= opt.label %></span>
-            <% if (opt.party) { %><span class="option-party"><%= opt.party %></span><% } %>
-            <% if (opt.description) { %><span class="option-sub"><%= opt.description %></span><% } %>
+            <% if (etype.showAffiliation && opt.party) { %><span class="option-party"><%= opt.party %></span><% } %>
+            <% if (etype.showBio && opt.description) { %><span class="option-sub"><%= opt.description %></span><% } %>
           </span>
           <span class="option-check" aria-hidden="true"></span>
         </label>

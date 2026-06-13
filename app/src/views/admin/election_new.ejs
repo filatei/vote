@@ -17,6 +17,20 @@
     <textarea id="description" name="description" rows="3" maxlength="5000"><%= form ? form.description : '' %></textarea>
 
     <fieldset class="inline-fieldset">
+      <legend>What kind of election is this?</legend>
+      <% var selType = (form && form.electionType) ? form.electionType : 'candidates'; %>
+      <div class="type-grid">
+        <% electionTypeList().forEach(function(t) { %>
+          <label class="type-card">
+            <input type="radio" name="electionType" value="<%= t.key %>" <%= selType === t.key ? 'checked' : '' %> />
+            <span class="type-card-name"><%= t.name %></span>
+            <span class="type-card-hint"><%= t.hint %></span>
+          </label>
+        <% }) %>
+      </div>
+    </fieldset>
+
+    <fieldset class="inline-fieldset">
       <legend>Ballot type</legend>
       <label class="radio-inline">
         <input type="radio" name="ballotType" value="single"

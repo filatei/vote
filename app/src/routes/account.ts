@@ -217,6 +217,7 @@ accountRouter.post('/elections', csrfProtection, async (req, res, next) => {
       maxSelections: req.body.maxSelections,
       accessMode: req.body.accessMode,
       resultsVisibility: req.body.resultsVisibility,
+      electionType: req.body.electionType,
       options: toArray(req.body.option).map((s) => s.trim()).filter((s) => s.length > 0),
       opensAt: req.body.opensAt,
       closesAt: req.body.closesAt,

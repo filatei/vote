@@ -1,73 +1,90 @@
 <%- include('../partials/head') %>
+<% var etype = electionTypeConfig(election.election_type); %>
 <section class="page-head">
   <div>
-    <h1>Contestants</h1>
+    <h1><%= etype.manageNoun %></h1>
     <p class="lead"><%= election.title %></p>
   </div>
   <a class="button button-ghost" href="<%= basePath %>/elections/<%= election.id %>">← Back to election</a>
 </section>
 
-<p class="help">Add a photo, a short bio, and an optional party logo for each contestant. Voters see the photo and party logo prominently on the ballot and results, and the bio when they hover or tap. JPG, PNG or WebP up to 2&nbsp;MB each.</p>
+<% if (!etype.showProfiles) { %>
+  <div class="info-callout">
+    <span class="info-ico" aria-hidden="true">i</span>
+    <div>
+      <strong>This is a simple poll.</strong>
+      <p>Its options don't have photos or bios. To rename or change the options, use <strong>Edit details &amp; options</strong> on the election page.</p>
+    </div>
+  </div>
+<% } else { %>
+  <p class="help">Add a photo<% if (etype.showBio) { %>, a short bio<% } %><% if (etype.showAffiliation) { %>, and a <%= etype.affiliationLabel.toLowerCase() %><% } %> for each <%= etype.itemNoun %>. Voters see these on the ballot and results<% if (etype.showBio) { %>, with the bio shown on hover or tap<% } %>. JPG, PNG or WebP up to 2&nbsp;MB each.</p>
 
-<% election.options.forEach(function(opt) { %>
-  <section class="card contestant-editor">
-    <form method="post" action="<%= basePath %>/elections/<%= election.id %>/options/<%= opt.id %>"
-          enctype="multipart/form-data" class="contestant-form" data-contestant-form>
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <% election.options.forEach(function(opt) { %>
+    <section class="card contestant-editor">
+      <form method="post" action="<%= basePath %>/elections/<%= election.id %>/options/<%= opt.id %>"
+            enctype="multipart/form-data" class="contestant-form" data-contestant-form>
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
 
-      <div class="contestant-row">
-        <div class="contestant-photo">
-          <% if (opt.image_path) { %>
-            <img src="/uploads/<%= opt.image_path %>" alt="Photo of <%= opt.label %>" class="thumb-lg" />
-          <% } else { %>
-            <%- avatarSvg(opt.label, opt.id, 'thumb-lg') %>
-          <% } %>
-        </div>
+        <div class="contestant-row">
+          <div class="contestant-photo">
+            <% if (opt.image_path) { %>
+              <img src="/uploads/<%= opt.image_path %>" alt="Photo of <%= opt.label %>" class="thumb-lg" />
+            <% } else { %>
+              <%- avatarSvg(opt.label, opt.id, 'thumb-lg') %>
+            <% } %>
+          </div>
 
-        <div class="contestant-fields">
-          <h2 class="contestant-name"><%= opt.label %></h2>
+          <div class="contestant-fields">
+            <h2 class="contestant-name"><%= opt.label %></h2>
 
-          <label for="party-<%= opt.id %>">Party name <span class="muted">(optional)</span></label>
-          <input id="party-<%= opt.id %>" name="party" type="text" maxlength="120"
-                 placeholder="e.g. Labour Party" value="<%= opt.party %>" data-dirty />
+            <% if (etype.showAffiliation) { %>
+              <label for="party-<%= opt.id %>"><%= etype.affiliationLabel %> <span class="muted">(optional)</span></label>
+              <input id="party-<%= opt.id %>" name="party" type="text" maxlength="120"
+                     placeholder="<%= etype.affiliationPlaceholder %>" value="<%= opt.party %>" data-dirty />
+            <% } %>
 
-          <label for="bio-<%= opt.id %>">Bio / description</label>
-          <textarea id="bio-<%= opt.id %>" name="description" rows="3" maxlength="5000"
-                    placeholder="A short bio shown to voters" data-dirty><%= opt.description %></textarea>
+            <% if (etype.showBio) { %>
+              <label for="bio-<%= opt.id %>">Bio / description</label>
+              <textarea id="bio-<%= opt.id %>" name="description" rows="3" maxlength="5000"
+                        placeholder="A short bio shown to voters" data-dirty><%= opt.description %></textarea>
+            <% } %>
 
-          <div class="contestant-controls">
-            <div class="file-field">
-              <label for="img-<%= opt.id %>">Photo <span class="muted">(optional)</span></label>
-              <input id="img-<%= opt.id %>" name="image" type="file"
-                     accept="image/jpeg,image/png,image/webp" data-dirty />
-              <% if (opt.image_path) { %>
-                <label class="checkbox-inline">
-                  <input type="checkbox" name="removePhoto" value="1" data-dirty /> Remove photo
-                </label>
-              <% } %>
-            </div>
-
-            <div class="file-field">
-              <label for="flag-<%= opt.id %>">Party logo <span class="muted">(optional)</span></label>
-              <div class="flag-field-row">
-                <% if (opt.flag_path) { %>
-                  <img class="flag-preview" src="/uploads/<%= opt.flag_path %>" alt="<%= opt.label %> party logo" />
-                <% } %>
-                <input id="flag-<%= opt.id %>" name="flag" type="file"
+            <div class="contestant-controls">
+              <div class="file-field">
+                <label for="img-<%= opt.id %>">Photo <span class="muted">(optional)</span></label>
+                <input id="img-<%= opt.id %>" name="image" type="file"
                        accept="image/jpeg,image/png,image/webp" data-dirty />
+                <% if (opt.image_path) { %>
+                  <label class="checkbox-inline">
+                    <input type="checkbox" name="removePhoto" value="1" data-dirty /> Remove photo
+                  </label>
+                <% } %>
               </div>
-              <% if (opt.flag_path) { %>
-                <label class="checkbox-inline">
-                  <input type="checkbox" name="removeFlag" value="1" data-dirty /> Remove logo
-                </label>
-              <% } %>
-            </div>
 
-            <button class="button button-primary contestant-save" type="submit" data-save disabled>Save</button>
+              <% if (etype.showLogo) { %>
+                <div class="file-field">
+                  <label for="flag-<%= opt.id %>"><%= etype.logoLabel %> <span class="muted">(optional)</span></label>
+                  <div class="flag-field-row">
+                    <% if (opt.flag_path) { %>
+                      <img class="flag-preview" src="/uploads/<%= opt.flag_path %>" alt="<%= opt.label %> logo" />
+                    <% } %>
+                    <input id="flag-<%= opt.id %>" name="flag" type="file"
+                           accept="image/jpeg,image/png,image/webp" data-dirty />
+                  </div>
+                  <% if (opt.flag_path) { %>
+                    <label class="checkbox-inline">
+                      <input type="checkbox" name="removeFlag" value="1" data-dirty /> Remove logo
+                    </label>
+                  <% } %>
+                </div>
+              <% } %>
+
+              <button class="button button-primary contestant-save" type="submit" data-save disabled>Save</button>
+            </div>
           </div>
         </div>
-      </div>
-    </form>
-  </section>
-<% }) %>
+      </form>
+    </section>
+  <% }) %>
+<% } %>
 <%- include('../partials/foot') %>

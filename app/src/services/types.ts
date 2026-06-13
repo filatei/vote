@@ -24,6 +24,7 @@ export interface Election {
   access_mode: AccessMode;
   status: ElectionStatus;
   results_visibility: ResultsVisibility;
+  election_type: string;
   opens_at: Date | null;
   closes_at: Date | null;
   owner_id: number | null;

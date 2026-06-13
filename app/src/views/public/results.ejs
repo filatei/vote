@@ -6,6 +6,7 @@
   <p class="status-pill status-<%= election.status %>"><%= election.status %></p>
 </section>
 
+<% var etype = electionTypeConfig(election.election_type); %>
 <% if (election.status === 'closed') { %>
   <section class="winner-card">
     <% if (win.winner) { %>
@@ -14,7 +15,7 @@
       </span>
       <p class="winner-eyebrow">Result declared</p>
       <h2 class="winner-name"><%= win.winner.label %></h2>
-      <% if (win.winner.party) { %><p class="winner-party"><%= win.winner.party %></p><% } %>
+      <% if (etype.showAffiliation && win.winner.party) { %><p class="winner-party"><%= win.winner.party %></p><% } %>
       <p class="winner-stat"><strong><%= win.winner.votes %></strong> votes · <%= win.pct %>% of <%= win.totalVotes %> cast<% if (closedWat) { %> · closed <%= closedWat %> WAT<% } %></p>
       <a class="button button-primary" href="/e/<%= election.public_id %>/certificate">Certificate of Return</a>
     <% } else if (win.isTie) { %>
@@ -36,42 +37,47 @@
     <% } %>
   </h2>
   <%
+    var etype = electionTypeConfig(election.election_type);
     var sorted = tally.rows.slice().sort(function(a, b){ return b.votes - a.votes; });
     var totalVotes = tally.rows.reduce(function(s, r){ return s + r.votes; }, 0);
     var maxVotes = sorted.length ? sorted[0].votes : 0;
   %>
   <ol class="leaderboard" data-results-poll data-public-id="<%= election.public_id %>"
+      data-show-affil="<%= etype.showAffiliation ? '1' : '' %>" data-show-bio="<%= etype.showBio ? '1' : '' %>"
       <%= election.status === 'open' && election.results_visibility === 'live' ? 'data-poll' : '' %>>
     <% sorted.forEach(function(r, i) {
          var pct = totalVotes ? Math.round((r.votes / totalVotes) * 100) : 0;
          var barPct = pct; // bar reflects the actual vote share, not relative to the leader
          var leader = i === 0 && r.votes > 0;
+         var hasBio = etype.showBio && r.description;
     %>
-      <li class="lb-row<%= leader ? ' lb-leader' : '' %><%= r.description ? ' has-bio' : '' %>"
+      <li class="lb-row<%= leader ? ' lb-leader' : '' %><%= hasBio ? ' has-bio' : '' %>"
           data-option-id="<%= r.option_id %>" style="--accent: <%= avatarColor(r.option_id) %>">
         <div class="lb-head">
-          <span class="lb-media">
-            <span class="lb-photo">
-              <% if (r.image_path) { %>
-                <img class="lb-thumb" src="/uploads/<%= r.image_path %>" alt="" loading="lazy" />
-              <% } else { %>
-                <%- avatarSvg(r.label, r.option_id, 'lb-thumb') %>
+          <% if (etype.showProfiles) { %>
+            <span class="lb-media">
+              <span class="lb-photo">
+                <% if (r.image_path) { %>
+                  <img class="lb-thumb" src="/uploads/<%= r.image_path %>" alt="" loading="lazy" />
+                <% } else { %>
+                  <%- avatarSvg(r.label, r.option_id, 'lb-thumb') %>
+                <% } %>
+              </span>
+              <% if (etype.showLogo && r.flag_path) { %>
+                <span class="lb-party-tile">
+                  <img class="lb-party-logo" src="/uploads/<%= r.flag_path %>" alt="" loading="lazy" />
+                  <span class="lb-party-cap">Party</span>
+                </span>
               <% } %>
             </span>
-            <% if (r.flag_path) { %>
-              <span class="lb-party-tile">
-                <img class="lb-party-logo" src="/uploads/<%= r.flag_path %>" alt="" loading="lazy" />
-                <span class="lb-party-cap">Party</span>
-              </span>
-            <% } %>
-          </span>
+          <% } %>
           <div class="lb-id">
             <div class="lb-top">
               <span class="lb-name"><%= r.label %></span>
               <% if (leader) { %><span class="lb-badge">Leading</span><% } %>
-              <% if (r.description) { %><span class="lb-caret" aria-hidden="true">▾</span><% } %>
+              <% if (hasBio) { %><span class="lb-caret" aria-hidden="true">▾</span><% } %>
             </div>
-            <% if (r.party) { %><div class="lb-party-name"><%= r.party %></div><% } %>
+            <% if (etype.showAffiliation && r.party) { %><div class="lb-party-name"><%= r.party %></div><% } %>
           </div>
           <div class="lb-score">
             <span class="lb-count"><%= r.votes %></span>
@@ -79,7 +85,7 @@
           </div>
         </div>
         <div class="bar"><div class="bar-fill" style="width: <%= barPct %>%"></div></div>
-        <% if (r.description) { %><div class="lb-bio"><%= r.description %></div><% } %>
+        <% if (hasBio) { %><div class="lb-bio"><%= r.description %></div><% } %>
       </li>
     <% }) %>
   </ol>
