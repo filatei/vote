@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import { pool } from '../db';
 import { config } from '../config';
 import { logger } from '../logger';
+import { sendMail } from '../mailer';
 
 const LS_API = 'https://api.lemonsqueezy.com/v1';
 
@@ -236,4 +237,40 @@ export async function applySubscriptionEvent(raw: Buffer): Promise<void> {
     ],
   );
   logger.info({ customerId, status: attrs.status, event: name }, 'Lemon Squeezy subscription updated');
+
+  // Branded confirmation email on first activation (LS also sends its own receipt).
+  if (name === 'subscription_created') {
+    await sendSubscriptionWelcome(customerId, attrs.user_email).catch((err) =>
+      logger.error({ err }, 'subscription welcome email failed'),
+    );
+  }
+}
+
+async function sendSubscriptionWelcome(customerId: number, emailFromEvent?: string): Promise<void> {
+  let to = emailFromEvent || null;
+  if (!to) {
+    const { rows } = await pool.query<{ email: string }>(`SELECT email FROM customers WHERE id = $1`, [
+      customerId,
+    ]);
+    to = rows[0]?.email ?? null;
+  }
+  if (!to) return;
+  const dash = `${config.PUBLIC_BASE_URL}/account`;
+  const billing = `${config.PUBLIC_BASE_URL}/account/billing`;
+  await sendMail({
+    to,
+    subject: 'Your Torama Vote subscription is active',
+    text:
+      `Thank you for subscribing to Torama Vote.\n\n` +
+      `Your subscription is now active — you can open your elections for voting.\n\n` +
+      `Go to your dashboard: ${dash}\n` +
+      `Manage or cancel any time from Billing: ${billing}\n\n` +
+      `— Torama Vote`,
+    html:
+      `<p>Thank you for subscribing to <strong>Torama Vote</strong>.</p>` +
+      `<p>Your subscription is now active — you can open your elections for voting.</p>` +
+      `<p><a href="${dash}">Go to your dashboard</a> &middot; ` +
+      `<a href="${billing}">Manage or cancel any time</a></p>` +
+      `<p>— Torama Vote</p>`,
+  });
 }
