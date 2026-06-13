@@ -102,7 +102,7 @@ CREATE INDEX idx_ballots_election ON ballots(election_id);
 CREATE TABLE ballot_selections (
     id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     ballot_id  BIGINT NOT NULL REFERENCES ballots(id) ON DELETE CASCADE,
-    option_id  BIGINT NOT NULL REFERENCES options(id),
+    option_id  BIGINT NOT NULL REFERENCES options(id) ON DELETE CASCADE,
     UNIQUE (ballot_id, option_id)
 );
 CREATE INDEX idx_selections_option ON ballot_selections(option_id);

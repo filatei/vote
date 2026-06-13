@@ -95,6 +95,13 @@ const STATEMENTS: string[] = [
 
   // Per-customer / per-election branding logo.
   `ALTER TABLE elections ADD COLUMN IF NOT EXISTS logo_path TEXT`,
+
+  // Let deleting an election cascade through its votes: ballot_selections.option_id
+  // originally had no ON DELETE rule, which blocked the cascade from options and
+  // made election deletion fail once any vote existed.
+  `ALTER TABLE ballot_selections DROP CONSTRAINT IF EXISTS ballot_selections_option_id_fkey`,
+  `ALTER TABLE ballot_selections ADD CONSTRAINT ballot_selections_option_id_fkey
+     FOREIGN KEY (option_id) REFERENCES options(id) ON DELETE CASCADE`,
 ];
 
 export async function runMigrations(): Promise<void> {
