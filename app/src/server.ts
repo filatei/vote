@@ -52,9 +52,10 @@ app.use(
         frameSrc: ["'self'", 'https://www.youtube.com', 'https://www.youtube-nocookie.com'],
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
-        // Allow the subscribe form to redirect on to the Lemon Squeezy hosted
-        // checkout (browsers enforce form-action against the redirect target).
-        formAction: ["'self'", 'https://*.lemonsqueezy.com'],
+        // Allow payment forms to redirect on to a hosted checkout (browsers
+        // enforce form-action against the redirect target): Lemon Squeezy for
+        // subscriptions, Monnify for the per-election launch payment.
+        formAction: ["'self'", 'https://*.lemonsqueezy.com', 'https://*.monnify.com'],
         frameAncestors: ["'none'"],
       },
     },
