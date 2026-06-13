@@ -89,7 +89,7 @@ main { padding: 28px 0 8px; }
 .stack { display: flex; flex-direction: column; gap: 6px; }
 .stack > label, .inline-fieldset > legend { font-weight: 600; margin-top: 10px; }
 .stack > label:first-child { margin-top: 0; }
-input[type="text"], input[type="password"], input[type="number"], textarea, .option-input {
+input[type="text"], input[type="email"], input[type="password"], input[type="number"], textarea, .option-input {
   width: 100%; padding: 11px 12px; border: 1px solid #cbd2de; border-radius: 8px;
   font: inherit; background: #fff; color: var(--ink);
 }
@@ -289,8 +289,21 @@ button.receipt-code:hover { background: rgba(47, 109, 244, .08); }
 .auth-title { font-size: 1.6rem; margin: 0 0 6px; }
 .auth-sub { margin: 0 0 20px; }
 .auth-form { text-align: left; }
-.auth-form label { font-weight: 600; }
+.auth-form label { font-weight: 600; display: block; margin-bottom: 6px; }
 .auth-form .button { margin-top: 10px; }
+/* Soft, filled, well-padded email field — no harsh border line */
+.auth-form input[type="email"],
+.auth-form input[type="text"] {
+  padding: 15px 16px; font-size: 1.02rem; background: #f4f7fc;
+  border: 1.5px solid transparent; border-radius: 12px;
+  transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.auth-form input::placeholder { color: #9aa6b6; }
+.auth-form input[type="email"]:focus,
+.auth-form input[type="text"]:focus {
+  background: #fff; border-color: var(--brand); outline: none;
+  box-shadow: 0 0 0 4px rgba(47, 109, 244, .15);
+}
 .auth-foot { margin: 16px 0 0; font-size: .88rem; color: var(--muted); }
 
 /* Schedule inputs */
