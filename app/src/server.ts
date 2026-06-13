@@ -51,7 +51,9 @@ app.use(
         frameSrc: ["'self'", 'https://www.youtube.com', 'https://www.youtube-nocookie.com'],
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
-        formAction: ["'self'"],
+        // Allow the subscribe form to redirect on to the Lemon Squeezy hosted
+        // checkout (browsers enforce form-action against the redirect target).
+        formAction: ["'self'", 'https://*.lemonsqueezy.com'],
         frameAncestors: ["'none'"],
       },
     },
