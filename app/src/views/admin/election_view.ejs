@@ -241,7 +241,16 @@
 </section>
 <section class="card danger-zone">
   <h2 class="h3">Danger zone</h2>
-  <p class="help">Deleting an election is currently disabled to prevent accidental, irreversible removal. To end an election, use <strong>Close</strong> in the Status panel.</p>
-  <button class="button button-danger" type="button" disabled>Delete this election</button>
+  <% if (canDelete) { %>
+    <p class="help">Permanently delete this election and all its data. This cannot be undone — to merely end voting, use <strong>Close</strong> instead.</p>
+    <form method="post" action="<%= basePath %>/elections/<%= election.id %>/delete" class="inline-form"
+          data-confirm="Permanently delete '<%= election.title %>' and all its data? This cannot be undone.">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <button class="button button-danger" type="submit">Delete this election</button>
+    </form>
+  <% } else { %>
+    <p class="help">Deletion is currently disabled<% if (typeof allowDeleteAny !== 'undefined' && !allowDeleteAny) { %> by the platform admin<% } %>. To end an election, use <strong>Close</strong> in the Status panel.</p>
+    <button class="button button-danger" type="button" disabled>Delete this election</button>
+  <% } %>
 </section>
 <%- include('../partials/foot') %>

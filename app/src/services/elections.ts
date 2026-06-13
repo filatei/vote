@@ -1,5 +1,12 @@
 import { pool } from '../db';
+import { config } from '../config';
+import { getBoolSetting } from './settings';
 import { Election, ElectionWithOptions, Option } from './types';
+
+/** Runtime master switch for election deletion (admin-toggleable; .env default). */
+export function allowElectionDelete(): boolean {
+  return getBoolSetting('allow_election_delete', config.ALLOW_ELECTION_DELETE);
+}
 
 // Postgres returns BIGINT columns as strings; coerce numeric fields so the
 // Election object matches its declared types and id comparisons are reliable.

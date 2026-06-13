@@ -39,5 +39,27 @@
   </div>
 </section>
 
+<section class="card setting-card">
+  <div class="setting-row">
+    <div>
+      <h2 class="h3">Election deletion</h2>
+      <p class="muted" style="margin:4px 0 0;">
+        When on, election owners (and admins) can permanently delete elections. When off, opened elections can only be closed — deletion is blocked to protect records.
+      </p>
+    </div>
+    <div class="setting-action">
+      <span class="status-pill status-<%= deleteEnabled ? 'open' : 'draft' %>"><%= deleteEnabled ? 'On' : 'Off' %></span>
+      <form method="post" action="/admin/settings/election-delete" class="inline-form"
+            <% if (!deleteEnabled) { %>data-confirm="Allow permanent deletion of elections, including ones with votes?"<% } %>>
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <input type="hidden" name="enabled" value="<%= deleteEnabled ? '0' : '1' %>" />
+        <button class="button <%= deleteEnabled ? 'button-danger' : 'button-primary' %>" type="submit">
+          <%= deleteEnabled ? 'Disable' : 'Enable' %> deletion
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+
 <%- include('../partials/election_list', { elections: elections, basePath: '/admin', showResults: true }) %>
 <%- include('../partials/foot') %>

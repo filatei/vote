@@ -10,6 +10,7 @@ import {
   toArray,
 } from '../util/validate';
 import {
+  allowElectionDelete,
   canDeleteElection,
   clearOptionFlag,
   clearOptionImage,
@@ -57,6 +58,7 @@ adminRouter.get('/', async (_req, res, next) => {
       subsToggledOn: subscriptionsToggledOn(),
       subsActive: subscriptionsEnabled(),
       lsConfigured: lsConfigured(),
+      deleteEnabled: allowElectionDelete(),
     });
   } catch (err) {
     next(err);
@@ -71,6 +73,23 @@ adminRouter.post('/settings/subscriptions', csrfProtection, async (req, res, nex
     await logAction({
       adminId: req.session.adminId!,
       action: 'toggle_subscriptions',
+      detail: { enabled: enable },
+      ip: req.ip,
+    });
+    res.redirect('/admin');
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Toggle whether elections can be deleted (admin only).
+adminRouter.post('/settings/election-delete', csrfProtection, async (req, res, next) => {
+  try {
+    const enable = req.body.enabled === '1';
+    await setBoolSetting('allow_election_delete', enable);
+    await logAction({
+      adminId: req.session.adminId!,
+      action: 'toggle_election_delete',
       detail: { enabled: enable },
       ip: req.ip,
     });
@@ -228,8 +247,8 @@ adminRouter.get('/elections/:id', csrfToken, async (req, res, next) => {
       audit,
       baseUrl: config.PUBLIC_BASE_URL,
       generatedCodes: null,
-      canDelete: canDeleteElection(election, config.ALLOW_ELECTION_DELETE),
-      allowDeleteAny: config.ALLOW_ELECTION_DELETE,
+      canDelete: canDeleteElection(election, allowElectionDelete()),
+      allowDeleteAny: allowElectionDelete(),
     });
   } catch (err) {
     next(err);
@@ -475,7 +494,7 @@ adminRouter.post('/elections/:id/delete', csrfProtection, async (req, res, next)
     const id = Number(req.params.id);
     const election = await getElectionById(id);
     if (!election) throw new HttpError(404, 'Election not found.');
-    if (!canDeleteElection(election, config.ALLOW_ELECTION_DELETE)) {
+    if (!canDeleteElection(election, allowElectionDelete())) {
       throw new HttpError(
         403,
         'This election has been opened and can no longer be deleted — close it instead.',
@@ -548,8 +567,8 @@ adminRouter.post('/elections/:id/codes', csrfProtection, csrfToken, async (req, 
       audit,
       baseUrl: config.PUBLIC_BASE_URL,
       generatedCodes: codes,
-      canDelete: canDeleteElection(election, config.ALLOW_ELECTION_DELETE),
-      allowDeleteAny: config.ALLOW_ELECTION_DELETE,
+      canDelete: canDeleteElection(election, allowElectionDelete()),
+      allowDeleteAny: allowElectionDelete(),
     });
   } catch (err) {
     next(err);

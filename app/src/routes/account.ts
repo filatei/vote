@@ -30,6 +30,7 @@ import {
 } from '../services/googleAuth';
 import { generateUrlToken } from '../util/crypto';
 import {
+  allowElectionDelete,
   canDeleteElection,
   clearOptionFlag,
   clearOptionImage,
@@ -281,8 +282,8 @@ async function renderElectionView(req: Request, res: import('express').Response,
     audit: [], // customers don't see the admin audit trail
     baseUrl: config.PUBLIC_BASE_URL,
     generatedCodes,
-    canDelete: canDeleteElection(election, config.ALLOW_ELECTION_DELETE),
-    allowDeleteAny: config.ALLOW_ELECTION_DELETE,
+    canDelete: canDeleteElection(election, allowElectionDelete()),
+    allowDeleteAny: allowElectionDelete(),
     paymentsEnabled: paymentsEnabled(),
     payFlash: paid === '1' ? 'ok' : paid === '0' ? 'fail' : null,
     subRequired: subEnabled && !subActive,
@@ -630,7 +631,7 @@ accountRouter.post('/elections/:id/options/:optionId', uploadContestantMedia, cs
 accountRouter.post('/elections/:id/delete', csrfProtection, async (req, res, next) => {
   try {
     const election = await loadOwned(req);
-    if (!canDeleteElection(election, config.ALLOW_ELECTION_DELETE)) {
+    if (!canDeleteElection(election, allowElectionDelete())) {
       throw new HttpError(403, 'This election has been opened and can no longer be deleted — close it instead.');
     }
     await logAction({ adminId: null, action: 'delete_election_self_service', electionId: null, detail: { title: election.title }, ip: req.ip });
