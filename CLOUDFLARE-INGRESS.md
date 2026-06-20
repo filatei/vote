@@ -105,6 +105,41 @@ work in CLOUDFLARE.md is then only relevant to any apps still on Apache.
   exercise `/api/*`, `/wallet/*`, `/payments/*`, `/staking`, the `/ws` tick feed,
   and the frontend over `https://127.0.0.1:2087` with the Host header.
 
+## Deploy must ship the Caddyfile
+
+Each app's deploy must copy `infra/caddy/Caddyfile` to the server, or Docker
+bind-mounts an auto-created empty directory onto `/etc/caddy/Caddyfile` and the
+caddy container fails (`not a directory`).
+
+| App | Deploy ships Caddyfile? |
+|-----|-------------------------|
+| neflo | yes — SCPs `infra/**` |
+| vote | yes — server is a full git clone (`git pull`) |
+| daybook | **fixed** — added `infra/caddy/Caddyfile` to the scp `source:` list |
+| otuburu | **TODO** — curated SCP; must add `infra/caddy/Caddyfile` before re-adding the caddy service |
+
+## Troubleshooting
+
+- **`apache2ctl configtest` → `Invalid command 'RemoteIPHeader'`** — the Apache
+  vhosts use `mod_remoteip` but the module isn't enabled. Fix once:
+  `sudo a2enmod remoteip && sudo systemctl reload apache2`. (This was the cause
+  of the early "reload failed" errors.)
+- **Through Cloudflare but still hitting Apache** (`server: Apache`, no
+  `via: 1.1 Caddy`) — the record isn't proxied, or the Origin Rule (port
+  override) isn't deployed. Proxy the record (orange cloud) **and** add the
+  Origin Rule.
+- **`server: cloudflare` but no `cf-ray`** when testing — you're hitting the
+  origin directly (record is DNS-only). Flip it to Proxied.
+
+## Cutover status
+
+| App | Port | Proxied | Origin Rule | Apache vhost | State |
+|-----|------|---------|-------------|--------------|-------|
+| neflo | 8443 | yes | yes | disable (verify) | LIVE off Apache |
+| vote | 2053 | yes | yes | disabled | LIVE off Apache |
+| daybook | 2083 | pending | pending | enabled | ready — deploy fix landed |
+| otuburu | 2087 | no | no | enabled | deferred — needs deploy fix + cert (trading box, do last) |
+
 ## Rollback
 
 Re-enable the Apache site and remove the Origin Rule for that host:
