@@ -1,0 +1,64 @@
+<svg viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Who is your president for 2027 poll banner">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f3faf6"/>
+    </linearGradient>
+    <linearGradient id="grn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0aa363"/>
+      <stop offset="1" stop-color="#00713f"/>
+    </linearGradient>
+    <filter id="cardsh" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0c3a26" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <!-- Flag side bands -->
+  <rect x="0" y="0" width="46" height="630" fill="url(#grn)"/>
+  <rect x="1154" y="0" width="46" height="630" fill="url(#grn)"/>
+  <!-- Top flag ribbon -->
+  <rect x="46" y="0" width="1108" height="14" fill="#0aa363"/>
+
+  <!-- Header -->
+  <text x="600" y="92" text-anchor="middle" font-family="Georgia,'Times New Roman',serif"
+        font-size="30" letter-spacing="5" fill="#00713f" font-weight="700">NAIJA DECIDES · 2027</text>
+  <text x="600" y="166" text-anchor="middle" font-family="Arial,Helvetica,sans-serif"
+        font-size="62" font-weight="800" fill="#0d1b14">Who's your President?</text>
+  <text x="600" y="212" text-anchor="middle" font-family="Arial,Helvetica,sans-serif"
+        font-size="27" fill="#3c5648">If the 2027 election were held today, who would you vote for?</text>
+
+  <!-- Three candidate cards (alphabetical, neutral placeholders) -->
+  <g filter="url(#cardsh)">
+    <rect x="120" y="262" width="290" height="236" rx="20" fill="#ffffff" stroke="#dcefe4" stroke-width="2"/>
+    <rect x="455" y="262" width="290" height="236" rx="20" fill="#ffffff" stroke="#dcefe4" stroke-width="2"/>
+    <rect x="790" y="262" width="290" height="236" rx="20" fill="#ffffff" stroke="#dcefe4" stroke-width="2"/>
+  </g>
+
+  <!-- avatar silhouettes -->
+  <g fill="#cfe6d9">
+    <circle cx="265" cy="350" r="52"/><circle cx="600" cy="350" r="52"/><circle cx="935" cy="350" r="52"/>
+  </g>
+  <g fill="#ffffff">
+    <circle cx="265" cy="338" r="20"/><circle cx="600" cy="338" r="20"/><circle cx="935" cy="338" r="20"/>
+    <path d="M237 392 a28 26 0 0 1 56 0z"/><path d="M572 392 a28 26 0 0 1 56 0z"/><path d="M907 392 a28 26 0 0 1 56 0z"/>
+  </g>
+  <!-- names -->
+  <g font-family="Arial,Helvetica,sans-serif" text-anchor="middle">
+    <text x="265" y="448" font-size="30" font-weight="800" fill="#0d1b14">Atiku</text>
+    <text x="265" y="478" font-size="18" fill="#3c5648">Abubakar</text>
+    <text x="600" y="448" font-size="30" font-weight="800" fill="#0d1b14">Obi</text>
+    <text x="600" y="478" font-size="18" fill="#3c5648">Peter</text>
+    <text x="935" y="448" font-size="30" font-weight="800" fill="#0d1b14">Tinubu</text>
+    <text x="935" y="478" font-size="18" fill="#3c5648">Bola Ahmed</text>
+  </g>
+
+  <!-- CTA pill -->
+  <rect x="402" y="528" width="396" height="58" rx="29" fill="url(#grn)"/>
+  <text x="600" y="566" text-anchor="middle" font-family="Arial,Helvetica,sans-serif"
+        font-size="26" font-weight="800" fill="#ffffff">VOTE NOW · LIVE RESULTS</text>
+
+  <!-- disclaimer -->
+  <text x="600" y="612" text-anchor="middle" font-family="Arial,Helvetica,sans-serif"
+        font-size="15" fill="#7c9488">Informal opinion poll · one vote per device · not affiliated with INEC or any government body</text>
+</svg>

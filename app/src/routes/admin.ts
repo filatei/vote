@@ -36,10 +36,9 @@ import fs from 'fs';
 import { generateCodes, getCodeStats } from '../services/codes';
 import { tallyElection } from '../services/tally';
 import { getDeviceVotes } from '../services/devices';
-import { listPayments, formatAmount } from '../services/payments';
+import { listPayments, formatAmount, paymentsToggledOn, paymentProviderConfigured } from '../services/payments';
 import { getPlatformStats } from '../services/stats';
 import { getAuditLog, logAction } from '../services/admins';
-import { lsConfigured, subscriptionsEnabled, subscriptionsToggledOn } from '../services/subscriptions';
 import { setBoolSetting } from '../services/settings';
 
 export const adminRouter = Router();
@@ -55,9 +54,8 @@ adminRouter.get('/', async (_req, res, next) => {
     res.render('admin/dashboard', {
       title: 'Dashboard',
       elections,
-      subsToggledOn: subscriptionsToggledOn(),
-      subsActive: subscriptionsEnabled(),
-      lsConfigured: lsConfigured(),
+      monetiseOn: paymentsToggledOn(),
+      providerConfigured: paymentProviderConfigured(),
       deleteEnabled: allowElectionDelete(),
     });
   } catch (err) {
@@ -65,14 +63,15 @@ adminRouter.get('/', async (_req, res, next) => {
   }
 });
 
-// Toggle the app-wide subscription requirement (admin only).
-adminRouter.post('/settings/subscriptions', csrfProtection, async (req, res, next) => {
+// Toggle monetisation: pay-before-open paywall (admin only). When ON, opening
+// an election requires paying the per-voter launch fee (creating stays free).
+adminRouter.post('/settings/monetise', csrfProtection, async (req, res, next) => {
   try {
     const enable = req.body.enabled === '1';
-    await setBoolSetting('subscriptions_enabled', enable);
+    await setBoolSetting('payments_enabled', enable);
     await logAction({
       adminId: req.session.adminId!,
-      action: 'toggle_subscriptions',
+      action: 'toggle_monetise',
       detail: { enabled: enable },
       ip: req.ip,
     });

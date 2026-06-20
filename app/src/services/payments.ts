@@ -8,6 +8,7 @@ import { Election } from './types';
 import { quoteForVoters, Quote } from './pricing';
 import { monnifyConfigured, initTransaction, getTransactionStatus } from './monnify';
 import { squadConfigured, createPaymentLink, verifyTransaction } from './squad';
+import { getBoolSetting } from './settings';
 
 export type Provider = 'squad' | 'monnify';
 
@@ -28,10 +29,24 @@ export function activeProvider(): Provider | null {
   return null;
 }
 
+/**
+ * Admin runtime switch for monetisation ("MONETISE"). Defaults to the .env
+ * value (PAYMENTS_ENABLED) until an admin flips it from /admin. This is the
+ * pay-before-open model: creating an election is always free; opening one
+ * requires paying the per-voter launch fee (unless it's in the free tier).
+ */
+export function paymentsToggledOn(): boolean {
+  return getBoolSetting('payments_enabled', config.PAYMENTS_ENABLED);
+}
+
+/** True when monetisation is ON *and* a payment rail is actually configured. */
 export function paymentsEnabled(): boolean {
-  // Requires the master switch AND at least one configured rail, so leaving keys
-  // in place doesn't paywall elections until you explicitly turn it on.
-  return config.PAYMENTS_ENABLED && activeProvider() !== null;
+  return paymentsToggledOn() && activeProvider() !== null;
+}
+
+/** Whether any payment rail (Squad/Monnify) has credentials configured. */
+export function paymentProviderConfigured(): boolean {
+  return activeProvider() !== null;
 }
 
 // ── Per-voter metering ──────────────────────────────────────────────────────
