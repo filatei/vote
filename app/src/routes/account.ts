@@ -59,6 +59,7 @@ import {
   priceLabelForElection,
   quoteElection,
   reconcilePendingPayment,
+  setProviderReference,
   verifyPayment,
 } from '../services/payments';
 import { generateCodes, getCodeStats } from '../services/codes';
@@ -482,10 +483,15 @@ accountRouter.post('/elections/:id/pay', csrfProtection, async (req, res, next) 
   }
 });
 
-// Paystack returns here after checkout. Verify is authoritative.
+// The gateway returns here after checkout. Verify is authoritative.
+//   • Squad — our reference is carried in `?ref=…` (we baked it into the link's
+//     redirect URL); Squad appends its own transaction ref alongside it.
+//   • Monnify — returns our paymentReference (verify-on-view is the safety net).
 accountRouter.get('/pay/callback', async (req, res, next) => {
   try {
-    const reference = String(req.query.reference || req.query.trxref || '');
+    const reference = String(
+      req.query.ref || req.query.paymentReference || req.query.reference || req.query.trxref || '',
+    );
     if (!reference) {
       res.redirect('/account');
       return;
@@ -495,6 +501,14 @@ accountRouter.get('/pay/callback', async (req, res, next) => {
     if (!pay || Number(pay.customerId) !== Number(req.session.customerId)) {
       res.redirect('/account');
       return;
+    }
+    // Squad payment-link payments use a gateway-generated transaction ref; grab
+    // it from the redirect so the authoritative verify can run.
+    if (pay.provider === 'squad') {
+      const gwRef = String(
+        req.query.transaction_ref || req.query.transactionRef || req.query.reference || '',
+      );
+      if (gwRef && gwRef !== reference) await setProviderReference(reference, gwRef);
     }
     const result = await verifyPayment(reference);
     if (result.ok && result.electionId) {

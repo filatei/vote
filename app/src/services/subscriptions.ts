@@ -19,9 +19,14 @@ export function subscriptionsToggledOn(): boolean {
   return getBoolSetting('subscriptions_enabled', config.SUBSCRIPTIONS_ENABLED);
 }
 
-/** True only when the toggle is ON *and* the LS store is configured. */
+/**
+ * Retired: the Lemon Squeezy monthly subscription has been replaced by Squad
+ * per-election payments. Hard-disabled so the subscribe/billing gates are
+ * always no-ops; the scaffolding below is kept dormant for history and can be
+ * deleted once the customer subscription columns are dropped.
+ */
 export function subscriptionsEnabled(): boolean {
-  return subscriptionsToggledOn() && lsConfigured();
+  return false;
 }
 
 export function subscriptionPriceLabel(): string {

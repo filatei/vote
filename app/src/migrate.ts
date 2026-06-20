@@ -113,11 +113,11 @@ const STATEMENTS: string[] = [
   `ALTER TABLE elections ADD COLUMN IF NOT EXISTS enrolled_voters INTEGER NOT NULL DEFAULT 0`,
 
   // ── Multi-provider payments ───────────────────────────────────────────
-  // The paystack_payments table is now provider-agnostic (Monnify primary,
-  // Paystack fallback). Add the provider, the gateway's own reference (Monnify
-  // returns a transactionReference distinct from our paymentReference), and the
-  // billed voter count for reconciliation. Existing rows are Paystack.
-  `ALTER TABLE paystack_payments ADD COLUMN IF NOT EXISTS provider TEXT NOT NULL DEFAULT 'paystack'`,
+  // The paystack_payments table is provider-agnostic (Squad primary, Monnify
+  // fallback). Add the provider, the gateway's own reference (Squad/Monnify
+  // generate a transaction ref distinct from our reference), and the billed
+  // voter count for reconciliation. The provider is always set on insert.
+  `ALTER TABLE paystack_payments ADD COLUMN IF NOT EXISTS provider TEXT NOT NULL DEFAULT 'squad'`,
   `ALTER TABLE paystack_payments ADD COLUMN IF NOT EXISTS provider_reference TEXT`,
   `ALTER TABLE paystack_payments ADD COLUMN IF NOT EXISTS voters INTEGER`,
 ];

@@ -64,27 +64,36 @@ const schema = z.object({
   // elections can be created and opened for free; set true (with a configured
   // provider) to require payment before an owner can open their election.
   PAYMENTS_ENABLED: bool(false),
-  // Currency the metered price is charged in (Monnify supports NGN).
+  // Currency the metered price is charged in (Squad supports NGN & USD).
   PAYMENT_CURRENCY: z.string().default('NGN'),
-  // Preferred rail. "monnify" is primary; Paystack is kept as a fallback that
-  // is used automatically when the preferred provider isn't configured.
-  PAYMENT_PROVIDER: z.enum(['monnify', 'paystack']).default('monnify'),
+  // Preferred rail. "squad" is primary; Monnify is kept as a fallback that is
+  // used automatically when the preferred provider isn't configured.
+  PAYMENT_PROVIDER: z.enum(['squad', 'monnify']).default('squad'),
 
-  // ── Monnify (primary NGN rail — instant virtual-account + card) ────────
+  // ── Squad (primary NGN rail — GTBank / HabariPay payment links) ────────
+  // Each election launch creates a one-off hosted payment link for the exact
+  // metered amount. Leave the secret blank to disable Squad (falls back to
+  // Monnify if configured). Sandbox keys start sandbox_sk_…, live sk_….
+  SQUAD_SECRET_KEY: z.string().optional(),
+  // API host. Sandbox: https://sandbox-api-d.squadco.com  Live: https://api-d.squadco.com
+  SQUAD_BASE_URL: z.string().default('https://sandbox-api-d.squadco.com'),
+  // Hosted-checkout host the link hash is appended to. Sandbox:
+  // https://sandbox-pay.squadco.com  Live: https://pay.squadco.com
+  SQUAD_PAY_BASE_URL: z.string().default('https://sandbox-pay.squadco.com'),
+  // Optional static product/payment link from the dashboard (e.g.
+  // https://pay.squadco.com/toramavote) — used as a manual fallback only.
+  SQUAD_PAYMENT_LINK: z.string().optional(),
+
+  // ── Monnify (fallback NGN rail — instant virtual-account + card) ───────
   // Reuses the same sandbox integration proven on otuburu. Leave the secret
-  // blank to disable the Monnify rail (falls back to Paystack if configured).
+  // blank to disable the Monnify rail.
   MONNIFY_API_KEY: z.string().optional(),
   MONNIFY_SECRET_KEY: z.string().optional(),
   MONNIFY_CONTRACT_CODE: z.string().optional(),
   MONNIFY_WALLET_ACCOUNT: z.string().optional(), // disbursement source (future)
   MONNIFY_BASE_URL: z.string().default('https://sandbox.monnify.com'),
-  // Base URL Monnify/Paystack return to after checkout (defaults PUBLIC_BASE_URL).
+  // Base URL the gateway returns to after checkout (defaults PUBLIC_BASE_URL).
   PAYMENT_CALLBACK_URL: z.string().optional(),
-
-  // ── Paystack (fallback rail; same keys/var names as other torama apps) ─
-  PAYSTACK_SECRET_KEY: z.string().optional(),
-  PAYSTACK_PUBLIC_KEY: z.string().optional(),
-  PAYSTACK_CALLBACK_URL: z.string().optional(),
 
   // ── Per-voter pricing ──────────────────────────────────────────────────
   // Optional JSON override of the rate card (see services/pricing.ts for the

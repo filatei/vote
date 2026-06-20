@@ -53,9 +53,9 @@ app.use(
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
         // Allow payment forms to redirect on to a hosted checkout (browsers
-        // enforce form-action against the redirect target): Lemon Squeezy for
-        // subscriptions, Monnify for the per-election launch payment.
-        formAction: ["'self'", 'https://*.lemonsqueezy.com', 'https://*.monnify.com'],
+        // enforce form-action against the redirect target): Squad (primary) and
+        // Monnify (fallback) for the per-election launch payment.
+        formAction: ["'self'", 'https://*.squadco.com', 'https://*.monnify.com'],
         frameAncestors: ["'none'"],
       },
     },
@@ -65,8 +65,8 @@ app.use(
 
 app.use(pinoHttp({ logger }));
 
-// Paystack webhook needs the RAW body for signature verification, so mount it
-// before the urlencoded body parser.
+// Squad/Monnify webhooks need the RAW body for signature verification, so mount
+// them before the urlencoded body parser.
 app.use('/webhooks', webhookRouter);
 
 app.use(express.urlencoded({ extended: false, limit: '256kb' }));

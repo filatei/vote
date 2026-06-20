@@ -63,6 +63,9 @@ publicRouter.get('/', csrfToken, (_req, res) => {
 // Static content / trust pages.
 publicRouter.get('/terms', (_req, res) => res.render('public/terms', { title: 'Terms of Service' }));
 publicRouter.get('/privacy', (_req, res) => res.render('public/privacy', { title: 'Privacy Policy' }));
+publicRouter.get(['/return-policy', '/refund-policy', '/returns'], (_req, res) =>
+  res.render('public/return-policy', { title: 'Return & Refund Policy' }),
+);
 publicRouter.get('/trust', (_req, res) => res.render('public/trust', { title: 'How we keep votes fair' }));
 publicRouter.get('/status', async (_req, res, next) => {
   try {

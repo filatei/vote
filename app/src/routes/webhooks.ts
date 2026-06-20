@@ -2,33 +2,52 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import express, { Router } from 'express';
 import { config } from '../config';
 import { logger } from '../logger';
-import { verifyPayment } from '../services/payments';
-import { applySubscriptionEvent, verifyWebhookSignature } from '../services/subscriptions';
+import { reconcileSquadWebhook, verifyPayment } from '../services/payments';
+import { getElectionById, setStatus } from '../services/elections';
+import { parseWebhook, verifyWebhookSignature as verifySquadSignature } from '../services/squad';
 
 export const webhookRouter = Router();
 
 /**
- * Lemon Squeezy subscription webhook. Signed with HMAC-SHA256 of the raw body
- * using the webhook signing secret, in the `X-Signature` header.
+ * Squad webhook (primary rail). Fired on a successful transaction. Signed with
+ * the uppercase-hex HMAC-SHA512 of the RAW body in `x-squad-encrypted-body`.
+ * The link-payment webhook carries Squad's transaction ref + payer email +
+ * amount, so we match it to the pending election payment, attach the gateway
+ * ref, then verify server-side (authoritative) before opening the election.
  */
-webhookRouter.post('/lemonsqueezy', express.raw({ type: '*/*' }), async (req, res) => {
+webhookRouter.post('/squad', express.raw({ type: '*/*' }), async (req, res) => {
+  if (!config.SQUAD_SECRET_KEY) {
+    res.sendStatus(200);
+    return;
+  }
   const raw = Buffer.isBuffer(req.body) ? req.body : Buffer.from('');
-  const signature = String(req.headers['x-signature'] || '');
-  if (!verifyWebhookSignature(raw, signature)) {
+  const signature = String(req.headers['x-squad-encrypted-body'] || '');
+  if (!verifySquadSignature(raw, signature)) {
     res.sendStatus(401);
     return;
   }
   try {
-    await applySubscriptionEvent(raw);
+    const evt = parseWebhook(raw);
+    if (evt && evt.status.includes('success')) {
+      const electionId = await reconcileSquadWebhook({
+        transactionRef: evt.transactionRef,
+        email: evt.email,
+        amountSubunits: evt.amountSubunits,
+      });
+      if (electionId) {
+        const el = await getElectionById(electionId);
+        if (el && el.status === 'draft') await setStatus(electionId, 'open');
+      }
+    }
   } catch (err) {
-    logger.error({ err }, 'Lemon Squeezy webhook handling failed');
+    logger.error({ err }, 'Squad webhook handling failed');
   }
   res.sendStatus(200);
 });
 
 /**
- * Monnify webhook. Signed with HMAC-SHA512 of the raw request body using the
- * merchant secret key, in the `monnify-signature` header. The authoritative
+ * Monnify webhook (fallback rail). Signed with HMAC-SHA512 of the raw body using
+ * the merchant secret key, in the `monnify-signature` header. The authoritative
  * confirmation is still a server-side status query (verifyPayment). We match on
  * our own paymentReference, which Monnify echoes back as eventData.paymentReference.
  */
@@ -55,37 +74,6 @@ webhookRouter.post('/monnify', express.raw({ type: '*/*' }), async (req, res) =>
     if (reference) await verifyPayment(reference);
   } catch (err) {
     logger.error({ err }, 'Monnify webhook handling failed');
-  }
-  res.sendStatus(200);
-});
-
-/**
- * Paystack webhook. A Paystack account has ONE webhook URL (likely already
- * pointed at another torama.money app), so this is a belt-and-braces path — the
- * authoritative confirmation is the callback `verify`. Signature is HMAC-SHA512
- * of the raw body with the secret key.
- */
-webhookRouter.post('/paystack', express.raw({ type: '*/*' }), async (req, res) => {
-  const secret = config.PAYSTACK_SECRET_KEY;
-  if (!secret) {
-    res.sendStatus(200);
-    return;
-  }
-  const raw = Buffer.isBuffer(req.body) ? req.body : Buffer.from('');
-  const expected = createHmac('sha512', secret).update(raw).digest('hex');
-  const provided = String(req.headers['x-paystack-signature'] || '');
-  const a = Buffer.from(expected);
-  const b = Buffer.from(provided);
-  if (a.length !== b.length || !timingSafeEqual(a, b)) {
-    res.sendStatus(401);
-    return;
-  }
-  try {
-    const evt = JSON.parse(raw.toString('utf8')) as { data?: { reference?: string } };
-    const reference = evt?.data?.reference;
-    if (reference) await verifyPayment(reference);
-  } catch (err) {
-    logger.error({ err }, 'Paystack webhook handling failed');
   }
   res.sendStatus(200);
 });
