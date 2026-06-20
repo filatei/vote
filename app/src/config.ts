@@ -83,6 +83,18 @@ const schema = z.object({
   // Optional static product/payment link from the dashboard (e.g.
   // https://pay.squadco.com/toramavote) — used as a manual fallback only.
   SQUAD_PAYMENT_LINK: z.string().optional(),
+  // ── Squad webhook hub (one account → many apps) ───────────────────────
+  // Squad allows ONE webhook URL per account, so this app can act as the hub:
+  // point Squad's dashboard webhook at <PUBLIC_BASE_URL>/webhooks/squad-hub.
+  // The hub verifies the signature once, settles this app's own payments
+  // locally, and forwards anything that isn't ours to the other apps' own
+  // /webhooks/squad endpoints (they verify the same shared Squad secret).
+  // JSON array, e.g.
+  //   [{"name":"neflo","url":"https://neflo.pay/webhooks/squad","prefix":"nf_,cg_"},
+  //    {"name":"otuburu","url":"https://otuburu.torama.money/webhooks/squad","prefix":"otu-"}]
+  // `prefix` is optional (comma-separated reference prefixes). When omitted,
+  // events we can't settle locally are broadcast to every downstream.
+  SQUAD_DOWNSTREAMS: z.string().optional(),
 
   // ── Monnify (fallback NGN rail — instant virtual-account + card) ───────
   // Reuses the same sandbox integration proven on otuburu. Leave the secret
