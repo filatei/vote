@@ -46,8 +46,10 @@ jobs:
       - name: Trigger deploy over SSH
         env:
           DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          DEPLOY_HOST: vote.torama.money
-          DEPLOY_USER: user1
+          # Origin IP, not vote.torama.money — that hostname is Cloudflare-proxied
+          # now, so SSH (port 22) wouldn't reach the server through it.
+          DEPLOY_HOST: 139.162.170.253
+          DEPLOY_USER: vote
         run: |
           test -n "$DEPLOY_KEY" || { echo "DEPLOY_SSH_KEY secret is not set"; exit 1; }
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
