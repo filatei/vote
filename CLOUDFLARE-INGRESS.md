@@ -135,9 +135,9 @@ caddy container fails (`not a directory`).
 
 | App | Port | Proxied | Origin Rule | Apache vhost | State |
 |-----|------|---------|-------------|--------------|-------|
-| neflo | 8443 | yes | yes | disable (verify) | LIVE off Apache |
+| neflo | 8443 | yes | yes | disabled | LIVE off Apache |
 | vote | 2053 | yes | yes | disabled | LIVE off Apache |
-| daybook | 2083 | pending | pending | enabled | ready — deploy fix landed |
+| daybook | 2083 | yes | yes | disable (cleanup) | LIVE off Apache |
 | otuburu | 2087 | no | no | enabled | deferred — needs deploy fix + cert (trading box, do last) |
 
 ## Rollback
