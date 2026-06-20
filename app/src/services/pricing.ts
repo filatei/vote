@@ -7,7 +7,7 @@
  * money spec §6.
  *
  * Rates here are in MAJOR units per voter (naira / dollars). The free bracket
- * (1–50) prices to zero so small elections launch without payment.
+ * (1–10) prices to zero so small elections launch without payment.
  */
 
 export type Currency = 'NGN' | 'USD';
@@ -21,7 +21,7 @@ type Bracket = [number, number];
 // flags it as volume/contact pricing.
 const DEFAULT_TABLE: Record<Currency, Bracket[]> = {
   NGN: [
-    [50, 0],
+    [10, 0],
     [500, 120],
     [2500, 90],
     [10000, 55],
@@ -29,7 +29,7 @@ const DEFAULT_TABLE: Record<Currency, Bracket[]> = {
     [Infinity, 22],
   ],
   USD: [
-    [50, 0],
+    [10, 0],
     [500, 0.25],
     [2500, 0.18],
     [10000, 0.12],

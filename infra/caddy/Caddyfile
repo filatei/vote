@@ -16,7 +16,10 @@
 	}
 }
 
-vote.torama.money:2053 {
+# Both hostnames serve the same app (Verita is the product brand). The
+# *.torama.money Origin cert covers both; Cloudflare Origin Rules send each to
+# this :2053 ingress.
+vote.torama.money:2053, verita.torama.money:2053 {
 	# Cloudflare Origin Certificate (15-year) for *.torama.money.
 	tls /etc/caddy/origin/cert.pem /etc/caddy/origin/key.pem
 

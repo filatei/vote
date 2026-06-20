@@ -32,16 +32,20 @@
 
     <fieldset class="inline-fieldset">
       <legend>Ballot type</legend>
-      <label class="radio-inline">
-        <input type="radio" name="ballotType" value="single"
-               <%= !form || form.ballotType !== 'multiple' ? 'checked' : '' %> data-ballot-toggle />
-        Single choice (pick one)
-      </label>
-      <label class="radio-inline">
-        <input type="radio" name="ballotType" value="multiple"
-               <%= form && form.ballotType === 'multiple' ? 'checked' : '' %> data-ballot-toggle />
-        Multiple choice (approval)
-      </label>
+      <div class="type-grid">
+        <label class="type-card">
+          <input type="radio" name="ballotType" value="single"
+                 <%= !form || form.ballotType !== 'multiple' ? 'checked' : '' %> data-ballot-toggle />
+          <span class="type-card-name">Single choice</span>
+          <span class="type-card-hint">Voters pick exactly one option.</span>
+        </label>
+        <label class="type-card">
+          <input type="radio" name="ballotType" value="multiple"
+                 <%= form && form.ballotType === 'multiple' ? 'checked' : '' %> data-ballot-toggle />
+          <span class="type-card-name">Multiple choice</span>
+          <span class="type-card-hint">Approval — voters can pick several.</span>
+        </label>
+      </div>
     </fieldset>
 
     <div data-max-wrap <%= (form && form.ballotType === 'multiple') ? '' : 'hidden' %>>
@@ -52,36 +56,44 @@
 
     <fieldset class="inline-fieldset">
       <legend>Who can vote?</legend>
-      <label class="radio-inline">
-        <input type="radio" name="accessMode" value="code"
-               <%= !form || form.accessMode !== 'open' ? 'checked' : '' %> />
-        Pre-issued voting codes (strongest)
-      </label>
-      <label class="radio-inline">
-        <input type="radio" name="accessMode" value="open"
-               <%= form && form.accessMode === 'open' ? 'checked' : '' %> />
-        Open link — one vote per device
-      </label>
-      <label class="radio-inline">
-        <input type="radio" name="accessMode" value="hybrid"
-               <%= form && form.accessMode === 'hybrid' ? 'checked' : '' %> />
-        Link + codes (hybrid)
-      </label>
-      <p class="help">Codes give the strongest guarantee (one code = one vote). Open link lets anyone with the URL vote, limited to one per device. Hybrid combines both: people with a code use it, and anyone else can vote once per device via the link. Use codes for high-stakes elections.</p>
+      <div class="type-grid">
+        <label class="type-card">
+          <input type="radio" name="accessMode" value="open"
+                 <%= (!form || !form.accessMode || form.accessMode === 'open') ? 'checked' : '' %> />
+          <span class="type-card-name">Open link — one vote per device</span>
+          <span class="type-card-hint">Anyone with the link votes, limited to one per device. Quickest to run.</span>
+        </label>
+        <label class="type-card">
+          <input type="radio" name="accessMode" value="code"
+                 <%= form && form.accessMode === 'code' ? 'checked' : '' %> />
+          <span class="type-card-name">Pre-issued voting codes</span>
+          <span class="type-card-hint">One code = one vote — the strongest guarantee. Best for high-stakes elections.</span>
+        </label>
+        <label class="type-card">
+          <input type="radio" name="accessMode" value="hybrid"
+                 <%= form && form.accessMode === 'hybrid' ? 'checked' : '' %> />
+          <span class="type-card-name">Link + codes (hybrid)</span>
+          <span class="type-card-hint">People with a code use it; everyone else votes once per device via the link.</span>
+        </label>
+      </div>
     </fieldset>
 
     <fieldset class="inline-fieldset">
       <legend>When are results visible?</legend>
-      <label class="radio-inline">
-        <input type="radio" name="resultsVisibility" value="after_close"
-               <%= !form || form.resultsVisibility !== 'live' ? 'checked' : '' %> />
-        After the election closes
-      </label>
-      <label class="radio-inline">
-        <input type="radio" name="resultsVisibility" value="live"
-               <%= form && form.resultsVisibility === 'live' ? 'checked' : '' %> />
-        Live (as votes come in)
-      </label>
+      <div class="type-grid">
+        <label class="type-card">
+          <input type="radio" name="resultsVisibility" value="after_close"
+                 <%= !form || form.resultsVisibility !== 'live' ? 'checked' : '' %> />
+          <span class="type-card-name">After the election closes</span>
+          <span class="type-card-hint">The tally stays hidden until voting ends.</span>
+        </label>
+        <label class="type-card">
+          <input type="radio" name="resultsVisibility" value="live"
+                 <%= form && form.resultsVisibility === 'live' ? 'checked' : '' %> />
+          <span class="type-card-name">Live results</span>
+          <span class="type-card-hint">The tally updates as votes come in.</span>
+        </label>
+      </div>
     </fieldset>
 
     <fieldset class="inline-fieldset">
@@ -106,7 +118,7 @@
       <label for="enrolledVoters">How many voters will be eligible?</label>
       <input id="enrolledVoters" name="enrolledVoters" type="number" inputmode="numeric" min="0" step="1"
              value="<%= form && form.enrolledVoters ? form.enrolledVoters : 0 %>" />
-      <p class="help">This is the billable count. Pricing is per registered voter, with the rate set by the total (the first 50 voters are free). You can adjust it before you launch.</p>
+      <p class="help">This is the billable count. Pricing is per registered voter, with the rate set by the total (the first 10 voters are free). You can adjust it before you launch.</p>
     </fieldset>
 
     <label>Options <span class="muted">(at least two)</span></label>

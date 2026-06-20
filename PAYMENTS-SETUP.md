@@ -2,7 +2,7 @@
 
 Verita prices each election by its **organiser-declared registered (enrolled) voter
 count**. The total count selects one bracket and every voter is billed at that flat
-rate (money spec §6). The first 50 voters are free, so small elections launch with no
+rate (money spec §6). The first 10 voters are free, so small elections launch with no
 payment. Payment is taken **before launch** — an election can only be opened once paid
 (or if it's in the free tier).
 
@@ -10,8 +10,8 @@ payment. Payment is taken **before launch** — an election can only be opened o
 
 | Registered voters | ₦ / voter | $ / voter |
 |---|---|---|
-| 1 – 50 | Free | Free |
-| 51 – 500 | ₦120 | $0.25 |
+| 1 – 10 | Free | Free |
+| 11 – 500 | ₦120 | $0.25 |
 | 501 – 2,500 | ₦90 | $0.18 |
 | 2,501 – 10,000 | ₦55 | $0.12 |
 | 10,001 – 50,000 | ₦35 | $0.08 |

@@ -3,17 +3,17 @@ import assert from 'node:assert/strict';
 import { quoteForVoters } from './pricing';
 
 // Worked examples from the money spec §6 (NGN). Amounts are in subunits (kobo).
-test('free tier (1–50 voters) prices to zero', () => {
-  const q = quoteForVoters(50);
+test('free tier (1–10 voters) prices to zero', () => {
+  const q = quoteForVoters(10);
   assert.equal(q.free, true);
   assert.equal(q.subunits, 0);
   assert.equal(q.perVoterMajor, 0);
 });
 
-test('boundary: 51 voters falls into the ₦120 bracket', () => {
-  const q = quoteForVoters(51);
+test('boundary: 11 voters falls into the ₦120 bracket', () => {
+  const q = quoteForVoters(11);
   assert.equal(q.perVoterMajor, 120);
-  assert.equal(q.subunits, 51 * 120 * 100);
+  assert.equal(q.subunits, 11 * 120 * 100);
   assert.equal(q.free, false);
 });
 
