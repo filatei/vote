@@ -14,10 +14,12 @@ records **DNS-only (grey)** so the Google SMTP relay / mail flow is untouched.
 
 SSL/TLS → Overview → **Full (strict)**. This setting is **zone-wide** — it
 applies to every proxied hostname at once (neflo, vote, otuburu). So only flip
-to Full (strict) once **every proxied origin presents a valid cert**. neflo is
-already proxied but its origin cert isn't sorted yet, so install the Origin CA
-cert on neflo too (below) before switching, or neflo's TLS will fail under
-strict. Until then, "Full" (non-strict) keeps everything up.
+to Full (strict) once **every proxied origin presents a valid cert**:
+- **vote, otuburu** — Apache, using the Origin CA cert (this doc).
+- **neflo** — does NOT use Apache. It has its own Caddy ingress on `:8443`
+  fronted by a Cloudflare Origin Rule, serving the same Cloudflare Origin cert
+  (see neflo repo `infra/CLOUDFLARE-INGRESS.md`). Finish that ingress before
+  flipping to strict, or use "Full" (non-strict) until it's confirmed.
 
 Also enable Edge Certificates → **Always Use HTTPS**, **Min TLS 1.2**.
 
