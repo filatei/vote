@@ -27,8 +27,26 @@ services:
     networks:
       - vote_net
     ports:
-      # Bind to loopback only — Apache (on the host) reverse-proxies to this.
+      # Bind to loopback only — the caddy ingress (and local checks) reach this.
       - "127.0.0.1:${APP_PORT:-8090}:${APP_PORT:-8090}"
+
+  # Dedicated ingress — Cloudflare proxies vote.torama.money here on :2053
+  # (Origin Rule sets the port), bypassing the shared Apache. See CLOUDFLARE-INGRESS.md.
+  vote_caddy:
+    container_name: vote_caddy
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - vote_app
+    ports:
+      - "2053:2053"
+    volumes:
+      - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - /opt/vote/origin:/etc/caddy/origin:ro
+      - vote_caddy_data:/data
+      - vote_caddy_config:/config
+    networks:
+      - vote_net
 
   vote_postgres:
     container_name: vote_postgres
@@ -74,3 +92,5 @@ volumes:
     name: vote_pgdata
   vote_uploads:
     name: vote_uploads
+  vote_caddy_data:
+  vote_caddy_config:
