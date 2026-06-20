@@ -117,7 +117,7 @@
       <legend>Registered voters <span class="muted">(for pricing)</span></legend>
       <label for="enrolledVoters">How many voters will be eligible?</label>
       <input id="enrolledVoters" name="enrolledVoters" type="number" inputmode="numeric" min="0" step="1"
-             value="<%= form && form.enrolledVoters ? form.enrolledVoters : 0 %>" />
+             value="<%= form && form.enrolledVoters ? form.enrolledVoters : 20 %>" />
       <p class="help">This is the billable count. Pricing is per registered voter, with the rate set by the total (the first 10 voters are free). You can adjust it before you launch.</p>
     </fieldset>
 
