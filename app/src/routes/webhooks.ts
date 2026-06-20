@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import express, { Router } from 'express';
 import { config } from '../config';
 import { logger } from '../logger';
-import { reconcileSquadWebhook, verifyPayment } from '../services/payments';
+import { reconcileSquadWebhook, sendLaunchReceipt, verifyPayment } from '../services/payments';
 import { getElectionById, setStatus } from '../services/elections';
 import { parseWebhook, verifyWebhookSignature as verifySquadSignature } from '../services/squad';
 import { downstreams, forward, resolveTargets } from '../services/squadHub';
@@ -10,20 +10,25 @@ import { downstreams, forward, resolveTargets } from '../services/squadHub';
 export const webhookRouter = Router();
 
 /** Settle a verified Squad event against this app's own pending payments.
- *  Returns the election id when it becomes paid, else null. */
-async function settleSquadLocally(raw: Buffer): Promise<number | null> {
+ *  Opens the election + emails a receipt (once) on first confirmation.
+ *  Returns true when the event matched and settled one of our payments. */
+async function settleSquadLocally(raw: Buffer): Promise<boolean> {
   const evt = parseWebhook(raw);
-  if (!evt || !evt.status.includes('success')) return null;
-  const electionId = await reconcileSquadWebhook({
+  if (!evt || !evt.status.includes('success')) return false;
+  const res = await reconcileSquadWebhook({
     transactionRef: evt.transactionRef,
     email: evt.email,
     amountSubunits: evt.amountSubunits,
   });
-  if (electionId) {
-    const el = await getElectionById(electionId);
-    if (el && el.status === 'draft') await setStatus(electionId, 'open');
+  if (!res) return false;
+  const el = await getElectionById(res.electionId);
+  if (el && el.status === 'draft') await setStatus(res.electionId, 'open');
+  if (res.newlyConfirmed) {
+    await sendLaunchReceipt(res.reference).catch((err) =>
+      logger.error({ err, reference: res.reference }, 'Squad receipt email failed'),
+    );
   }
-  return electionId;
+  return true;
 }
 
 /**
@@ -73,8 +78,7 @@ webhookRouter.post('/squad-hub', express.raw({ type: '*/*' }), async (req, res) 
   // Don't relay events we forwarded to ourselves (defensive loop guard).
   const forwarded = req.headers['x-forwarded-by'] === 'squad-hub';
   try {
-    const electionId = await settleSquadLocally(raw);
-    const settledLocally = electionId != null;
+    const settledLocally = await settleSquadLocally(raw);
     if (!forwarded) {
       const evt = parseWebhook(raw);
       const targets = resolveTargets(evt?.transactionRef || '', settledLocally, downstreams());

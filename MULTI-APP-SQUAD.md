@@ -47,8 +47,8 @@ In the **hub app's `.env`** list the other apps (JSON):
 
 ```
 SQUAD_DOWNSTREAMS=[
-  {"name":"neflo",  "url":"https://neflo.pay/webhooks/squad",        "prefix":"nf_,cg_"},
-  {"name":"otuburu","url":"https://otuburu.torama.money/webhooks/squad","prefix":"otu-"}
+  {"name":"neflo",  "url":"https://neflo.pay/api/webhooks/squad",          "prefix":"nf_,cg_"},
+  {"name":"otuburu","url":"https://otuburu.torama.money/payments/squad/webhook","prefix":"otu-"}
 ]
 ```
 
@@ -60,16 +60,23 @@ SQUAD_DOWNSTREAMS=[
 
 ## What each downstream app needs
 
-A `/webhooks/squad` route that:
+A webhook route that:
 
 1. verifies `x-squad-encrypted-body` = uppercase-hex HMAC-SHA512 of the raw body
    with the shared `SQUAD_SECRET_KEY`, then
-2. settles its own pending payment (vote/neflo already do this; the matcher is
-   email + amount + a server-side `/transaction/verify`).
+2. settles its own pending payment (the matcher is email + amount + a
+   server-side `/transaction/verify`).
 
-vote needs no change to be a downstream — its existing `/webhooks/squad` already
-does both. neflo's Squad webhook already verifies the same signature. otuburu
-just needs the same small route added.
+Status of each app:
+
+| App | Downstream endpoint | State |
+|-----|---------------------|-------|
+| vote | `/webhooks/squad` | done — also self-settles its own |
+| neflo | `/api/webhooks/squad` | done — already verifies `x-squad-encrypted-body` (no change) |
+| otuburu | `/payments/squad/webhook` | route added (`wallet/internal/payments/squad.go`); verifies + acknowledges. Crediting is a TODO until otuburu has a Squad deposit flow |
+
+Forwarding carries the original `x-squad-encrypted-body` header, so each app
+re-verifies the shared secret with no extra config.
 
 ## Reference namespacing (recommended)
 

@@ -1,6 +1,7 @@
 import { pool } from '../db';
 import { config } from '../config';
 import { logger } from '../logger';
+import { sendMail } from '../mailer';
 import { HttpError } from '../middleware/errors';
 import { generateUrlToken } from '../util/crypto';
 import { Election } from './types';
@@ -222,11 +223,11 @@ export async function initializePayment(opts: InitPaymentOpts): Promise<string> 
  */
 export async function verifyPayment(
   reference: string,
-): Promise<{ ok: boolean; electionId: number | null }> {
+): Promise<{ ok: boolean; electionId: number | null; newlyConfirmed: boolean }> {
   const pay = await getPaymentByReference(reference);
-  if (!pay) return { ok: false, electionId: null };
+  if (!pay) return { ok: false, electionId: null, newlyConfirmed: false };
   const electionId = pay.electionId;
-  if (pay.status === 'confirmed') return { ok: true, electionId };
+  if (pay.status === 'confirmed') return { ok: true, electionId, newlyConfirmed: false };
 
   const success =
     pay.provider === 'monnify'
@@ -234,13 +235,16 @@ export async function verifyPayment(
       : await verifySquad(pay);
 
   if (success.ok) {
-    await pool.query(
+    // Guard the flip with `status <> 'confirmed'` so concurrent callers (redirect
+    // callback + webhook) can't both "newly confirm" — only the row that flips
+    // it gets newlyConfirmed=true, which gates the one-time receipt email.
+    const upd = await pool.query(
       `UPDATE paystack_payments SET status='confirmed', paystack_status=$2, confirmed_at=now()
-        WHERE reference=$1`,
+        WHERE reference=$1 AND status <> 'confirmed'`,
       [reference, success.raw],
     );
     await pool.query(`UPDATE elections SET paid = TRUE WHERE id = $1`, [electionId]);
-    return { ok: true, electionId };
+    return { ok: true, electionId, newlyConfirmed: (upd.rowCount ?? 0) > 0 };
   }
 
   await pool.query(
@@ -248,7 +252,35 @@ export async function verifyPayment(
       WHERE reference=$1 AND status <> 'confirmed'`,
     [reference, success.raw],
   );
-  return { ok: false, electionId };
+  return { ok: false, electionId, newlyConfirmed: false };
+}
+
+/**
+ * Send the launch payment receipt email (once). Loads the payment + election
+ * title directly to avoid an import cycle with the elections service. Called by
+ * both the redirect callback and the webhook path, but only when a payment was
+ * *newly* confirmed, so the payer gets exactly one receipt.
+ */
+export async function sendLaunchReceipt(reference: string): Promise<void> {
+  const pay = await getPaymentByReference(reference);
+  if (!pay) return;
+  const { rows } = await pool.query<{ title: string }>(
+    `SELECT title FROM elections WHERE id = $1`,
+    [pay.electionId],
+  );
+  const title = rows[0]?.title ?? '—';
+  const amt = formatAmount(pay.amountSubunits, pay.currency);
+  await sendMail({
+    to: pay.email,
+    subject: `Payment receipt — ${config.APP_NAME}`,
+    text:
+      `Thank you. Your payment has been received.\n\n` +
+      `Election: ${title}\n` +
+      `Amount: ${amt}\n` +
+      `Reference: ${pay.reference}\n` +
+      `Date: ${new Date().toISOString().slice(0, 10)}\n\n` +
+      `Your election is now open. Manage it at ${config.PUBLIC_BASE_URL}/account/elections/${pay.electionId}`,
+  });
 }
 
 async function verifyMonnify(pay: PaymentRow): Promise<{ ok: boolean; raw: string }> {
@@ -297,13 +329,13 @@ export async function setProviderReference(reference: string, providerRef: strin
  * carries Squad's transaction ref + the payer's email + amount but NOT our
  * reference, so we match the most recent pending Squad payment by email +
  * amount, attach the gateway ref, then verify authoritatively. Returns the
- * election id when it becomes paid.
+ * matched reference + election id + whether this call newly confirmed it.
  */
 export async function reconcileSquadWebhook(opts: {
   transactionRef: string;
   email: string | null;
   amountSubunits: number;
-}): Promise<number | null> {
+}): Promise<{ reference: string; electionId: number; newlyConfirmed: boolean } | null> {
   const { rows } = await pool.query<{ reference: string }>(
     `SELECT reference FROM paystack_payments
        WHERE provider = 'squad'
@@ -317,5 +349,6 @@ export async function reconcileSquadWebhook(opts: {
   if (!ref) return null;
   await setProviderReference(ref, opts.transactionRef);
   const res = await verifyPayment(ref);
-  return res.ok ? res.electionId : null;
+  if (!res.ok || res.electionId == null) return null;
+  return { reference: ref, electionId: res.electionId, newlyConfirmed: res.newlyConfirmed };
 }

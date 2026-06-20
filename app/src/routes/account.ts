@@ -59,6 +59,7 @@ import {
   priceLabelForElection,
   quoteElection,
   reconcilePendingPayment,
+  sendLaunchReceipt,
   setProviderReference,
   verifyPayment,
 } from '../services/payments';
@@ -514,22 +515,12 @@ accountRouter.get('/pay/callback', async (req, res, next) => {
     if (result.ok && result.electionId) {
       const el = await getElectionById(result.electionId);
       if (el && el.status === 'draft') await setStatus(result.electionId, 'open');
-      // Email a receipt (best-effort).
-      try {
-        const amt = formatAmount(pay.amountSubunits, pay.currency);
-        await sendMail({
-          to: pay.email,
-          subject: `Payment receipt — ${config.APP_NAME}`,
-          text:
-            `Thank you. Your payment has been received.\n\n` +
-            `Election: ${el ? el.title : '—'}\n` +
-            `Amount: ${amt}\n` +
-            `Reference: ${pay.reference}\n` +
-            `Date: ${new Date().toISOString().slice(0, 10)}\n\n` +
-            `Your election is now open. Manage it at ${config.PUBLIC_BASE_URL}/account/elections/${result.electionId}`,
-        });
-      } catch (mailErr) {
-        logger.error({ err: mailErr }, 'payment receipt email failed');
+      // Email a receipt once (the webhook path may also confirm; sendLaunchReceipt
+      // is only invoked on the call that newly confirmed, so no double send).
+      if (result.newlyConfirmed) {
+        await sendLaunchReceipt(reference).catch((mailErr) =>
+          logger.error({ err: mailErr }, 'payment receipt email failed'),
+        );
       }
       res.redirect(`/account/elections/${result.electionId}?paid=1`);
     } else {
