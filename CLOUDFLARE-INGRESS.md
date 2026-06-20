@@ -48,11 +48,14 @@ sudo tee /opt/<app>/origin/key.pem  >/dev/null   # paste key,   Ctrl-D
 sudo chmod 600 /opt/<app>/origin/key.pem
 ```
 
-**2. Open the port to Cloudflare only** (don't expose it to the world):
+**2. Lock the port to Cloudflare only** (don't expose it to the world). The
+Caddy port is **Docker-published**, and UFW does NOT filter Docker-published
+ports — so use the DOCKER-USER chain via the helper (covers all four ports at
+once; safe to run now and after adding each app):
 
 ```bash
-for r in $(curl -s https://www.cloudflare.com/ips-v4); do
-  sudo ufw allow from "$r" to any port <port> proto tcp; done
+sudo bash scripts/firewall-cloudflare-ports.sh
+# persist: sudo apt-get install -y iptables-persistent && sudo netfilter-persistent save
 ```
 
 **3. Deploy** (brings up the `caddy` container) and check the origin locally:
