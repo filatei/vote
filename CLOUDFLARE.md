@@ -10,26 +10,51 @@ Cloudflare dashboard → DNS. For `vote` and `otuburu` (A/AAAA → the Linode IP
 switch the proxy status to **Proxied (orange cloud)**. Leave `MX` and any mail
 records **DNS-only (grey)** so the Google SMTP relay / mail flow is untouched.
 
-## 2. TLS mode = Full (strict)
+## 2. TLS mode = Full (strict)  ⚠ zone-wide
 
-SSL/TLS → Overview → **Full (strict)**. The origin already serves a valid
-Let's Encrypt cert via Apache, so end-to-end TLS stays intact. Also enable:
-Edge Certificates → **Always Use HTTPS**, **Min TLS 1.2**. (Origin already
-sends HSTS.)
+SSL/TLS → Overview → **Full (strict)**. This setting is **zone-wide** — it
+applies to every proxied hostname at once (neflo, vote, otuburu). So only flip
+to Full (strict) once **every proxied origin presents a valid cert**. neflo is
+already proxied but its origin cert isn't sorted yet, so install the Origin CA
+cert on neflo too (below) before switching, or neflo's TLS will fail under
+strict. Until then, "Full" (non-strict) keeps everything up.
 
-## 3. Cert renewal gotcha (important)
+Also enable Edge Certificates → **Always Use HTTPS**, **Min TLS 1.2**.
 
-With the proxy **on** + *Always Use HTTPS*, certbot's HTTP-01 challenge on
-port 80 is 301'd by Cloudflare before it reaches the origin, so
-`certbot renew` will start failing. Pick one fix:
+## 3. Origin CA certificate (closes the renewal problem)
 
-- **Recommended — Cloudflare Origin CA cert** (15-year, no renewal): SSL/TLS →
-  Origin Server → Create Certificate, install the cert/key in each Apache vhost
-  in place of the Let's Encrypt paths. Keep TLS mode Full (strict).
-- *or* switch certbot to **DNS-01** with the Cloudflare API token, which works
-  fine through the proxy.
-- *or* add a Configuration Rule that disables "Always Use HTTPS" for
-  `/.well-known/acme-challenge/*` (keeps Let's Encrypt HTTP-01 working).
+With the proxy on, certbot's HTTP-01 challenge on :80 is 301'd by Cloudflare and
+`certbot renew` starts failing. Fix it for good with a **Cloudflare Origin CA
+cert**: one `*.torama.money` + `torama.money` cert (validity up to 15 years, no
+renewal) that Cloudflare trusts, installed on every origin. (You already have an
+Origin cert — reuse it for all three apps.)
+
+Per origin server (vote, otuburu, neflo), in order:
+
+```bash
+# 1. Place the Origin cert + key (same wildcard cert on each box)
+sudo mkdir -p /etc/ssl/cloudflare
+sudo install -m 644 origin.pem /etc/ssl/cloudflare/torama.money.pem
+sudo install -m 600 origin.key /etc/ssl/cloudflare/torama.money.key
+
+# 2. Point the vhost at them (swap the two SSLCertificate* lines — the Origin CA
+#    alternatives are already in the repo vhosts, commented). Then GATE on:
+sudo apache2ctl configtest        # must say "Syntax OK"
+sudo systemctl reload apache2
+```
+
+Ordering that avoids any downtime:
+
+1. **Proxy** the record (orange cloud) while the origin still has its valid
+   Let's Encrypt cert — Full/strict accepts it, traffic flows through Cloudflare.
+2. Place the Origin cert + key on the box.
+3. Swap the vhost to the Origin CA lines → `configtest` → reload.
+4. Once **all** proxied origins are on Origin CA, set the zone to **Full
+   (strict)**. certbot can then be left to lapse (or removed).
+
+> Origin CA certs are trusted **only by Cloudflare**, so a host must be proxied
+> before you swap its cert — direct (DNS-only) HTTPS to it would show untrusted.
+> That's why vote/otuburu get proxied first.
 
 ## 4. Real visitor IP (origin change — already in the repo)
 
