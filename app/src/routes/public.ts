@@ -61,15 +61,15 @@ publicRouter.get('/', csrfToken, (_req, res) => {
 });
 
 // Static content / trust pages.
-publicRouter.get('/terms', (_req, res) => res.render('public/terms', { title: 'Terms of Service' }));
-publicRouter.get('/privacy', (_req, res) => res.render('public/privacy', { title: 'Privacy Policy' }));
+publicRouter.get('/terms', (_req, res) => res.render('public/terms', { title: 'Terms of Service', showBack: true }));
+publicRouter.get('/privacy', (_req, res) => res.render('public/privacy', { title: 'Privacy Policy', showBack: true }));
 publicRouter.get(['/return-policy', '/refund-policy', '/returns'], (_req, res) =>
-  res.render('public/return-policy', { title: 'Return & Refund Policy' }),
+  res.render('public/return-policy', { title: 'Return & Refund Policy', showBack: true }),
 );
-publicRouter.get('/trust', (_req, res) => res.render('public/trust', { title: 'How we keep votes fair' }));
+publicRouter.get('/trust', (_req, res) => res.render('public/trust', { title: 'How we keep votes fair', showBack: true }));
 publicRouter.get('/status', async (_req, res, next) => {
   try {
-    res.render('public/status', { title: 'System status', dbOk: await healthCheck() });
+    res.render('public/status', { title: 'System status', dbOk: await healthCheck(), showBack: true });
   } catch (err) {
     next(err);
   }

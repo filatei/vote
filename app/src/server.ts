@@ -130,6 +130,9 @@ app.use((req, res, next) => {
   res.locals.avatarColor = avatarColor;
   res.locals.electionTypeConfig = electionTypeConfig;
   res.locals.electionTypeList = electionTypeList;
+  // Expose the signed-in customer to every page (incl. public/static pages),
+  // so the header can show an avatar instead of "Sign in" everywhere.
+  res.locals.sessionEmail = (req.session && req.session.customerEmail) || null;
   next();
 });
 

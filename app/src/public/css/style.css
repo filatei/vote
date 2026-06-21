@@ -56,6 +56,12 @@ a:hover { text-decoration: underline; }
 .header-nav { display: flex; align-items: center; gap: 16px; }
 .header-nav a, .header-nav .link-button { white-space: nowrap; }
 .brand-name { white-space: nowrap; }
+/* Header account avatar (shown in place of "Sign in" when logged in). */
+.header-avatar-link { display: inline-flex; border-radius: 50%; line-height: 0; transition: box-shadow .15s ease; }
+.header-avatar-link:hover { box-shadow: 0 0 0 3px rgba(47, 109, 244, .18); }
+.header-avatar { width: 34px; height: 34px; border-radius: 50%; display: block; }
+/* "Back" link on static/policy pages. */
+.back-link { display: inline-flex; align-items: center; margin: 14px 0 2px; }
 .nav-email { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .inline-form { display: inline; margin: 0; }
 .link-button {

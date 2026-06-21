@@ -393,4 +393,16 @@
       });
     });
   }
+
+  // 4. "Back" links on static pages: return to the page the visitor came from
+  //    when there's in-site history; otherwise follow the href fallback (e.g. "/").
+  var backLinks = document.querySelectorAll('[data-back]');
+  for (var bk = 0; bk < backLinks.length; bk++) {
+    backLinks[bk].addEventListener('click', function (e) {
+      if (history.length > 1 && document.referrer) {
+        e.preventDefault();
+        history.back();
+      }
+    });
+  }
 })();

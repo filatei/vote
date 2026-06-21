@@ -88,6 +88,12 @@
           <button class="link-button" type="submit">Sign out</button>
         </form>
       </nav>
+    <% } else if (typeof sessionEmail !== 'undefined' && sessionEmail) { %>
+      <nav class="header-nav">
+        <a class="header-avatar-link" href="/account" title="<%= sessionEmail %>" aria-label="Your account">
+          <%- avatarSvg(sessionEmail, sessionEmail, 'header-avatar') %>
+        </a>
+      </nav>
     <% } else { %>
       <nav class="header-nav">
         <a class="button button-ghost button-sm" href="/account/login">Sign in</a>
@@ -96,3 +102,6 @@
   </div>
 </header>
 <main id="main" class="container">
+<% if (typeof showBack !== 'undefined' && showBack) { %>
+  <a class="button button-ghost button-sm back-link" href="/" data-back>← Back</a>
+<% } %>
