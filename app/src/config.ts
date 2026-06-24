@@ -96,6 +96,15 @@ const schema = z.object({
   // events we can't settle locally are broadcast to every downstream.
   SQUAD_DOWNSTREAMS: z.string().optional(),
 
+  // ── Paystack webhook hub (shared Paystack account → multiple apps) ─────
+  // Paystack allows only ONE webhook URL per account. This app receives that
+  // single webhook at /webhooks/paystack-hub, verifies the HMAC-SHA512
+  // signature with PAYSTACK_SECRET_KEY, then fans out to PAYSTACK_DOWNSTREAMS
+  // (same JSON shape as SQUAD_DOWNSTREAMS). Vote settles nothing Paystack-side
+  // itself — it's a pure relay for tpay/neflo/otuburu payouts.
+  PAYSTACK_SECRET_KEY: z.string().optional(),
+  PAYSTACK_DOWNSTREAMS: z.string().optional(),
+
   // ── Monnify (fallback NGN rail — instant virtual-account + card) ───────
   // Reuses the same sandbox integration proven on otuburu. Leave the secret
   // blank to disable the Monnify rail.

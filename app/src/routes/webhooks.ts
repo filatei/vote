@@ -6,6 +6,7 @@ import { reconcileSquadWebhook, sendLaunchReceipt, verifyPayment } from '../serv
 import { getElectionById, setStatus } from '../services/elections';
 import { parseWebhook, verifyWebhookSignature as verifySquadSignature } from '../services/squad';
 import { downstreams, forward, resolveTargets } from '../services/squadHub';
+import { paystackDownstreams, forwardPaystack } from '../services/paystackHub';
 
 export const webhookRouter = Router();
 
@@ -86,6 +87,51 @@ webhookRouter.post('/squad-hub', express.raw({ type: '*/*' }), async (req, res) 
     }
   } catch (err) {
     logger.error({ err }, 'Squad hub handling failed');
+  }
+  res.sendStatus(200);
+});
+
+/**
+ * Paystack webhook HUB. Paystack allows only one webhook URL per account, so a
+ * single shared Paystack account routes every event here. We verify the
+ * HMAC-SHA512 signature (x-paystack-signature) once, then forward to the owning
+ * app's /webhooks/paystack (configured via PAYSTACK_DOWNSTREAMS, routed by
+ * reference prefix e.g. TPAY-). Vote has no Paystack payments of its own, so this
+ * is a pure relay; downstreams re-verify the same forwarded body + signature.
+ */
+webhookRouter.post('/paystack-hub', express.raw({ type: '*/*' }), async (req, res) => {
+  const secret = config.PAYSTACK_SECRET_KEY;
+  if (!secret) {
+    res.sendStatus(200);
+    return;
+  }
+  const raw = Buffer.isBuffer(req.body) ? req.body : Buffer.from('');
+  const expected = createHmac('sha512', secret).update(raw).digest('hex');
+  const provided = String(req.headers['x-paystack-signature'] || '');
+  const a = Buffer.from(expected);
+  const b = Buffer.from(provided);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) {
+    res.sendStatus(401);
+    return;
+  }
+  // Don't relay events we forwarded to ourselves (defensive loop guard).
+  if (req.headers['x-forwarded-by'] === 'paystack-hub') {
+    res.sendStatus(200);
+    return;
+  }
+  try {
+    let reference = '';
+    try {
+      const evt = JSON.parse(raw.toString('utf8')) as { data?: { reference?: string } };
+      reference = evt?.data?.reference || '';
+    } catch {
+      /* non-JSON body — broadcast */
+    }
+    // Vote settles nothing Paystack-side itself (settledLocally = false).
+    const targets = resolveTargets(reference, false, paystackDownstreams());
+    await Promise.all(targets.map((t) => forwardPaystack(t, raw, provided)));
+  } catch (err) {
+    logger.error({ err }, 'Paystack hub handling failed');
   }
   res.sendStatus(200);
 });
